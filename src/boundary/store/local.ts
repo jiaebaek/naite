@@ -8,6 +8,8 @@
 import { SNAPSHOT_VERSION } from './types'
 import type { AppSnapshot, AppStore } from './types'
 
+// ⚠️ 저장소 키는 브랜드(나이테)와 무관하게 'edu-manager' 로 고정한다.
+//    바꾸면 기존 사용자의 로컬 데이터가 orphan 된다(키가 곧 데이터 식별자).
 const KEY = `edu-manager:v${SNAPSHOT_VERSION}`
 
 export class LocalStore implements AppStore {
