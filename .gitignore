@@ -1,6 +1,9 @@
 node_modules/
 dist/
 
+# TypeScript 증분 빌드 정보 (tsc -b 산출물)
+*.tsbuildinfo
+
 # 프로젝트 로컬 포터블 Node (env.ps1 이 사용). 재설치 가능하므로 커밋하지 않는다.
 .node/
 
