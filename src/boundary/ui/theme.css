@@ -1,0 +1,690 @@
+/**
+ * 색 토큰. docs/08-UI계약.md §5
+ *
+ * ⚠️ INV-UI-12 — 경고색으로 빨강 계열을 쓰지 않는다. 앰버까지만.
+ *    빨강은 오류의 색이다. 아이가 숙제를 안 한 것은 오류가 아니다.
+ * ⚠️ INV-UI-21 — `초과` 에 경고색을 쓰지 않는다. 나쁜 상태가 아니다.
+ * ⚠️ INV-UI-30 — 대비는 WCAG AA (4.5:1) 이상.
+ */
+
+:root {
+  --bg: #ffffff;
+  --surface: #f7f7f8;
+  --border: #e3e3e6;
+
+  --text: #1a1a1c;
+  --text-muted: #6b6b73;
+  /* 가장 약한 톤. `대기` 전용 — 눈에 띄면 안 된다 (INV-UI-20) */
+  --text-faint: #9a9aa2;
+
+  /* 경고 = 앰버. 빨강 아님 (INV-UI-12) */
+  --warn: #b57600;
+  --warn-strong: #6b4500;
+  --warn-bg: #fff6e0;
+
+  /* 완료·달성 — 차분하되 기분 좋게 */
+  --ok: #2f8f5b;
+  --ok-strong: #1f5c3a;
+  --ok-bg: #e8f6ee;
+
+  /* `초과` — 파랑. 경고가 아니라 정보다 (INV-UI-21) */
+  --info: #2a5b8c;
+  --info-bg: #eef4fa;
+
+  --tap-min: 44px; /* INV-UI-10 */
+  --page-max: 430px; /* INV-UI-28 — 모바일 폭 기준 */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+.page {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  background: var(--bg);
+  min-height: 100dvh;
+  padding: 16px 16px 88px;
+}
+
+.page__date {
+  font-size: 15px;
+  color: var(--text-muted);
+  margin: 0 0 16px;
+}
+
+.domain {
+  margin: 0 0 20px;
+}
+
+.domain__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin: 0 0 6px;
+  letter-spacing: 0.02em;
+}
+
+/* 한 줄 = 하나의 탭 타깃 (INV-UI-06, INV-UI-10) */
+.task {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--tap-min);
+  padding: 4px 6px;
+  border-radius: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.task:active {
+  background: var(--surface);
+}
+
+.task__box {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  accent-color: var(--ok);
+}
+
+.task__name {
+  flex: 1 1 auto;
+  font-size: 16px;
+}
+
+.task[data-done='true'] .task__name {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+/**
+ * INV-UI-11 — 경고는 shouldWarnOnMiss() 가 true 일 때만.
+ *
+ * ⚠️ 초판은 너무 약했다. 사용자 피드백:
+ *    "압박적이지 않아. 오히려 꼭 해야된다는 느낌이 너무 안 들어."
+ *    C-6(죄책감 금지)을 지키느라 `필수` 마저 힘이 빠졌다.
+ *    → 좌측 막대 + 배경으로 무게를 올린다. 색은 여전히 앰버다 (INV-UI-12).
+ */
+.task[data-warn='true'] {
+  background: var(--warn-bg);
+  border-left: 3px solid var(--warn);
+  padding-left: 9px;
+}
+
+.task[data-warn='true'] .task__name {
+  font-weight: 600;
+  color: var(--warn-strong);
+}
+
+/**
+ * 주간 목표를 채운 항목 — 이번 주엔 더 안 해도 된다.
+ * 사용자 요청: "한 게 기분 좋게" 보이도록.
+ * 단 점수·퍼센트로 만들지는 않는다 (OOS-6 / INV-UI-13).
+ */
+.task[data-week-met='true'] {
+  background: linear-gradient(90deg, var(--ok-bg) 0%, transparent 70%);
+}
+
+.task[data-week-met='true'] .task__name {
+  color: var(--ok-strong);
+}
+
+
+.task__weekdone {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--ok);
+  border-radius: 999px;
+  padding: 3px 10px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(47, 107, 70, 0.25);
+}
+
+/* 이어온 기록. 벌이 아니라 흐름이다 */
+.task__streak {
+  font-size: 12px;
+  color: var(--ok);
+  background: var(--ok-bg);
+  border-radius: 999px;
+  padding: 2px 8px;
+  flex: 0 0 auto;
+}
+
+/* nature 라벨 — 색만으로 정보를 전달하지 않는다 (INV-UI-29) */
+.task__nature {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 8px;
+  flex: 0 0 auto;
+}
+
+.task[data-warn='true'] .task__nature {
+  color: var(--warn);
+  background: var(--warn-bg);
+  border-color: transparent;
+}
+
+.task__progress {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  flex: 0 0 auto;
+}
+
+.empty {
+  color: var(--text-muted);
+  font-size: 15px;
+  text-align: center;
+  padding: 48px 0;
+}
+
+/* ─────────────────────────────────────────────────────
+   영역 화면 (F3). docs/08-UI계약.md §3
+   ───────────────────────────────────────────────────── */
+
+.dcard {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  margin: 0 0 12px;
+}
+
+/* INV-UI-20 — `대기` 는 가장 약하다. 눈에 띄면 안 된다 */
+.dcard[data-tone='faint'] {
+  border-color: transparent;
+  background: var(--surface);
+}
+
+.dcard[data-tone='faint'] .dcard__title,
+.dcard[data-tone='faint'] .dcard__note,
+.dcard[data-tone='faint'] .dcard__badge {
+  color: var(--text-faint);
+}
+
+.dcard[data-tone='warn'] {
+  border-color: var(--warn);
+  background: var(--warn-bg);
+}
+
+.dcard[data-tone='ok'] {
+  border-color: var(--border);
+}
+
+/* INV-UI-21 — `초과` 는 경고가 아니라 정보다 */
+.dcard[data-tone='info'] {
+  border-color: var(--info);
+  background: var(--info-bg);
+}
+
+.dcard__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dcard__title {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0;
+  flex: 1 1 auto;
+}
+
+.dcard__badge {
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 3px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.dcard[data-tone='ok'] .dcard__badge {
+  color: #fff;
+  background: var(--ok);
+  border-color: transparent;
+}
+
+.dcard[data-tone='warn'] .dcard__badge {
+  color: #fff;
+  background: var(--warn);
+  border-color: transparent;
+}
+
+.dcard[data-tone='info'] .dcard__badge {
+  color: #fff;
+  background: var(--info);
+  border-color: transparent;
+}
+
+.dcard__note {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 6px 0 10px;
+}
+
+.dcard__targets {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+}
+
+.target {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 7px 0;
+  border-top: 1px solid var(--border);
+}
+
+.target__text {
+  font-size: 14px;
+}
+
+.target__meta {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.origin {
+  font-size: 11px;
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+/* 🟦 국가 기준 — 사실 */
+.origin--공교육 {
+  color: #1c3f66;
+  background: #dbe8f5;
+  font-weight: 600;
+}
+
+/* 🟨 우리 판단 — 반박 가능 */
+.origin--해석 {
+  color: #6b4500;
+  background: #fdf0d0;
+}
+
+/* INV-UI-16 — 자체 목표. 공교육과 확실히 다르게 보여야 한다 */
+.origin--자체 {
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px dashed var(--border);
+}
+
+.target__code {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.dcard__foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.dcard__count {
+  font-size: 13px;
+  color: var(--text-muted);
+  flex: 1 1 auto;
+}
+
+.dcard__action {
+  font-size: 13px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  cursor: pointer;
+}
+
+/* INV-UI-17 — 오프셋 조정을 카드 안에서 바로 */
+.offset {
+  display: flex;
+  gap: 6px;
+}
+
+.offset__btn {
+  flex: 1 1 0;
+  min-height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.offset__btn[aria-pressed='true'] {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+  font-weight: 600;
+}
+
+.offset__na {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* INV-UI-18 — 상향 경고. 건너뛰기 버튼은 없다 */
+.warnbox {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--warn-bg);
+  border-left: 3px solid var(--warn);
+}
+
+.warnbox__msg {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--warn-strong);
+  margin: 0 0 6px;
+}
+
+.warnbox__signals {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: var(--warn-strong);
+}
+
+/* 하단 탭. INV-UI-02 — 계층은 2단계를 넘지 않는다 */
+.tabs {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: var(--page-max);
+  display: flex;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.tabs__btn {
+  flex: 1 1 0;
+  min-height: 56px;
+  border: 0;
+  background: transparent;
+  font-size: 14px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.tabs__btn[aria-pressed='true'] {
+  color: var(--text);
+  font-weight: 700;
+  box-shadow: inset 0 2px 0 var(--text);
+}
+
+/* 목표 달성 토글 — 능력 서술 ("됨"). 성적 아님 (INV-UI-38) */
+.target__main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.target__done {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+  flex: 0 0 auto;
+  cursor: pointer;
+  padding-left: 8px;
+}
+
+.target[data-achieved='true'] {
+  background: linear-gradient(90deg, transparent 0%, var(--ok-bg) 100%);
+}
+
+.target[data-achieved='true'] .target__done {
+  color: var(--ok-strong);
+  font-weight: 600;
+}
+
+.target {
+  flex-direction: row;
+  align-items: center;
+}
+
+/* 오프셋 버튼 — 잠금 표시 (INV-UI-37) */
+.offset__btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+}
+
+.offset__btn[data-locked='true'] {
+  color: var(--text-faint);
+  background: var(--surface);
+  cursor: not-allowed;
+}
+
+.offset__label {
+  font-size: 13px;
+}
+
+.offset__hint {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* ─────────────────────────────────────────────────────
+   펫 (오늘 화면 상단). docs/08-UI계약.md §3-B
+   ⚠️ 벌 없음 — 굶는·슬픈 표현 절대 없음 (INV-UI-41)
+   ───────────────────────────────────────────────────── */
+.pet {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  margin: 0 0 18px;
+  text-align: center;
+  background: linear-gradient(180deg, var(--ok-bg) 0%, var(--bg) 100%);
+}
+
+.pet__top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 72px;
+  justify-content: flex-end;
+}
+
+.pet__emoji {
+  line-height: 1;
+  transition: font-size 0.4s ease;
+}
+
+.pet__stage {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ok-strong);
+}
+
+.pet__tokens {
+  font-size: 13px;
+  color: var(--ok-strong);
+  margin: 8px 0;
+  font-weight: 600;
+}
+
+.pet__tokens--empty {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.pet__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.pet__btn {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: var(--tap-min);
+  padding: 8px 4px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.pet__btn:not(:disabled):active {
+  background: var(--ok-bg);
+  transform: scale(0.96);
+}
+
+.pet__btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ─────────────────────────────────────────────────────
+   활동 화면 (F2). docs/08-UI계약.md §4
+   ───────────────────────────────────────────────────── */
+.alist { list-style: none; margin: 0 0 14px; padding: 0; }
+
+.arow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 6px;
+  border-bottom: 1px solid var(--border);
+}
+.arow[data-active='false'] { opacity: 0.45; }
+.arow__main { flex: 1 1 auto; display: flex; flex-direction: column; gap: 2px; }
+.arow__name { font-size: 15px; }
+.arow__meta { font-size: 12px; color: var(--text-muted); }
+.arow__nature {
+  font-size: 11px; color: var(--text-muted);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 999px; padding: 2px 8px; flex: 0 0 auto;
+}
+.arow__off {
+  font-size: 12px; min-height: 32px; padding: 0 10px;
+  border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text-muted); cursor: pointer; flex: 0 0 auto;
+}
+
+.alist__add {
+  width: 100%; min-height: var(--tap-min);
+  border-radius: 12px; border: 1px dashed var(--border);
+  background: var(--bg); font-size: 15px; color: var(--text); cursor: pointer;
+}
+
+.aform {
+  border: 1px solid var(--border); border-radius: 14px; padding: 14px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.aform__error {
+  margin: 0; padding: 8px 10px; border-radius: 8px;
+  background: var(--warn-bg); color: var(--warn-strong);
+  border-left: 3px solid var(--warn); font-size: 13px; font-weight: 600;
+}
+.aform__field { display: flex; flex-direction: column; gap: 5px; font-size: 13px; }
+.aform__field > span { color: var(--text-muted); font-weight: 600; }
+.aform__field input, .aform__field select {
+  min-height: 40px; padding: 0 10px; font-size: 15px;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--bg);
+}
+.aform__weekdays, .aform__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.aform__wd {
+  width: 40px; height: 40px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--bg); cursor: pointer; font-size: 14px;
+}
+.aform__wd[aria-pressed='true'] { background: var(--text); color: var(--bg); border-color: var(--text); }
+.aform__toggle {
+  min-height: 40px; padding: 0 16px; margin-right: 6px;
+  border-radius: 8px; border: 1px solid var(--border); background: var(--bg); cursor: pointer; font-size: 14px;
+}
+.aform__toggle[aria-pressed='true'] { background: var(--text); color: var(--bg); border-color: var(--text); }
+.aform__chip {
+  text-align: left; padding: 8px 10px; font-size: 13px;
+  border-radius: 8px; border: 1px solid var(--border); background: var(--bg); cursor: pointer;
+}
+.aform__chip[aria-pressed='true'] { background: var(--ok-bg); border-color: var(--ok); color: var(--ok-strong); }
+.aform__actions { display: flex; gap: 8px; }
+.aform__cancel, .aform__save {
+  flex: 1 1 0; min-height: var(--tap-min); border-radius: 10px; font-size: 15px; cursor: pointer;
+}
+.aform__cancel { border: 1px solid var(--border); background: var(--bg); }
+.aform__save { border: 0; background: var(--text); color: var(--bg); font-weight: 600; }
+
+/* 활동 행 — 겨냥 목표 표시 + 편집 */
+.arow { flex-direction: column; align-items: stretch; gap: 6px; }
+.arow__row { display: flex; align-items: center; gap: 10px; }
+.arow__targets {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding-left: 2px;
+}
+.arow__tlist {
+  flex: 1 1 auto; list-style: none; margin: 0; padding: 0;
+  font-size: 12px; color: var(--ok-strong);
+}
+.arow__tlist li { padding: 1px 0; }
+.arow__none { flex: 1 1 auto; font-size: 12px; color: var(--text-faint); }
+.arow__edit {
+  flex: 0 0 auto; font-size: 12px; min-height: 30px; padding: 0 10px;
+  border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text); cursor: pointer;
+}
+.aform--inline { border-style: dashed; margin-top: 4px; }
+
+/* 오늘 학원 일정 스트립 — 체크 없이 정보로만 (INV-ACAD-03) */
+.schedule {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin: 0 0 16px; padding: 10px 12px;
+  background: var(--info-bg); border-radius: 12px;
+  font-size: 13px; color: var(--info);
+}
+.schedule__item { font-weight: 600; }
+.schedule__time { font-variant-numeric: tabular-nums; opacity: 0.8; }
+
+/* 학원 섹션 (F2) */
+.asection__title {
+  font-size: 13px; font-weight: 700; color: var(--text-muted);
+  margin: 18px 0 8px; letter-spacing: 0.02em;
+}
+.acad {
+  border: 1px solid var(--border); border-radius: 12px;
+  padding: 12px; margin: 0 0 10px;
+}
+.acad[data-active='false'] { opacity: 0.45; }
+.acad__head { display: flex; align-items: center; gap: 8px; }
+.acad__name { flex: 1 1 auto; font-size: 15px; font-weight: 600; }
+.acad__meta { font-size: 12px; color: var(--info); background: var(--info-bg); border-radius: 999px; padding: 2px 8px; }
+.acad__hw { list-style: none; margin: 8px 0 0; padding: 8px 0 0; border-top: 1px dashed var(--border); }
+.acad__hw li { font-size: 13px; padding: 3px 0; display: flex; gap: 6px; align-items: center; }
+.acad__hwnature { font-size: 10px; color: var(--text-muted); border: 1px solid var(--border); border-radius: 999px; padding: 0 6px; }
+.acad__none-hw { font-size: 12px; color: var(--text-faint); }

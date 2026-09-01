@@ -1,0 +1,20 @@
+node_modules/
+dist/
+
+# 프로젝트 로컬 포터블 Node (env.ps1 이 사용). 재설치 가능하므로 커밋하지 않는다.
+.node/
+
+# 환경 변수 (Supabase 키 등)
+.env
+.env.local
+
+# Obsidian 워크스페이스 상태 (개인 로컬 설정)
+.obsidian/
+
+# Claude Code 로컬 설정 (launch.json 은 커밋)
+.claude/settings.local.json
+
+# 원문 PDF — 별책1·별책5(공교육 성취기준 1차 출처)는 커밋한다.
+# 41M 누리과정 해설서는 제외: 관련 내용은 docs/원문/*.md 로 이미 추출돼 있고 repo 를 무겁게 한다.
+# 필요하면 국가교육과정정보센터(ncic.re.kr)에서 다시 받는다.
+docs/원문/2019개정_누리과정_해설서.pdf
