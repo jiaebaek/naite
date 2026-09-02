@@ -181,12 +181,38 @@ export interface Completion {
   readonly memo?: string
 }
 
+/**
+ * 목표의 출처. 신뢰 앵커 표시용 (오늘·현황 화면, 피드백 ④).
+ *   공교육 — 누리과정/성취기준에 근거. '해석'은 refines 를 따라 여기로 귀속된다.
+ *   자체   — 공교육 기준 밖 우리 목표(영어 등), 또는 근거 없는 해석.
+ */
+export interface Provenance {
+  readonly kind: '공교육' | '자체'
+  /** kind='공교육'일 때 어느 문서인지 */
+  readonly doc?: '누리과정' | '성취기준'
+}
+
+/**
+ * 활동이 겨냥하는 한 목표의 표시 정보. Task.targets 에 실린다.
+ * 대표(공교육 우선)부터 정렬돼 온다 — 첫째가 요약 줄·배지에 쓰인다.
+ */
+export interface TaskTarget {
+  readonly standardId: StandardId
+  readonly statement: string
+  readonly provenance: Provenance
+}
+
 export interface Task {
   readonly activityId: ActivityId
   readonly name: string
   readonly domain: Domain
   /** 파생값 */
   readonly nature: Nature
+  /**
+   * 이 활동이 겨냥하는 목표들 (문장+출처). 0개 가능.
+   * 공교육 근거 목표가 앞에 오도록 정렬돼 있다 (대표 = targets[0]). 피드백 ③④
+   */
+  readonly targets: readonly TaskTarget[]
   readonly done: boolean
   /**
    * cadence.kind='주N회' 일 때만. 이번 주(월~일) 달성 횟수.

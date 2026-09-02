@@ -6,9 +6,16 @@
  *    여기서 `nature === '필수'` 같은 비교를 하면 도메인 계약이 장식이 된다.
  */
 
+import { useState } from 'react'
 import { shouldWarnOnMiss } from '../../domain/nature'
 import { DOMAINS } from '../../domain/types'
-import type { ActivityId, Domain, IsoDate, Task } from '../../domain/types'
+import type { ActivityId, Domain, IsoDate, Provenance, Task } from '../../domain/types'
+
+/** 출처를 사람 말 라벨로. UI 는 판단하지 않고 도메인 값을 옮길 뿐이다 (INV-UI-00). */
+function provenanceLabel(p: Provenance): string {
+  if (p.kind === '자체') return '자체 목표'
+  return p.doc === '누리과정' ? '공교육·누리과정' : '공교육·성취기준'
+}
 
 export interface TodayScreenProps {
   readonly date: IsoDate
@@ -87,6 +94,9 @@ function DomainGroup({
 }
 
 function TaskRow({ task, onToggle }: { task: Task; onToggle: (id: ActivityId) => void }) {
+  // 다중 목표일 때만 펼침 (③④ — 오늘은 요약, 전체 매핑은 현황 탭)
+  const [open, setOpen] = useState(false)
+
   // 주간 목표를 채웠으면 오늘 체크 여부와 무관하게 "이번 주 할 일"은 끝났다.
   // `met` 은 도메인이 계산한다 (INV-TASK-11) — 여기서 done >= times 를 비교하면 INV-UI-00 위반.
   const weekMet = task.weeklyProgress?.met ?? false
@@ -94,32 +104,77 @@ function TaskRow({ task, onToggle }: { task: Task; onToggle: (id: ActivityId) =>
   // INV-UI-11 — 도메인이 내린 판단을 그대로 따른다.
   const warn = !task.done && !weekMet && shouldWarnOnMiss(task.nature)
 
+  // 대표 목표 = 첫째 (도메인이 공교육 우선으로 정렬해 보냄). 나머지 개수.
+  const rep = task.targets[0]
+  const extra = task.targets.length - 1
+
   /*
-   * INV-UI-36 — 주간 목표를 채워도 체크박스는 남긴다.
-   * 실수로 체크했을 때 되돌릴 길이 없으면 안 된다.
-   * 배지는 "이번 주", 체크박스는 "오늘" — 층위가 다르므로 공존한다.
+   * INV-UI-36 — 주간 목표를 채워도 체크박스는 남긴다 (되돌릴 수 있어야 한다).
+   * 체크박스+이름만 <label> 로 묶어 탭하면 완료 토글. 목표 요약 줄은 바깥에 둬
+   * '펼치기' 탭과 '완료' 탭이 겹치지 않게 한다 (다중 목표 표시 결정).
    */
   return (
-    <label
+    <div
       className="task"
       data-testid={`task-${task.activityId}`}
       data-warn={String(warn)}
       data-done={String(task.done)}
       data-week-met={String(weekMet)}
     >
-      <input
-        className="task__box"
-        type="checkbox"
-        checked={task.done}
-        // INV-UI-06 — 탭 1회로 기록. 확인 다이얼로그 없음.
-        // INV-UI-07 — 추가 입력을 요구하지 않는다.
-        onChange={() => onToggle(task.activityId)}
-      />
-      <span className="task__name">{task.name}</span>
-      {renderMeta(task, weekMet)}
-      {/* INV-UI-29 — 색만으로 정보를 전달하지 않는다 */}
-      <span className="task__nature">{task.nature}</span>
-    </label>
+      <div className="task__row">
+        <label className="task__check">
+          <input
+            className="task__box"
+            type="checkbox"
+            checked={task.done}
+            // INV-UI-06 — 탭 1회로 기록. 확인 다이얼로그 없음.
+            // INV-UI-07 — 추가 입력을 요구하지 않는다.
+            onChange={() => onToggle(task.activityId)}
+          />
+          <span className="task__name">{task.name}</span>
+        </label>
+        <div className="task__meta">
+          {/* INV-UI-29 — 색만으로 정보를 전달하지 않는다. 출처(공교육/자체)를 글자로. 피드백 ④ */}
+          <span className="task__prov">
+            {task.targets.length === 0 ? '자유' : provenanceLabel(rep!.provenance)}
+          </span>
+          {renderMeta(task, weekMet)}
+        </div>
+      </div>
+
+      {/* 연결된 목표 — 피드백 ③ */}
+      <div className="task__goal">
+        {task.targets.length === 0 ? (
+          <span className="task__goalnone">겨냥 목표 없음</span>
+        ) : extra > 0 ? (
+          <button
+            type="button"
+            className="task__goallink"
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+          >
+            <span className="task__arrow" aria-hidden="true">→</span> {rep!.statement}
+            <span className="task__more">외 {extra}개</span>
+            <span aria-hidden="true">{open ? ' ▴' : ' ▾'}</span>
+          </button>
+        ) : (
+          <span className="task__goal1">
+            <span className="task__arrow" aria-hidden="true">→</span> {rep!.statement}
+          </span>
+        )}
+      </div>
+
+      {open && extra > 0 && (
+        <ul className="task__goals">
+          {task.targets.map((t) => (
+            <li key={t.standardId}>
+              <span className="task__gs">{t.statement}</span>
+              <span className="task__prov task__prov--sm">{provenanceLabel(t.provenance)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   )
 }
 

@@ -93,7 +93,7 @@ describe('07 계약 문서가 코드의 계약을 빠짐없이 담는다', () =>
   })
 
   it('코드에 있는 모든 도메인 모듈이 §8 모듈 구조에 적혀 있다', () => {
-    for (const m of ['pace.ts', 'nature.ts', 'coverage.ts', 'today.ts', 'completion.ts', 'activity.ts', 'guards.ts', 'errors.ts', 'types.ts', 'gate.ts', 'pet.ts', 'academy.ts']) {
+    for (const m of ['pace.ts', 'nature.ts', 'provenance.ts', 'coverage.ts', 'today.ts', 'completion.ts', 'activity.ts', 'guards.ts', 'errors.ts', 'types.ts', 'gate.ts', 'pet.ts', 'academy.ts']) {
       expect(계약, m).toContain(m)
     }
   })

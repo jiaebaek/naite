@@ -14,18 +14,29 @@ import type { Task } from '../../src/domain/types'
 
 const task = (over: Partial<Task> & Pick<Task, 'activityId' | 'domain' | 'nature'>): Task => ({
   name: over.name ?? '활동',
+  targets: [],
   done: false,
   ...over,
 })
 
 const TASKS: readonly Task[] = [
-  task({ activityId: 'hw-hangul', domain: '국어', name: '한글 학원 숙제', nature: '필수' }),
-  task({ activityId: 'hw-facto', domain: '수학', name: '팩토 숙제', nature: '필수', done: true }),
+  task({
+    activityId: 'hw-hangul', domain: '국어', name: '한글 학원 숙제', nature: '필수',
+    targets: [{ standardId: 'int-ko-letter-sounds', statement: '자음·모음의 소릿값을 안다', provenance: { kind: '공교육', doc: '성취기준' } }],
+  }),
+  task({
+    activityId: 'hw-facto', domain: '수학', name: '팩토 숙제', nature: '필수', done: true,
+    targets: [{ standardId: 'int-ma-count-20', statement: '20까지 세고 숫자를 읽는다', provenance: { kind: '공교육', doc: '성취기준' } }],
+  }),
   task({
     activityId: 'board', domain: '수학', name: '수학 보드게임', nature: '필수',
     weeklyProgress: { done: 2, times: 3, met: false },
+    targets: [{ standardId: 'int-ma-pattern', statement: '반복 규칙을 이어간다', provenance: { kind: '공교육', doc: '누리과정' } }],
   }),
-  task({ activityId: 'en-book', domain: '영어', name: '영어 원서 1권', nature: '자체목표' }),
+  task({
+    activityId: 'en-book', domain: '영어', name: '영어 원서 1권', nature: '자체목표',
+    targets: [{ standardId: 'own-en-listen', statement: '영어 그림책 한 권을 끝까지 듣는다', provenance: { kind: '자체' } }],
+  }),
   task({ activityId: 'alpha', domain: '수학', name: '알파짱 워크지', nature: '자유' }),
 ]
 
@@ -239,12 +250,52 @@ describe('INV-UI-35 — 주간 목표를 채우면 기분 좋게 알려준다', 
   })
 })
 
-describe('INV-UI-29 — 색만으로 정보를 전달하지 않는다', () => {
-  it('각 항목에 nature 라벨 텍스트가 있다', () => {
+describe('INV-UI-29 — 색만으로 정보를 전달하지 않는다 (출처 라벨)', () => {
+  it('각 항목에 출처 라벨 텍스트가 있다', () => {
     setup()
-    expect(within(screen.getByTestId('task-hw-hangul')).getByText('필수')).toBeInTheDocument()
-    expect(within(screen.getByTestId('task-en-book')).getByText('자체목표')).toBeInTheDocument()
+    expect(within(screen.getByTestId('task-hw-hangul')).getByText('공교육·성취기준')).toBeInTheDocument()
+    expect(within(screen.getByTestId('task-en-book')).getByText('자체 목표')).toBeInTheDocument()
     expect(within(screen.getByTestId('task-alpha')).getByText('자유')).toBeInTheDocument()
+  })
+})
+
+describe('⭐ 활동↔목표 연결·출처 (피드백 ③④)', () => {
+  it('연결된 목표 문장이 활동 아래 보인다', () => {
+    setup()
+    expect(within(screen.getByTestId('task-hw-hangul')).getByText(/자음·모음의 소릿값을 안다/)).toBeInTheDocument()
+  })
+
+  it('공교육 출처 배지가 보인다', () => {
+    setup()
+    expect(within(screen.getByTestId('task-board')).getByText('공교육·누리과정')).toBeInTheDocument()
+  })
+
+  it('목표가 없는 활동은 "겨냥 목표 없음"', () => {
+    setup()
+    expect(within(screen.getByTestId('task-alpha')).getByText(/겨냥 목표 없음/)).toBeInTheDocument()
+  })
+
+  it('⭐ 여러 목표면 대표 + "외 N개"만 보이고, 펼치면 전체가 보인다', async () => {
+    const multi = [
+      task({
+        activityId: 'multi', domain: '국어', nature: '필수',
+        targets: [
+          { standardId: 'a', statement: '첫째 목표', provenance: { kind: '공교육', doc: '누리과정' } },
+          { standardId: 'b', statement: '둘째 목표', provenance: { kind: '공교육', doc: '성취기준' } },
+          { standardId: 'c', statement: '셋째 목표', provenance: { kind: '자체' } },
+        ],
+      }),
+    ]
+    setup(multi)
+    const row = screen.getByTestId('task-multi')
+    expect(within(row).getByText(/첫째 목표/)).toBeInTheDocument()
+    expect(within(row).getByText(/외 2개/)).toBeInTheDocument()
+    // 접힌 상태: 나머지는 숨겨져 있다
+    expect(within(row).queryByText('둘째 목표')).not.toBeInTheDocument()
+    // 요약 줄을 탭하면 전체가 펼쳐진다
+    await userEvent.click(within(row).getByRole('button', { name: /첫째 목표/ }))
+    expect(within(row).getByText('둘째 목표')).toBeInTheDocument()
+    expect(within(row).getByText('셋째 목표')).toBeInTheDocument()
   })
 })
 

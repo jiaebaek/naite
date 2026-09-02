@@ -6,12 +6,14 @@
 
 import { deriveNature } from './nature'
 import { findCompletion } from './completion'
+import { isPublicProvenance, provenanceOf } from './provenance'
 import type {
   Activity,
   Completion,
   IsoDate,
   Standard,
   Task,
+  TaskTarget,
   Weekday,
 } from './types'
 
@@ -90,6 +92,7 @@ export function deriveTodayTasks(
       name: activity.name,
       domain: activity.domain,
       nature: deriveNature(activity, standards),
+      targets: targetsOf(activity, standards),
       done: findCompletion(activity.id, date, completions) !== null,
       ...(weekly ? { weeklyProgress: weekly } : {}),
       ...(streak ? { streak } : {}),
@@ -97,6 +100,24 @@ export function deriveTodayTasks(
   }
 
   return tasks
+}
+
+/**
+ * 활동이 겨냥하는 목표들을 표시용(문장+출처)으로 만든다. 피드백 ③④
+ * 공교육 근거 목표를 앞세운다 — 대표(targets[0])가 요약 줄·배지에 쓰인다.
+ */
+function targetsOf(activity: Activity, standards: readonly Standard[]): readonly TaskTarget[] {
+  return activity.targetIds
+    .map((id) => standards.find((s) => s.id === id))
+    .filter((s): s is Standard => Boolean(s))
+    .map((s) => ({
+      standardId: s.id,
+      statement: s.statement,
+      provenance: provenanceOf(s, standards),
+    }))
+    .sort(
+      (a, b) => Number(isPublicProvenance(b.provenance)) - Number(isPublicProvenance(a.provenance)),
+    )
 }
 
 /**

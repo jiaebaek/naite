@@ -76,17 +76,38 @@ body {
 /* 한 줄 = 하나의 탭 타깃 (INV-UI-06, INV-UI-10) */
 .task {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: var(--tap-min);
-  padding: 4px 6px;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px 6px;
   border-radius: 10px;
-  cursor: pointer;
   user-select: none;
 }
 
-.task:active {
-  background: var(--surface);
+.task__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: var(--tap-min);
+}
+
+.task__check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 auto;
+  cursor: pointer;
+}
+
+.task__check:active {
+  opacity: 0.7;
+}
+
+.task__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex: 0 0 auto;
 }
 
 .task__box {
@@ -161,21 +182,81 @@ body {
   flex: 0 0 auto;
 }
 
-/* nature 라벨 — 색만으로 정보를 전달하지 않는다 (INV-UI-29) */
-.task__nature {
+/* 출처 배지 — 색만으로 정보를 전달하지 않는다 (INV-UI-29). 피드백 ④ */
+.task__prov {
   font-size: 11px;
+  font-weight: 600;
   color: var(--text-muted);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 2px 8px;
+  white-space: nowrap;
   flex: 0 0 auto;
 }
 
-.task[data-warn='true'] .task__nature {
+.task__prov--sm {
+  font-weight: 500;
+}
+
+.task[data-warn='true'] .task__prov {
   color: var(--warn);
   background: var(--warn-bg);
   border-color: transparent;
+}
+
+/* 연결된 목표 줄 — 피드백 ③. 체크박스 폭만큼 들여쓴다 */
+.task__goal {
+  padding-left: 32px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.task__arrow {
+  color: var(--ok);
+  font-weight: 700;
+}
+
+.task__goalnone {
+  font-style: italic;
+}
+
+.task__goallink {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: var(--text-muted);
+  text-align: left;
+  cursor: pointer;
+}
+
+.task__more {
+  color: var(--text);
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+.task__goals {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0 0 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.task__goals li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.task__gs {
+  flex: 1 1 auto;
 }
 
 .task__progress {

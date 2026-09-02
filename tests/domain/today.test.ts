@@ -10,6 +10,7 @@
 import { describe, it, expect } from 'vitest'
 import { deriveTodayTasks, streakOf, weekdayOf, weeklyProgressOf } from '../../src/domain/today'
 import { DOMAINS } from '../../src/domain/types'
+import { STANDARDS_2021 } from '../../src/domain/standards/child2021'
 import type { Activity, Completion, Standard } from '../../src/domain/types'
 
 // 2026-11-01 은 일요일이다 → 02 월, 04 수, 08 일
@@ -300,5 +301,31 @@ describe('weeklyProgressOf — 주간 집계는 월요일에 시작한다 (INV-T
   it('다른 활동의 기록은 세지 않는다', () => {
     const done: readonly Completion[] = [{ activityId: '다른활동', date: 월요일 }]
     expect(weeklyProgressOf(보드게임, 수요일, done)).toEqual({ done: 0, times: 3, met: false })
+  })
+})
+
+describe('Task.targets — 활동↔목표 연결·출처 (피드백 ③④)', () => {
+  const real = (id: string, targetIds: readonly string[]): Activity =>
+    act({ id, domain: '국어', targetIds })
+
+  it('겨냥 목표가 문장·출처와 함께 실린다', () => {
+    const t = deriveTodayTasks([real('r', ['int-ko-letter-sounds'])], 수요일, [], STANDARDS_2021)[0]!
+    expect(t.targets).toHaveLength(1)
+    expect(t.targets[0]!.statement).toBe('자음·모음의 소릿값을 안다')
+    expect(t.targets[0]!.provenance).toEqual({ kind: '공교육', doc: '성취기준' })
+  })
+
+  it('목표 0개면 targets 는 빈 배열', () => {
+    const t = deriveTodayTasks([real('r', [])], 수요일, [], STANDARDS_2021)[0]!
+    expect(t.targets).toEqual([])
+  })
+
+  it('⭐ 공교육 근거 목표가 대표(첫째)로 정렬된다', () => {
+    // 자체(영어) + 공교육(수학) 을 섞어도 공교육이 앞에 온다 (표시용이라 영역 혼합 허용)
+    const mixed = act({ id: 'm', domain: '수학', targetIds: ['own-en-daily-video', 'int-ma-pattern'] })
+    const t = deriveTodayTasks([mixed], 수요일, [], STANDARDS_2021)[0]!
+    expect(t.targets).toHaveLength(2)
+    expect(t.targets[0]!.provenance.kind).toBe('공교육')
+    expect(t.targets[1]!.provenance.kind).toBe('자체')
   })
 })
