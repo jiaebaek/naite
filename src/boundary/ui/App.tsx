@@ -6,7 +6,8 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { deriveTodayTasks } from '../../domain/today'
+import { deriveTodayTasks, weekRangeOf } from '../../domain/today'
+import { weeklyReport } from '../../domain/report'
 import { findCompletion, toggleCompletion } from '../../domain/completion'
 import { assessOffsetRaise, currentTargets, effectiveOffset } from '../../domain/pace'
 import { evaluateCoverage, goalStatusOf } from '../../domain/coverage'
@@ -34,7 +35,9 @@ import { TodayScreen } from './TodayScreen'
 import { PetPanel } from './PetPanel'
 import { DomainScreen } from './DomainScreen'
 import { ActivityScreen } from './ActivityScreen'
+import { LogScreen } from './LogScreen'
 import type { DomainCard, OffsetOption } from './DomainScreen'
+import type { WeekDay } from './LogScreen'
 import type {
   Academy,
   AcademyId,
@@ -80,7 +83,40 @@ function serialize(s: AppSnapshot): string {
   })
 }
 
-type Tab = '오늘' | '영역' | '활동'
+const DOW = ['일', '월', '화', '수', '목', '금', '토']
+
+/** 'YYYY-MM-DD' → 'N월 N일 X요일' */
+function formatDate(date: IsoDate): string {
+  const [y, m, d] = date.split('-').map(Number)
+  const dow = DOW[new Date(Date.UTC(y ?? 0, (m ?? 1) - 1, d ?? 1)).getUTCDay()]
+  return `${m}월 ${d}일 ${dow}요일`
+}
+
+/** anchor 가 속한 주(월~일) 7일. 기록 탭 스트립용. */
+function weekDaysOf(
+  anchor: IsoDate,
+  today: IsoDate,
+  completions: readonly Completion[],
+): readonly WeekDay[] {
+  const { from } = weekRangeOf(anchor)
+  const [y, m, d] = from.split('-').map(Number)
+  const start = new Date(Date.UTC(y ?? 0, (m ?? 1) - 1, d ?? 1))
+  return Array.from({ length: 7 }, (_, i) => {
+    const dt = new Date(start)
+    dt.setUTCDate(start.getUTCDate() + i)
+    const iso = dt.toISOString().slice(0, 10)
+    return {
+      date: iso,
+      dayNum: dt.getUTCDate(),
+      dow: DOW[dt.getUTCDay()] ?? '',
+      isToday: iso === today,
+      isFuture: iso > today,
+      doneCount: completions.filter((c) => c.date === iso).length,
+    }
+  })
+}
+
+type Tab = '오늘' | '영역' | '기록' | '활동'
 
 export function App() {
   const [tab, setTab] = useState<Tab>('오늘')
@@ -93,6 +129,8 @@ export function App() {
   const [achieved, setAchieved] = useState<readonly StandardId[]>([])
   const [care, setCare] = useState<CareState>(INITIAL_CARE)
   const [warning, setWarning] = useState<{ domain: Domain; warning: OffsetWarning } | null>(null)
+  // 기록 탭에서 선택한 날 (기본 오늘). 지난 날을 골라 소급 기록한다 (⑦)
+  const [selectedDate, setSelectedDate] = useState<IsoDate>(todayIso)
 
   // 저장 계층. 처음엔 로드 전이므로 저장을 막아, 로드 결과를 seed 로 덮어쓰지 않는다.
   const store = useMemo(() => getStore(), [])
@@ -163,6 +201,17 @@ export function App() {
   const activeActivities = useMemo(() => activities.filter((a) => a.active), [activities])
   const tasks = deriveTodayTasks(activeActivities, date, completions, STANDARDS_2021)
 
+  // 기록 탭 (F4) — 이번 주 스트립 / 선택한 날 기록 / 주간 리포트
+  const weekDays = useMemo(() => weekDaysOf(date, date, completions), [date, completions])
+  const dayTasks = useMemo(
+    () => deriveTodayTasks(activeActivities, selectedDate, completions, STANDARDS_2021),
+    [activeActivities, selectedDate, completions],
+  )
+  const report = useMemo(
+    () => weeklyReport(activeActivities, completions, date),
+    [activeActivities, completions, date],
+  )
+
   // INV-ACAD-03 — 오늘 등원 학원 (일정 스트립)
   const schedule = useMemo(
     () => academiesToday(academies, date).map((a) => ({ name: a.name, ...(a.time ? { time: a.time } : {}) })),
@@ -231,6 +280,17 @@ export function App() {
 
     // INV-UI-43 — 완료 1개 → 돌봄 토큰 1개. 체크 해제는 벌하지 않는다(토큰 회수 없음).
     if (result.kind === 'created') setCare((c) => grantToken(c))
+  }
+
+  // ⑦ 지난 날 기록 (기록 탭). 소급 기록은 펫 토큰을 주지 않는다 — 펫은 오늘의 리듬 전용 (결정 #2)
+  const handleLogPast = (activityId: ActivityId) => {
+    const existing = findCompletion(activityId, selectedDate, completions)
+    const result = toggleCompletion(activityId, selectedDate, existing, todayIso())
+    setCompletions((prev) =>
+      result.kind === 'created'
+        ? [...prev, result.completion]
+        : prev.filter((c) => !(c.activityId === activityId && c.date === selectedDate)),
+    )
   }
 
   // INV-UI-45 — 돌봄 1회. 토큰이 없으면 도메인이 막는다(버튼도 비활성).
@@ -329,6 +389,18 @@ export function App() {
           warning={warning}
         />
       )}
+      {tab === '기록' && (
+        <LogScreen
+          weekDays={weekDays}
+          selectedDate={selectedDate}
+          selectedLabel={formatDate(selectedDate)}
+          selectedIsToday={selectedDate === date}
+          onSelectDay={setSelectedDate}
+          dayTasks={dayTasks}
+          onToggleDay={handleLogPast}
+          report={report}
+        />
+      )}
       {tab === '활동' && (
         <ActivityScreen
           activities={activities}
@@ -349,9 +421,9 @@ export function App() {
         />
       )}
 
-      {/* INV-UI-02 — 화면 계층은 2단계를 넘지 않는다 */}
+      {/* INV-UI-02 — 화면 계층은 2단계를 넘지 않는다. 일상 3탭 + 관리(⚙) 강등 (①②) */}
       <nav className="tabs" aria-label="화면 전환">
-        {(['오늘', '영역', '활동'] as const).map((t) => (
+        {(['오늘', '영역', '기록'] as const).map((t) => (
           <button
             key={t}
             type="button"
@@ -362,6 +434,16 @@ export function App() {
             {t}
           </button>
         ))}
+        {/* 관리(활동·학원 등록)는 설정 성격 — 매일 쓰는 탭에서 빼서 복잡도를 낮춘다 */}
+        <button
+          type="button"
+          className="tabs__btn tabs__btn--manage"
+          aria-pressed={tab === '활동'}
+          onClick={() => setTab('활동')}
+        >
+          <span aria-hidden="true">⚙</span>
+          <span className="tabs__manage-label">관리</span>
+        </button>
       </nav>
     </>
   )

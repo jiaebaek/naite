@@ -617,6 +617,23 @@ body {
   box-shadow: inset 0 2px 0 var(--text);
 }
 
+/* 관리(⚙) — 일상 3탭에서 강등. 아이콘+작은 라벨로 가볍게 (①②) */
+.tabs__btn--manage {
+  flex: 0 0 auto;
+  padding: 0 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  font-size: 18px;
+  border-left: 1px solid var(--border);
+}
+
+.tabs__manage-label {
+  font-size: 10px;
+}
+
 /* 목표 행 — 상태 배지 + 출처 + 연결활동. '됨'은 성취 확인 모드에서만 (INV-UI-38/39개정) */
 .target__top {
   display: flex;
@@ -924,3 +941,205 @@ body {
 .acad__hw li { font-size: 13px; padding: 3px 0; display: flex; gap: 6px; align-items: center; }
 .acad__hwnature { font-size: 10px; color: var(--text-muted); border: 1px solid var(--border); border-radius: 999px; padding: 0 6px; }
 .acad__none-hw { font-size: 12px; color: var(--text-faint); }
+
+/* ─────────────────────────────────────────────────────
+   기록 화면 (F4). docs/08-UI계약.md §6
+   ───────────────────────────────────────────────────── */
+.log__lede {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 4px 0 4px;
+}
+
+.log__sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.log__section {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  margin: 24px 0 10px;
+}
+
+/* 주간 스트립 — 지난 날 선택 (⑦) */
+.week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  margin: 0 0 16px;
+}
+
+.week__day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0 7px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.week__day:hover {
+  background: var(--surface);
+}
+
+.week__day[data-selected='true'] {
+  border-color: var(--ok);
+  background: var(--ok-bg);
+}
+
+.week__day[data-future='true'] {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.week__dow {
+  font-size: 10.5px;
+  color: var(--text-faint);
+}
+
+.week__day[data-today='true'] .week__num {
+  color: var(--ok-strong);
+  font-weight: 700;
+}
+
+.week__num {
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.week__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.week__dot[data-has='true'] {
+  background: var(--ok);
+}
+
+/* 선택한 날 기록 */
+.logday {
+  margin: 0 0 8px;
+}
+
+.logday__title {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 3px;
+}
+
+.logday__hint {
+  font-size: 12px;
+  color: var(--text-faint);
+  margin: 0 0 10px;
+}
+
+.logday__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.logrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--tap-min);
+  border-top: 1px solid var(--border);
+}
+
+.logrow:first-child {
+  border-top: none;
+}
+
+.logrow__check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 auto;
+  cursor: pointer;
+}
+
+.logrow__name[data-done='true'] {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.logrow__domain {
+  font-size: 11px;
+  color: var(--text-faint);
+  flex: 0 0 auto;
+}
+
+/* 주간 리포트 (⑧) — 한 것을 센다, 긍정 프레이밍 */
+.report {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.report__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 0;
+  border-top: 1px solid var(--border);
+}
+
+.report__row:first-child {
+  border-top: none;
+}
+
+.report__main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.report__name {
+  font-size: 14px;
+}
+
+.report__domain {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.report__stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.report__done {
+  font-size: 13px;
+  color: var(--ok-strong);
+  font-weight: 600;
+}
+
+.report__none {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.report__streak {
+  font-size: 12px;
+  color: var(--warn-strong);
+  background: var(--warn-bg);
+  border-radius: 999px;
+  padding: 2px 8px;
+}

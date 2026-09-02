@@ -30,7 +30,7 @@ export function weekdayOf(date: IsoDate): Weekday {
  * 그 날짜가 속한 주의 범위 (월~일, 양끝 포함).
  * INV-TASK-09 — 주간은 월요일에 시작한다 (한국 관습).
  */
-function weekRangeOf(date: IsoDate): { from: IsoDate; to: IsoDate } {
+export function weekRangeOf(date: IsoDate): { from: IsoDate; to: IsoDate } {
   const [y, m, d] = date.split('-').map(Number)
   const dt = new Date(Date.UTC(y ?? 0, (m ?? 1) - 1, d ?? 1))
   const dow = dt.getUTCDay() // 0=일
