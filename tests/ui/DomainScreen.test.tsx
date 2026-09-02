@@ -46,7 +46,13 @@ const 자체기준: Standard = {
   origin: '자체',
 }
 
-const tgt = (s: Standard, achieved = false): DomainTarget => ({ standard: s, achieved })
+const tgt = (s: Standard, over: Partial<DomainTarget> = {}): DomainTarget => ({
+  standard: s,
+  status: '아직',
+  provenance: { kind: '공교육', doc: '성취기준' },
+  activities: [],
+  ...over,
+})
 
 const opts = (
   current: OffsetMonths,
@@ -72,12 +78,12 @@ const card = (over: Partial<DomainCard> & Pick<DomainCard, 'domain' | 'coverage'
 })
 
 const CARDS: readonly DomainCard[] = [
-  card({ domain: '국어', coverage: '하는중', targets: [tgt(해석기준)], offsetOptions: opts(12, null), activityCount: 1 }),
+  card({ domain: '국어', coverage: '하는중', targets: [tgt(해석기준, { status: '챙기는중', activities: ['한글 학원 숙제'] })], offsetOptions: opts(12, null), activityCount: 1 }),
   card({ domain: '수학', coverage: '하는중', offsetOptions: opts(12, null), activityCount: 3 }),
   card({ domain: '과학·탐구', coverage: '비어있음', targets: [tgt(해석기준)] }),
-  card({ domain: '영어', coverage: '기준밖', offsetApplicable: false, targets: [tgt(자체기준)], activityCount: 2 }),
+  card({ domain: '영어', coverage: '기준밖', offsetApplicable: false, targets: [tgt(자체기준, { provenance: { kind: '자체' } })], activityCount: 2 }),
   card({ domain: '사회·인성', coverage: '연결필요', targets: [tgt(해석기준)], activityCount: 1 }),
-  card({ domain: '예체능', coverage: '하는중', targets: [tgt(해석기준)], activityCount: 2 }),
+  card({ domain: '예체능', coverage: '하는중', targets: [tgt(해석기준, { status: '챙기는중', activities: ['유아체육 등원'] })], activityCount: 2 }),
   card({ domain: '건강·안전', coverage: '아직아님' }),
 ]
 
@@ -209,14 +215,8 @@ describe('⭐ INV-UI-37 — 잠긴 오프셋은 왜 잠겼는지 보여준다', 
   })
 })
 
-describe('⭐ INV-UI-38 / 39 — 목표 달성 토글', () => {
-  it('각 목표에 "됨" 토글이 있다', () => {
-    setup()
-    const 국어 = screen.getByTestId('domain-국어')
-    expect(within(국어).getByRole('checkbox', { name: /됨/ })).toBeInTheDocument()
-  })
-
-  it('⭐ 능력 서술이다 — "달성/미달성"·점수·퍼센트가 없다', () => {
+describe('⭐ INV-UI-38 — 능력 서술("됨"). 점수·달성/미달성 금지 (C-6)', () => {
+  it('⭐ "달성/미달성"·점수·퍼센트·N/N 이 없다', () => {
     const { container } = setup()
     const text = container.textContent ?? ''
     expect(text).not.toContain('달성')
@@ -225,18 +225,77 @@ describe('⭐ INV-UI-38 / 39 — 목표 달성 토글', () => {
     expect(text).not.toMatch(/\d+\s*\/\s*\d+/)
   })
 
-  it('탭 1회로 토글된다 — 다이얼로그 없음', async () => {
+  it('상태가 배지·data 속성으로 노출된다', () => {
+    const 됨카드 = [card({ domain: '국어', coverage: '하는중', targets: [tgt(해석기준, { status: '됨' })] })]
+    setup(됨카드)
+    const row = screen.getByTestId('국어-target-int-ko-read')
+    expect(row).toHaveAttribute('data-status', '됨')
+    expect(within(row).getByText('됨')).toBeInTheDocument()
+  })
+})
+
+describe('⭐ INV-UI-39(개정) / ⑥ — "됨"은 성취 확인 모드에서만 바꾼다', () => {
+  it('⭐ 브라우즈 중에는 토글 컨트롤이 없다 (실수 방지)', () => {
+    setup()
+    const 국어 = screen.getByTestId('domain-국어')
+    expect(within(국어).queryByRole('checkbox')).not.toBeInTheDocument()
+    expect(within(국어).queryByRole('button', { name: /됨으로 표시|됨 취소/ })).not.toBeInTheDocument()
+  })
+
+  it('⭐ "성취 확인"을 눌러야 표시 버튼이 나오고, 눌러도 다이얼로그는 없다', async () => {
     const { onToggleAchieved } = setup()
     const 국어 = screen.getByTestId('domain-국어')
-    await userEvent.click(within(국어).getByRole('checkbox', { name: /됨/ }))
+    await userEvent.click(within(국어).getByRole('button', { name: /성취 확인/ }))
+    await userEvent.click(within(국어).getByRole('button', { name: /됨으로 표시/ }))
     expect(onToggleAchieved).toHaveBeenCalledWith('int-ko-read')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('달성 상태가 data 속성으로 노출된다', () => {
-    const 달성됨 = [card({ domain: '국어', coverage: '하는중', targets: [tgt(해석기준, true)] })]
-    setup(달성됨)
-    expect(screen.getByTestId('국어-target-int-ko-read')).toHaveAttribute('data-achieved', 'true')
+  it('되돌릴 수 있음을 안내한다 (선행 잠금 영향 고지)', async () => {
+    setup()
+    const 국어 = screen.getByTestId('domain-국어')
+    await userEvent.click(within(국어).getByRole('button', { name: /성취 확인/ }))
+    expect(within(국어).getByText(/되돌릴 수 있고|선행 잠금/)).toBeInTheDocument()
+  })
+})
+
+describe('⭐ ⑤ 커버리지 세그먼트·집계 — 점수 아님', () => {
+  it('진행바(progressbar) 역할을 쓰지 않는다', () => {
+    setup()
+    expect(screen.queryAllByRole('progressbar')).toHaveLength(0)
+  })
+
+  it('목표 상태 집계 문구가 보인다 (점수·퍼센트 아님)', () => {
+    setup()
+    const 국어 = screen.getByTestId('domain-국어')
+    expect(within(국어).getByText(/지금 목표 1/)).toBeInTheDocument()
+    expect(within(국어).getByText(/챙기는 중 1/)).toBeInTheDocument()
+  })
+})
+
+describe('⭐ ③④ 목표별 출처·연결활동', () => {
+  it('공교육 출처 배지가 목표에 붙는다', () => {
+    setup()
+    const row = screen.getByTestId('국어-target-int-ko-read')
+    expect(within(row).getByText('공교육·성취기준')).toBeInTheDocument()
+  })
+
+  it('자체 목표는 "자체 목표" 로 (공교육처럼 보이지 않게, INV-UI-16)', () => {
+    setup()
+    const row = screen.getByTestId('영어-target-own-en')
+    expect(within(row).getByText('자체 목표')).toBeInTheDocument()
+  })
+
+  it('겨냥하는 활동 이름이 목표 아래 보인다', () => {
+    setup()
+    const row = screen.getByTestId('국어-target-int-ko-read')
+    expect(within(row).getByText('한글 학원 숙제')).toBeInTheDocument()
+  })
+
+  it('겨냥 활동이 없는 목표는 "연결된 활동 없음"', () => {
+    setup()
+    const row = screen.getByTestId('과학·탐구-target-int-ko-read')
+    expect(within(row).getByText(/연결된 활동 없음/)).toBeInTheDocument()
   })
 })
 

@@ -6,7 +6,27 @@
 
 import { requireKnownDomain } from './guards'
 import { DOMAINS } from './types'
-import type { Activity, Coverage, Domain, Standard } from './types'
+import type { Activity, Coverage, Domain, Standard, StandardId } from './types'
+
+/** 한 목표의 상태 (현황 세그먼트·배지용). 점수가 아니라 상태다. */
+export type GoalStatus = '됨' | '챙기는중' | '아직'
+
+/**
+ * 한 목표가 지금 어떤 상태인지. 커버리지와 같은 원칙(INV-COV-05) —
+ * 수행 이력(Completion)이 아니라 "됐다고 표시했는가 / 겨냥하는 활동이 있는가"로 본다.
+ *   됨       — 부모가 '됨'으로 표시한 durable achievement
+ *   챙기는중 — 됨은 아니지만 활성 활동이 이 목표를 겨냥한다
+ *   아직     — 둘 다 아니다. 아직 시기일 뿐 빠뜨린 게 아니다 (C-6)
+ */
+export function goalStatusOf(
+  standardId: StandardId,
+  achieved: readonly StandardId[],
+  activities: readonly Activity[],
+): GoalStatus {
+  if (achieved.includes(standardId)) return '됨'
+  const covered = activities.some((a) => a.active && a.targetIds.includes(standardId))
+  return covered ? '챙기는중' : '아직'
+}
 
 /**
  * INV-COV-01 결과는 항상 4값 중 하나

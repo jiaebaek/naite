@@ -9,20 +9,26 @@
  *    선행 잠금은 offsetGate() 가 이미 정했다. 여기서는 그 결과를 표현만 한다.
  */
 
+import { useState } from 'react'
 import type {
   Coverage,
   Domain,
   OffsetMonths,
   OffsetWarning,
+  Provenance,
   Standard,
   StandardId,
 } from '../../domain/types'
+import type { GoalStatus } from '../../domain/coverage'
+import { provenanceLabel } from './labels'
 
-/** 목표 + 달성 상태 */
+/** 목표 + 상태(됨/챙기는중/아직) + 출처 + 겨냥하는 활동. 상태·출처는 도메인이 판정. */
 export interface DomainTarget {
   readonly standard: Standard
-  /** 부모가 "우리 아이 이거 돼요" 로 표시했는가 (Achievement) */
-  readonly achieved: boolean
+  readonly status: GoalStatus
+  readonly provenance: Provenance
+  /** 이 목표를 겨냥하는 활성 활동 이름 (피드백 ③) */
+  readonly activities: readonly string[]
 }
 
 /** 오프셋 선택지 (게이트 반영) */
@@ -70,6 +76,13 @@ const COVERAGE_VIEW: Record<
   아직아님: { tone: 'faint', note: '아직 시기가 아니에요', action: null },
 }
 
+/** 상태 라벨. 배지·집계에 같은 말을 쓴다. */
+const STATUS_LABEL: Record<GoalStatus, string> = {
+  됨: '됨',
+  챙기는중: '챙기는 중',
+  아직: '아직',
+}
+
 export function DomainScreen({
   cards,
   onOffsetChange,
@@ -105,6 +118,13 @@ function DomainCardView({
   warning: OffsetWarning | null
 }) {
   const view = COVERAGE_VIEW[card.coverage]
+  // ⑥ — '됨' 은 신중한 선언(선행 잠금에 영향). 브라우즈 중엔 못 바꾸고 이 모드에서만.
+  const [editing, setEditing] = useState(false)
+
+  const total = card.targets.length
+  const done = card.targets.filter((t) => t.status === '됨').length
+  const doing = card.targets.filter((t) => t.status === '챙기는중').length
+  const yet = card.targets.filter((t) => t.status === '아직').length
 
   return (
     <section
@@ -124,17 +144,51 @@ function DomainCardView({
 
       <p className="dcard__note">{view.note}</p>
 
-      {card.targets.length > 0 && (
-        <ul className="dcard__targets">
-          {card.targets.map((t) => (
-            <TargetRow
-              key={t.standard.id}
-              domain={card.domain}
-              target={t}
-              onToggleAchieved={onToggleAchieved}
-            />
-          ))}
-        </ul>
+      {total > 0 && (
+        <>
+          {/*
+            ⑤ — 커버리지를 한눈에. INV-UI-22 — 점수·퍼센트·진행바가 아니다.
+            목표별 상태를 색으로 나눈 장식이라 aria-hidden. 개수는 아래 글자가 준다.
+          */}
+          <div className="segbar" aria-hidden="true">
+            {card.targets.map((t) => (
+              <span key={t.standard.id} className="seg" data-status={t.status} />
+            ))}
+          </div>
+          <p className="dcard__breakdown">
+            지금 목표 {total}
+            {done > 0 && <> · 됨 {done}</>}
+            {doing > 0 && <> · 챙기는 중 {doing}</>}
+            {yet > 0 && <> · 아직 {yet}</>}
+          </p>
+
+          <div className="dcard__targets-head">
+            <span className="dcard__targets-label">지금 시기 목표</span>
+            <button
+              type="button"
+              className="dcard__achieve"
+              aria-pressed={editing}
+              onClick={() => setEditing((v) => !v)}
+            >
+              {editing ? '완료' : '성취 확인'}
+            </button>
+          </div>
+          {editing && (
+            <p className="dcard__achieve-hint">‘됨’은 되돌릴 수 있고, 선행 잠금에 영향을 줘요.</p>
+          )}
+
+          <ul className="dcard__targets">
+            {card.targets.map((t) => (
+              <TargetRow
+                key={t.standard.id}
+                domain={card.domain}
+                target={t}
+                editing={editing}
+                onToggleAchieved={onToggleAchieved}
+              />
+            ))}
+          </ul>
+        </>
       )}
 
       <div className="dcard__foot">
@@ -208,44 +262,68 @@ function OffsetButton({
 function TargetRow({
   domain,
   target,
+  editing,
   onToggleAchieved,
 }: {
   domain: Domain
   target: DomainTarget
+  editing: boolean
   onToggleAchieved: (standardId: StandardId) => void
 }) {
   const s = target.standard
+  const isDone = target.status === '됨'
   return (
     <li
       className="target"
       data-testid={`${domain}-target-${s.id}`}
       data-origin={s.origin}
-      data-achieved={String(target.achieved)}
+      data-status={target.status}
     >
-      <div className="target__main">
+      <div className="target__top">
         <span className="target__text">{s.statement}</span>
-        <span className="target__meta">
-          {/*
-            INV-UI-16 — `자체` 를 `공교육` 처럼 보이게 하지 않는다.
-            우리 판단이 국가 기준으로 둔갑하면 P-3 를 앱 안에서 재생산한다.
-          */}
-          <span className={`origin origin--${s.origin}`}>{s.origin}</span>
-          {s.source?.code && <span className="target__code">{s.source.code}</span>}
+        {/* INV-UI-38 — 능력 서술("됨")·상태로. "달성/미달성"·점수 금지 (C-6) */}
+        <span className="gbadge" data-status={target.status}>
+          {STATUS_LABEL[target.status]}
         </span>
       </div>
 
       {/*
-        INV-UI-38 — 능력 서술("됨")로. "달성/미달성"·점수 금지 (C-6).
-        INV-UI-39 — 탭 1회. 확인 다이얼로그 없음.
+        출처 + 겨냥하는 활동 (피드백 ③④).
+        INV-UI-16 — `자체` 를 `공교육` 처럼 보이게 하지 않는다. provenanceLabel 이 구분한다.
       */}
-      <label className="target__done">
-        <input
-          type="checkbox"
-          checked={target.achieved}
-          onChange={() => onToggleAchieved(s.id)}
-        />
-        <span>됨</span>
-      </label>
+      <div className="target__via">
+        <span className="prov">{provenanceLabel(target.provenance)}</span>
+        {target.activities.length > 0 ? (
+          <>
+            <span className="target__dot" aria-hidden="true">·</span>
+            {target.activities.map((name) => (
+              <span key={name} className="target__act">{name}</span>
+            ))}
+          </>
+        ) : (
+          !isDone && (
+            <>
+              <span className="target__dot" aria-hidden="true">·</span>
+              <span className="target__actnone">연결된 활동 없음</span>
+            </>
+          )
+        )}
+      </div>
+
+      {/*
+        ⑥ — '됨' 은 성취 확인 모드에서만 바꾼다. 브라우즈 중 실수 토글을 막는다.
+        INV-UI-39(개정) — 일상 완료(오늘)와 달리, 되돌릴 수 있는 신중한 선언이다.
+      */}
+      {editing && (
+        <button
+          type="button"
+          className="target__mark"
+          data-done={String(isDone)}
+          onClick={() => onToggleAchieved(s.id)}
+        >
+          {isDone ? '됨 취소' : '됨으로 표시'}
+        </button>
+      )}
     </li>
   )
 }

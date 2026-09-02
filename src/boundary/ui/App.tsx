@@ -9,7 +9,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { deriveTodayTasks } from '../../domain/today'
 import { findCompletion, toggleCompletion } from '../../domain/completion'
 import { assessOffsetRaise, currentTargets, effectiveOffset } from '../../domain/pace'
-import { evaluateCoverage } from '../../domain/coverage'
+import { evaluateCoverage, goalStatusOf } from '../../domain/coverage'
+import { provenanceOf } from '../../domain/provenance'
 import { offsetGate } from '../../domain/gate'
 import { createActivity, deactivate, rename, reschedule, retarget, setOwner } from '../../domain/activity'
 import {
@@ -172,7 +173,6 @@ export function App() {
   const cards: readonly DomainCard[] = useMemo(() => {
     const nowYm = date.slice(0, 7)
     const targets = currentTargets(STANDARDS_2021, offsets, nowYm)
-    const achievedSet = new Set(achieved)
 
     // INV-ACAD-06 — 등원용 영역 합성 활동을 커버리지 계산에만 합친다.
     // (오늘 화면 tasks 에는 넣지 않는다 — 등원은 체크 대상이 아니다)
@@ -204,7 +204,13 @@ export function App() {
         offsetApplicable: !NO_PUBLIC_STANDARD.includes(domain),
         targets: domainTargets.map((standard) => ({
           standard,
-          achieved: achievedSet.has(standard.id),
+          // INV-UI-00 — 상태·출처는 도메인이 판정한다. UI 는 표현만.
+          status: goalStatusOf(standard.id, achieved, coverageActivities),
+          provenance: provenanceOf(standard, STANDARDS_2021),
+          // 이 목표를 겨냥하는 활성 활동 이름 (등원 합성 포함). 피드백 ③
+          activities: coverageActivities
+            .filter((a) => a.active && a.targetIds.includes(standard.id))
+            .map((a) => a.name),
         })),
         offsetOptions,
         activityCount: activeActivities.filter((a) => a.domain === domain).length,

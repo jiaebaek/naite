@@ -9,13 +9,8 @@
 import { useState } from 'react'
 import { shouldWarnOnMiss } from '../../domain/nature'
 import { DOMAINS } from '../../domain/types'
-import type { ActivityId, Domain, IsoDate, Provenance, Task } from '../../domain/types'
-
-/** 출처를 사람 말 라벨로. UI 는 판단하지 않고 도메인 값을 옮길 뿐이다 (INV-UI-00). */
-function provenanceLabel(p: Provenance): string {
-  if (p.kind === '자체') return '자체 목표'
-  return p.doc === '누리과정' ? '공교육·누리과정' : '공교육·성취기준'
-}
+import type { ActivityId, Domain, IsoDate, Task } from '../../domain/types'
+import { provenanceLabel } from './labels'
 
 export interface TodayScreenProps {
   readonly date: IsoDate

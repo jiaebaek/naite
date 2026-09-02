@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { evaluateCoverage, evaluateAllCoverage } from '../../src/domain/coverage'
+import { evaluateCoverage, evaluateAllCoverage, goalStatusOf } from '../../src/domain/coverage'
 import { currentTargets } from '../../src/domain/pace'
 import { isDomainError } from '../../src/domain/errors'
 import { STANDARDS_2021, INITIAL_OFFSETS } from '../../src/domain/standards/child2021'
@@ -260,5 +260,37 @@ describe('⭐ P-6 실증 — 현재 우리 집 상태를 판정한다', () => {
   it('활동이 있는 네 영역은 모두 적기이다', () => {
     const ok = [...coverage()].filter(([, c]) => c === '하는중').map(([d]) => d)
     expect(ok.sort()).toEqual(['국어', '수학', '영어', '예체능'].sort())
+  })
+})
+
+describe('⭐ goalStatusOf — 목표별 상태 (됨/챙기는중/아직). 현황 세그먼트용', () => {
+  const 목표 = 목표A // int-like, id 'target-a'
+  const 겨냥활동 = act({ id: 'a1', domain: '국어', targetIds: ['target-a'] })
+
+  it('됨으로 표시했으면 됨', () => {
+    expect(goalStatusOf('target-a', ['target-a'], [])).toBe('됨')
+  })
+
+  it('활성 활동이 겨냥하면 챙기는중', () => {
+    expect(goalStatusOf('target-a', [], [겨냥활동])).toBe('챙기는중')
+  })
+
+  it('아무것도 없으면 아직', () => {
+    expect(goalStatusOf('target-a', [], [])).toBe('아직')
+  })
+
+  it('⭐ 됨이 챙기는중보다 우선한다', () => {
+    expect(goalStatusOf('target-a', ['target-a'], [겨냥활동])).toBe('됨')
+  })
+
+  it('비활성 활동이 겨냥해도 챙기는중이 아니다 (아직)', () => {
+    const 꺼진활동 = act({ id: 'a2', domain: '국어', targetIds: ['target-a'], active: false })
+    expect(goalStatusOf('target-a', [], [꺼진활동])).toBe('아직')
+    void 목표
+  })
+
+  it('다른 목표를 겨냥하는 활동은 이 목표를 챙기지 않는다', () => {
+    const 딴목표활동 = act({ id: 'a3', domain: '국어', targetIds: ['other'] })
+    expect(goalStatusOf('target-a', [], [딴목표활동])).toBe('아직')
   })
 })
