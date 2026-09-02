@@ -603,35 +603,39 @@ body {
 
 .tabs__btn {
   flex: 1 1 0;
-  min-height: 56px;
+  min-height: 58px;
   border: 0;
   background: transparent;
-  font-size: 14px;
   color: var(--text-muted);
   cursor: pointer;
-}
-
-.tabs__btn[aria-pressed='true'] {
-  color: var(--text);
-  font-weight: 700;
-  box-shadow: inset 0 2px 0 var(--text);
-}
-
-/* 관리(⚙) — 일상 3탭에서 강등. 아이콘+작은 라벨로 가볍게 (①②) */
-.tabs__btn--manage {
-  flex: 0 0 auto;
-  padding: 0 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
-  font-size: 18px;
-  border-left: 1px solid var(--border);
+  gap: 3px;
 }
 
-.tabs__manage-label {
-  font-size: 10px;
+.tabs__icon {
+  font-size: 19px;
+  line-height: 1;
+  filter: grayscale(1) opacity(0.5);
+}
+
+.tabs__label {
+  font-size: 11px;
+}
+
+.tabs__btn[aria-pressed='true'] {
+  color: var(--text);
+  box-shadow: inset 0 2px 0 var(--text);
+}
+
+.tabs__btn[aria-pressed='true'] .tabs__icon {
+  filter: none;
+}
+
+.tabs__btn[aria-pressed='true'] .tabs__label {
+  font-weight: 700;
 }
 
 /* 목표 행 — 상태 배지 + 출처 + 연결활동. '됨'은 성취 확인 모드에서만 (INV-UI-38/39개정) */
@@ -1142,4 +1146,134 @@ body {
   background: var(--warn-bg);
   border-radius: 999px;
   padding: 2px 8px;
+}
+
+/* ─────────────────────────────────────────────────────
+   상단 브랜드바 (프로토타입 셸). 나이테 + 관리(⚙)
+   ───────────────────────────────────────────────────── */
+.appbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 11px 16px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.appbar__brand {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.appbar__ring {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: radial-gradient(circle,
+    transparent 0 2px, var(--ok) 2px 3px,
+    transparent 3px 4.5px, var(--ok) 4.5px 5.5px,
+    transparent 5.5px 7px, var(--ok) 7px 8px, transparent 8px);
+  opacity: 0.9;
+}
+
+.appbar__gear {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 32px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  border-radius: 9px;
+  font-size: 15px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.appbar__gear[aria-pressed='true'] {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+
+/* ─────────────────────────────────────────────────────
+   영역 카드 접기 (프로토타입) — 눌러야 자세히
+   ───────────────────────────────────────────────────── */
+.dcard__toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+}
+
+.dcard__chev {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.dcard__detail {
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+
+/* ─────────────────────────────────────────────────────
+   기록 리포트 — 막대 그래프 (프로토타입). 빈도지 점수 아님 (C-6)
+   ───────────────────────────────────────────────────── */
+.report__row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 7px;
+}
+
+.report__head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.report__done {
+  margin-left: auto;
+}
+
+.report__none {
+  margin-left: auto;
+}
+
+.report__bar {
+  height: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.report__bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--ok);
+  border-radius: 999px;
+  min-width: 3px;
+}
+
+.report__bar-fill[data-empty='true'] {
+  background: transparent;
+  min-width: 0;
 }

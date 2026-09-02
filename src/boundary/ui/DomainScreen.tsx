@@ -118,6 +118,8 @@ function DomainCardView({
   warning: OffsetWarning | null
 }) {
   const view = COVERAGE_VIEW[card.coverage]
+  // 접기 — 기본은 접힘. 눌러야 자세한 목표·오프셋이 나온다 (프로토타입).
+  const [expanded, setExpanded] = useState(false)
   // ⑥ — '됨' 은 신중한 선언(선행 잠금에 영향). 브라우즈 중엔 못 바꾸고 이 모드에서만.
   const [editing, setEditing] = useState(false)
 
@@ -132,22 +134,30 @@ function DomainCardView({
       data-testid={`domain-${card.domain}`}
       data-coverage={card.coverage}
       data-tone={view.tone}
+      data-expanded={String(expanded)}
       aria-labelledby={`dh-${card.domain}`}
     >
-      <header className="dcard__head">
-        <h2 className="dcard__title" id={`dh-${card.domain}`}>
+      {/* 헤더 = 접기 토글. 눌러야 자세한 목표·오프셋이 나온다 */}
+      <button
+        type="button"
+        className="dcard__toggle"
+        aria-expanded={expanded}
+        onClick={() => setExpanded((v) => !v)}
+      >
+        <span className="dcard__title" id={`dh-${card.domain}`} role="heading" aria-level={2}>
           {card.domain}
-        </h2>
+        </span>
         {/* INV-UI-29 — 색만으로 정보를 전달하지 않는다 */}
         <span className="dcard__badge">{card.coverage}</span>
-      </header>
+        <span className="dcard__chev" aria-hidden="true">{expanded ? '접기' : '자세히'}</span>
+      </button>
 
       <p className="dcard__note">{view.note}</p>
 
       {total > 0 && (
         <>
           {/*
-            ⑤ — 커버리지를 한눈에. INV-UI-22 — 점수·퍼센트·진행바가 아니다.
+            ⑤ — 커버리지를 한눈에(접힌 상태에서도). INV-UI-22 — 점수·퍼센트·진행바가 아니다.
             목표별 상태를 색으로 나눈 장식이라 aria-hidden. 개수는 아래 글자가 준다.
           */}
           <div className="segbar" aria-hidden="true">
@@ -171,33 +181,6 @@ function DomainCardView({
           {gap > 0 && (
             <p className="dcard__gap">이 시기 목표 중 {gap}곳이 비어있어요 · 채우면 좋아요</p>
           )}
-
-          <div className="dcard__targets-head">
-            <span className="dcard__targets-label">지금 시기 목표</span>
-            <button
-              type="button"
-              className="dcard__achieve"
-              aria-pressed={editing}
-              onClick={() => setEditing((v) => !v)}
-            >
-              {editing ? '완료' : '성취 확인'}
-            </button>
-          </div>
-          {editing && (
-            <p className="dcard__achieve-hint">‘됨’은 되돌릴 수 있고, 선행 잠금에 영향을 줘요.</p>
-          )}
-
-          <ul className="dcard__targets">
-            {card.targets.map((t) => (
-              <TargetRow
-                key={t.standard.id}
-                domain={card.domain}
-                target={t}
-                editing={editing}
-                onToggleAchieved={onToggleAchieved}
-              />
-            ))}
-          </ul>
         </>
       )}
 
@@ -214,24 +197,60 @@ function DomainCardView({
         )}
       </div>
 
-      {/* INV-UI-17 — 오프셋 조정은 이 화면에서 직접. 설정 메뉴로 보내지 않는다 */}
-      {card.offsetApplicable ? (
-        <div className="offset" role="group" aria-label={`${card.domain} 선행 속도`}>
-          {card.offsetOptions.map((opt) => (
-            <OffsetButton
-              key={opt.months}
-              domain={card.domain}
-              opt={opt}
-              onOffsetChange={onOffsetChange}
-            />
-          ))}
-        </div>
-      ) : (
-        <p className="offset__na">공교육 기준이 없어 선행 개념이 성립하지 않습니다</p>
-      )}
+      {/* ── 자세히 (눌러야 나온다) ── */}
+      {expanded && (
+        <div className="dcard__detail">
+          {total > 0 && (
+            <>
+              <div className="dcard__targets-head">
+                <span className="dcard__targets-label">지금 시기 목표</span>
+                <button
+                  type="button"
+                  className="dcard__achieve"
+                  aria-pressed={editing}
+                  onClick={() => setEditing((v) => !v)}
+                >
+                  {editing ? '완료' : '성취 확인'}
+                </button>
+              </div>
+              {editing && (
+                <p className="dcard__achieve-hint">‘됨’은 되돌릴 수 있고, 선행 잠금에 영향을 줘요.</p>
+              )}
 
-      {/* INV-UI-18 — 상향 경고와 신호를 모두 노출. 건너뛰기 버튼은 두지 않는다 */}
-      {warning && <OffsetWarningBox warning={warning} />}
+              <ul className="dcard__targets">
+                {card.targets.map((t) => (
+                  <TargetRow
+                    key={t.standard.id}
+                    domain={card.domain}
+                    target={t}
+                    editing={editing}
+                    onToggleAchieved={onToggleAchieved}
+                  />
+                ))}
+              </ul>
+            </>
+          )}
+
+          {/* INV-UI-17 — 오프셋 조정은 이 화면에서 직접. 설정 메뉴로 보내지 않는다 */}
+          {card.offsetApplicable ? (
+            <div className="offset" role="group" aria-label={`${card.domain} 선행 속도`}>
+              {card.offsetOptions.map((opt) => (
+                <OffsetButton
+                  key={opt.months}
+                  domain={card.domain}
+                  opt={opt}
+                  onOffsetChange={onOffsetChange}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="offset__na">공교육 기준이 없어 선행 개념이 성립하지 않습니다</p>
+          )}
+
+          {/* INV-UI-18 — 상향 경고와 신호를 모두 노출. 건너뛰기 버튼은 두지 않는다 */}
+          {warning && <OffsetWarningBox warning={warning} />}
+        </div>
+      )}
     </section>
   )
 }

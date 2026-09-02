@@ -104,11 +104,9 @@ export function LogScreen({
         <ul className="report">
           {report.map((r) => (
             <li key={r.activityId} className="report__row" data-testid={`report-${r.activityId}`}>
-              <div className="report__main">
+              <div className="report__head">
                 <span className="report__name">{r.name}</span>
                 <span className="report__domain">{r.domain}</span>
-              </div>
-              <div className="report__stat">
                 {r.done > 0 ? (
                   <span className="report__done">이번 주 {r.done}일</span>
                 ) : (
@@ -117,6 +115,14 @@ export function LogScreen({
                 {r.streak !== undefined && r.streak > 0 && (
                   <span className="report__streak">🔥 {r.streak}일째</span>
                 )}
+              </div>
+              {/* 막대 그래프 — 이번 주 '한 날' 빈도(요일 7칸 기준). 점수·목표대비 아님 (C-6) */}
+              <div className="report__bar" aria-hidden="true">
+                <span
+                  className="report__bar-fill"
+                  data-empty={String(r.done === 0)}
+                  style={{ width: `${Math.min(r.done / 7, 1) * 100}%` }}
+                />
               </div>
             </li>
           ))}

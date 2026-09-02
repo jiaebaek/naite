@@ -372,6 +372,23 @@ export function App() {
 
   return (
     <>
+      {/* 상단 브랜드바 — 나이테 + 관리(⚙, 우측). 프로토타입 셸 */}
+      <header className="appbar">
+        <span className="appbar__brand">
+          <span className="appbar__ring" aria-hidden="true" />
+          나이테
+        </span>
+        <button
+          type="button"
+          className="appbar__gear"
+          aria-label="관리"
+          aria-pressed={tab === '활동'}
+          onClick={() => setTab(tab === '활동' ? '오늘' : '활동')}
+        >
+          ⚙
+        </button>
+      </header>
+
       {tab === '오늘' && (
         <TodayScreen
           date={date}
@@ -421,29 +438,24 @@ export function App() {
         />
       )}
 
-      {/* INV-UI-02 — 화면 계층은 2단계를 넘지 않는다. 일상 3탭 + 관리(⚙) 강등 (①②) */}
+      {/* INV-UI-02 — 일상 3탭(아이콘). 관리는 상단 ⚙로 강등 (①②) */}
       <nav className="tabs" aria-label="화면 전환">
-        {(['오늘', '영역', '기록'] as const).map((t) => (
+        {([
+          { id: '오늘', icon: '🌱' },
+          { id: '영역', icon: '🧭' },
+          { id: '기록', icon: '📖' },
+        ] as const).map(({ id, icon }) => (
           <button
-            key={t}
+            key={id}
             type="button"
             className="tabs__btn"
-            aria-pressed={tab === t}
-            onClick={() => setTab(t)}
+            aria-pressed={tab === id}
+            onClick={() => setTab(id)}
           >
-            {t}
+            <span className="tabs__icon" aria-hidden="true">{icon}</span>
+            <span className="tabs__label">{id}</span>
           </button>
         ))}
-        {/* 관리(활동·학원 등록)는 설정 성격 — 매일 쓰는 탭에서 빼서 복잡도를 낮춘다 */}
-        <button
-          type="button"
-          className="tabs__btn tabs__btn--manage"
-          aria-pressed={tab === '활동'}
-          onClick={() => setTab('활동')}
-        >
-          <span aria-hidden="true">⚙</span>
-          <span className="tabs__manage-label">관리</span>
-        </button>
       </nav>
     </>
   )
