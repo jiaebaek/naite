@@ -48,7 +48,7 @@ const 자체기준: Standard = {
 
 const tgt = (s: Standard, over: Partial<DomainTarget> = {}): DomainTarget => ({
   standard: s,
-  status: '아직',
+  status: '활동필요',
   provenance: { kind: '공교육', doc: '성취기준' },
   activities: [],
   ...over,
@@ -270,6 +270,20 @@ describe('⭐ ⑤ 커버리지 세그먼트·집계 — 점수 아님', () => {
     const 국어 = screen.getByTestId('domain-국어')
     expect(within(국어).getByText(/지금 목표 1/)).toBeInTheDocument()
     expect(within(국어).getByText(/챙기는 중 1/)).toBeInTheDocument()
+  })
+
+  it('⭐ 핵심가치 — 활동 없는 목표는 "활동 필요"로 드러나고 갭 안내가 보인다', () => {
+    setup()
+    const c = screen.getByTestId('domain-과학·탐구') // 활동 없는 목표 1개
+    expect(within(c).getByText('활동 필요')).toBeInTheDocument()
+    expect(within(c).getByText(/비어있어요/)).toBeInTheDocument()
+  })
+
+  it('"아직" 이라는 애매한 라벨을 쓰지 않는다 (활동 필요로 대체)', () => {
+    const { container } = setup()
+    // 목표 상태 배지로 "아직" 단독 라벨이 남아있으면 안 된다
+    expect(container.querySelector('.gbadge')?.textContent).not.toBe('아직')
+    expect(within(screen.getByTestId('domain-과학·탐구')).queryByText('아직')).not.toBeInTheDocument()
   })
 })
 

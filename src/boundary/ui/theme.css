@@ -375,25 +375,47 @@ body {
   height: 8px;
   flex: 1 1 0;
   border-radius: 3px;
-  background: var(--yet-bg);
-  border: 1px solid var(--yet);
+  background: var(--surface);
+  border: 1px solid var(--border);
 }
 
-.seg[data-status='됨'] {
-  background: var(--done);
-  border-color: var(--done);
-}
-
+/* 챙기는 중·됨 = 초록(비었지 않음). 활동 필요(갭) = 앰버로 도드라지게 */
 .seg[data-status='챙기는중'] {
   background: var(--ok);
   border-color: var(--ok);
 }
 
+.seg[data-status='됨'] {
+  background: var(--ok-strong);
+  border-color: var(--ok-strong);
+}
+
+.seg[data-status='활동필요'] {
+  background: var(--warn);
+  border-color: var(--warn);
+}
+
 .dcard__breakdown {
   font-size: 13px;
   color: var(--text-muted);
-  margin: 0 0 12px;
+  margin: 0 0 10px;
   font-variant-numeric: tabular-nums;
+}
+
+.dcard__gapcount {
+  color: var(--warn-strong);
+  font-weight: 700;
+}
+
+/* 갭 안내 — 핵심 가치. 부드러운 주의(앰버), 빨강·죄책감 아님 (C-6) */
+.dcard__gap {
+  font-size: 13px;
+  color: var(--warn-strong);
+  background: var(--warn-bg);
+  border: 1px solid var(--warn);
+  border-radius: 8px;
+  padding: 7px 11px;
+  margin: 0 0 12px;
 }
 
 .dcard__targets-head {
@@ -615,20 +637,17 @@ body {
   flex: 0 0 auto;
 }
 
-.gbadge[data-status='됨'] {
-  color: var(--done);
-  background: var(--done-bg);
-}
-
+.gbadge[data-status='됨'],
 .gbadge[data-status='챙기는중'] {
   color: var(--ok-strong);
   background: var(--ok-bg);
 }
 
-.gbadge[data-status='아직'] {
-  color: var(--text-muted);
-  background: var(--surface);
-  border: 1px solid var(--border);
+/* 활동 필요(갭) — 앰버로 눈에 띄게. "여기 비었으니 챙기면 좋아요" */
+.gbadge[data-status='활동필요'] {
+  color: var(--warn-strong);
+  background: var(--warn-bg);
+  border: 1px solid var(--warn);
 }
 
 .target__via {

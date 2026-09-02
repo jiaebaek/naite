@@ -76,11 +76,11 @@ const COVERAGE_VIEW: Record<
   아직아님: { tone: 'faint', note: '아직 시기가 아니에요', action: null },
 }
 
-/** 상태 라벨. 배지·집계에 같은 말을 쓴다. */
+/** 상태 라벨. 배지에 쓴다. '활동 필요' = 나이 기준인데 안 챙기는 갭 (달성 전이 아니다). */
 const STATUS_LABEL: Record<GoalStatus, string> = {
   됨: '됨',
   챙기는중: '챙기는 중',
-  아직: '아직',
+  활동필요: '활동 필요',
 }
 
 export function DomainScreen({
@@ -124,7 +124,7 @@ function DomainCardView({
   const total = card.targets.length
   const done = card.targets.filter((t) => t.status === '됨').length
   const doing = card.targets.filter((t) => t.status === '챙기는중').length
-  const yet = card.targets.filter((t) => t.status === '아직').length
+  const gap = card.targets.filter((t) => t.status === '활동필요').length
 
   return (
     <section
@@ -157,10 +157,20 @@ function DomainCardView({
           </div>
           <p className="dcard__breakdown">
             지금 목표 {total}
-            {done > 0 && <> · 됨 {done}</>}
             {doing > 0 && <> · 챙기는 중 {doing}</>}
-            {yet > 0 && <> · 아직 {yet}</>}
+            {done > 0 && <> · 됨 {done}</>}
+            {gap > 0 && (
+              <>
+                {' · '}
+                <span className="dcard__gapcount">비어있는 곳 {gap}</span>
+              </>
+            )}
           </p>
+
+          {/* 핵심 가치 — 나이 기준인데 안 챙기는 갭을 분명히 (죄책감 아닌 부드러운 주의) */}
+          {gap > 0 && (
+            <p className="dcard__gap">이 시기 목표 중 {gap}곳이 비어있어요 · 채우면 좋아요</p>
+          )}
 
           <div className="dcard__targets-head">
             <span className="dcard__targets-label">지금 시기 목표</span>

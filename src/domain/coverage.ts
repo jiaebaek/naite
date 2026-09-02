@@ -9,14 +9,15 @@ import { DOMAINS } from './types'
 import type { Activity, Coverage, Domain, Standard, StandardId } from './types'
 
 /** 한 목표의 상태 (현황 세그먼트·배지용). 점수가 아니라 상태다. */
-export type GoalStatus = '됨' | '챙기는중' | '아직'
+export type GoalStatus = '됨' | '챙기는중' | '활동필요'
 
 /**
  * 한 목표가 지금 어떤 상태인지. 커버리지와 같은 원칙(INV-COV-05) —
  * 수행 이력(Completion)이 아니라 "됐다고 표시했는가 / 겨냥하는 활동이 있는가"로 본다.
  *   됨       — 부모가 '됨'으로 표시한 durable achievement
  *   챙기는중 — 됨은 아니지만 활성 활동이 이 목표를 겨냥한다
- *   아직     — 둘 다 아니다. 아직 시기일 뿐 빠뜨린 게 아니다 (C-6)
+ *   활동필요 — 됨도 아니고 겨냥하는 활동도 없다 = **갭**. 나이 기준인데 안 챙기고 있는 것.
+ *              이 앱의 존재 이유가 이걸 찾아 메우는 것이다 ("아직"이 아니라 챙길 거리).
  */
 export function goalStatusOf(
   standardId: StandardId,
@@ -25,7 +26,7 @@ export function goalStatusOf(
 ): GoalStatus {
   if (achieved.includes(standardId)) return '됨'
   const covered = activities.some((a) => a.active && a.targetIds.includes(standardId))
-  return covered ? '챙기는중' : '아직'
+  return covered ? '챙기는중' : '활동필요'
 }
 
 /**

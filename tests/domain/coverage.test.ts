@@ -276,7 +276,7 @@ describe('⭐ goalStatusOf — 목표별 상태 (됨/챙기는중/아직). 현�
   })
 
   it('아무것도 없으면 아직', () => {
-    expect(goalStatusOf('target-a', [], [])).toBe('아직')
+    expect(goalStatusOf('target-a', [], [])).toBe('활동필요')
   })
 
   it('⭐ 됨이 챙기는중보다 우선한다', () => {
@@ -285,12 +285,12 @@ describe('⭐ goalStatusOf — 목표별 상태 (됨/챙기는중/아직). 현�
 
   it('비활성 활동이 겨냥해도 챙기는중이 아니다 (아직)', () => {
     const 꺼진활동 = act({ id: 'a2', domain: '국어', targetIds: ['target-a'], active: false })
-    expect(goalStatusOf('target-a', [], [꺼진활동])).toBe('아직')
+    expect(goalStatusOf('target-a', [], [꺼진활동])).toBe('활동필요')
     void 목표
   })
 
   it('다른 목표를 겨냥하는 활동은 이 목표를 챙기지 않는다', () => {
     const 딴목표활동 = act({ id: 'a3', domain: '국어', targetIds: ['other'] })
-    expect(goalStatusOf('target-a', [], [딴목표활동])).toBe('아직')
+    expect(goalStatusOf('target-a', [], [딴목표활동])).toBe('활동필요')
   })
 })
