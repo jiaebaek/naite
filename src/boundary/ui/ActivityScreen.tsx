@@ -20,17 +20,34 @@ import type {
   Cadence,
   Domain,
   Owner,
+  Provenance,
   Standard,
   StandardId,
   Track,
   Weekday,
 } from '../../domain/types'
+import { provenanceLabel } from './labels'
+
+/** 성취 기록(관리 탭) — 한 영역의 지금 목표들과 '됨' 상태 */
+export interface AchievementGoal {
+  readonly standardId: StandardId
+  readonly statement: string
+  readonly provenance: Provenance
+  readonly done: boolean
+}
+export interface AchievementGroup {
+  readonly domain: Domain
+  readonly goals: readonly AchievementGoal[]
+}
 
 export interface ActivityScreenProps {
   readonly activities: readonly Activity[]
   readonly standards: readonly Standard[]
   /** 이미 달성한 목표 id. 겨냥 칩에서 제외한다 (INV-UI-25b) */
   readonly achieved: readonly StandardId[]
+  // ── 성취 기록 (아이 상태 관리) ──
+  readonly achievementGroups: readonly AchievementGroup[]
+  readonly onToggleAchieved: (standardId: StandardId) => void
   /** may throw DomainError — 화면이 잡아서 메시지를 보여준다 */
   readonly onCreate: (input: ActivityInput) => void
   readonly onDeactivate: (id: ActivityId) => void
@@ -96,6 +113,8 @@ export function ActivityScreen({
   activities,
   standards,
   achieved,
+  achievementGroups,
+  onToggleAchieved,
   onCreate,
   onDeactivate,
   onRetarget,
@@ -121,7 +140,17 @@ export function ActivityScreen({
 
   return (
     <main className="page">
-      <p className="page__date">활동 관리</p>
+      <p className="page__date">관리</p>
+
+      {/* ── 성취 기록 (아이 상태 관리) — '됨'은 여기서만 바꾼다 (⑥) ── */}
+      <h2 className="asection__title">성취 기록</h2>
+      <p className="asection__desc">
+        아이가 <b>할 수 있게 된 것</b>을 표시해요. 됨으로 표시하면 그 영역의 선행 잠금이 풀릴 수 있어요.
+        (영역 탭에서는 됨은 숨겨져 빈 곳만 보여요)
+      </p>
+      {achievementGroups.map((g) => (
+        <AchievementGroupView key={g.domain} group={g} onToggleAchieved={onToggleAchieved} />
+      ))}
 
       {/* ── 학원 ── */}
       <h2 className="asection__title">학원</h2>
@@ -167,6 +196,44 @@ export function ActivityScreen({
         </button>
       )}
     </main>
+  )
+}
+
+/** 한 영역의 성취 기록. '됨' 토글은 관리 탭에서만 (⑥ — 신중한 상태 변경). */
+function AchievementGroupView({
+  group,
+  onToggleAchieved,
+}: {
+  group: AchievementGroup
+  onToggleAchieved: (standardId: StandardId) => void
+}) {
+  return (
+    <section className="achgroup" data-testid={`ach-${group.domain}`}>
+      <h3 className="achgroup__domain">{group.domain}</h3>
+      <ul className="achgroup__list">
+        {group.goals.map((goal) => (
+          <li
+            key={goal.standardId}
+            className="achrow"
+            data-testid={`ach-goal-${goal.standardId}`}
+            data-done={String(goal.done)}
+          >
+            <div className="achrow__main">
+              <span className="achrow__text">{goal.statement}</span>
+              <span className="achrow__prov">{provenanceLabel(goal.provenance)}</span>
+            </div>
+            <button
+              type="button"
+              className="achrow__toggle"
+              aria-pressed={goal.done}
+              onClick={() => onToggleAchieved(goal.standardId)}
+            >
+              {goal.done ? '✓ 됨' : '됨으로'}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 

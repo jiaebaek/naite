@@ -267,6 +267,23 @@ export function App() {
     })
   }, [date, offsets, achieved, activeActivities, academies])
 
+  // 성취 기록(관리 탭) — 지금 목표를 영역별로, '됨' 상태와 함께. 목표 있는 영역만.
+  const achievementGroups = useMemo(
+    () =>
+      cards
+        .filter((c) => c.targets.length > 0)
+        .map((c) => ({
+          domain: c.domain,
+          goals: c.targets.map((t) => ({
+            standardId: t.standard.id,
+            statement: t.standard.statement,
+            provenance: t.provenance,
+            done: t.status === '됨',
+          })),
+        })),
+    [cards],
+  )
+
   const handleToggle = (activityId: ActivityId) => {
     const existing = findCompletion(activityId, date, completions)
     const result = toggleCompletion(activityId, date, existing, todayIso())
@@ -402,7 +419,6 @@ export function App() {
         <DomainScreen
           cards={cards}
           onOffsetChange={handleOffsetChange}
-          onToggleAchieved={handleToggleAchieved}
           warning={warning}
         />
       )}
@@ -423,6 +439,8 @@ export function App() {
           activities={activities}
           standards={STANDARDS_2021}
           achieved={achieved}
+          achievementGroups={achievementGroups}
+          onToggleAchieved={handleToggleAchieved}
           onCreate={handleCreateActivity}
           onDeactivate={handleDeactivate}
           onRetarget={handleRetarget}

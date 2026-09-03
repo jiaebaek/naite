@@ -89,15 +89,12 @@ const CARDS: readonly DomainCard[] = [
 
 const setup = (
   cards: readonly DomainCard[] = CARDS,
-  handlers: Partial<Pick<React.ComponentProps<typeof DomainScreen>, 'onOffsetChange' | 'onToggleAchieved'>> = {},
+  handlers: Partial<Pick<React.ComponentProps<typeof DomainScreen>, 'onOffsetChange'>> = {},
   warning: React.ComponentProps<typeof DomainScreen>['warning'] = null,
 ) => {
   const onOffsetChange = handlers.onOffsetChange ?? vi.fn()
-  const onToggleAchieved = handlers.onToggleAchieved ?? vi.fn()
-  const utils = render(
-    <DomainScreen cards={cards} onOffsetChange={onOffsetChange} onToggleAchieved={onToggleAchieved} warning={warning} />,
-  )
-  return { ...utils, onOffsetChange, onToggleAchieved }
+  const utils = render(<DomainScreen cards={cards} onOffsetChange={onOffsetChange} warning={warning} />)
+  return { ...utils, onOffsetChange }
 }
 
 /** 카드는 기본 접힘 — 자세한 목표·오프셋을 보려면 헤더를 눌러 펼친다 */
@@ -263,40 +260,42 @@ describe('⭐ INV-UI-38 — 능력 서술("됨"). 점수·달성/미달성 금�
     expect(text).not.toMatch(/\d+\s*\/\s*\d+/)
   })
 
-  it('상태가 배지·data 속성으로 노출된다', async () => {
-    const 됨카드 = [card({ domain: '국어', coverage: '하는중', targets: [tgt(해석기준, { status: '됨' })] })]
-    setup(됨카드)
-    await openCard('국어')
-    const row = screen.getByTestId('국어-target-int-ko-read')
-    expect(row).toHaveAttribute('data-status', '됨')
-    expect(within(row).getByText('됨')).toBeInTheDocument()
+  it('상태가 배지·data 속성으로 노출된다 (활동 필요)', async () => {
+    setup()
+    await openCard('과학·탐구')
+    const row = screen.getByTestId('과학·탐구-target-int-ko-read')
+    expect(row).toHaveAttribute('data-status', '활동필요')
+    expect(within(row).getByText('활동 필요')).toBeInTheDocument()
   })
 })
 
-describe('⭐ INV-UI-39(개정) / ⑥ — "됨"은 성취 확인 모드에서만 바꾼다', () => {
-  it('⭐ 브라우즈 중에는 토글 컨트롤이 없다 (실수 방지)', () => {
+describe('⭐ ⑥ — "됨" 표시는 영역에 없다 (관리 탭으로 이동)', () => {
+  it('영역에는 됨 토글·성취 확인 컨트롤이 없다', async () => {
     setup()
+    await openCard('국어')
     const 국어 = screen.getByTestId('domain-국어')
     expect(within(국어).queryByRole('checkbox')).not.toBeInTheDocument()
-    expect(within(국어).queryByRole('button', { name: /됨으로 표시|됨 취소/ })).not.toBeInTheDocument()
+    expect(within(국어).queryByRole('button', { name: /됨으로|됨 취소|성취 확인/ })).not.toBeInTheDocument()
   })
 
-  it('⭐ "성취 확인"을 눌러야 표시 버튼이 나오고, 눌러도 다이얼로그는 없다', async () => {
-    const { onToggleAchieved } = setup()
+  it('⭐ 됨인 목표는 영역 목록에서 숨긴다 (빈 곳에 집중)', async () => {
+    const 섞인국어 = [
+      card({
+        domain: '국어', coverage: '하는중', activityCount: 1,
+        targets: [
+          tgt(해석기준, { status: '됨' }),
+          tgt({ ...해석기준, id: 'int-gap', statement: '받침 없는 단어를 읽는다' }, { status: '활동필요' }),
+        ],
+      }),
+    ]
+    setup(섞인국어)
     await openCard('국어')
     const 국어 = screen.getByTestId('domain-국어')
-    await userEvent.click(within(국어).getByRole('button', { name: /성취 확인/ }))
-    await userEvent.click(within(국어).getByRole('button', { name: /됨으로 표시/ }))
-    expect(onToggleAchieved).toHaveBeenCalledWith('int-ko-read')
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-  })
-
-  it('되돌릴 수 있음을 안내한다 (선행 잠금 영향 고지)', async () => {
-    setup()
-    await openCard('국어')
-    const 국어 = screen.getByTestId('domain-국어')
-    await userEvent.click(within(국어).getByRole('button', { name: /성취 확인/ }))
-    expect(within(국어).getByText(/되돌릴 수 있고|선행 잠금/)).toBeInTheDocument()
+    // 활동필요는 보이고, 됨은 목록에서 숨긴다
+    expect(within(국어).getByText('받침 없는 단어를 읽는다')).toBeInTheDocument()
+    expect(within(국어).queryByTestId('국어-target-int-ko-read')).not.toBeInTheDocument()
+    // 됨 개수는 요약에 남긴다
+    expect(within(국어).getByText(/됨 1개 숨김/)).toBeInTheDocument()
   })
 })
 

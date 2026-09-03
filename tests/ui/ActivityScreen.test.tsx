@@ -51,6 +51,7 @@ const setup = (
     onReschedule?: (id: string, cadence: unknown) => void
     onSetOwner?: (id: string, owner: string) => void
     onCreateAcademy?: (i: unknown) => void
+    onToggleAchieved?: (id: string) => void
   } = {},
   achieved: readonly string[] = [],
 ) => {
@@ -61,11 +62,14 @@ const setup = (
   const onReschedule = handlers.onReschedule ?? vi.fn()
   const onSetOwner = handlers.onSetOwner ?? vi.fn()
   const onCreateAcademy = handlers.onCreateAcademy ?? vi.fn()
+  const onToggleAchieved = handlers.onToggleAchieved ?? vi.fn()
   const utils = render(
     <ActivityScreen
       activities={activities}
       standards={STANDARDS}
       achieved={achieved}
+      achievementGroups={ACHIEVEMENT_GROUPS}
+      onToggleAchieved={onToggleAchieved}
       onCreate={onCreate}
       onDeactivate={onDeactivate}
       onRetarget={onRetarget}
@@ -80,8 +84,18 @@ const setup = (
       onSetAcademyCovers={vi.fn()}
     />,
   )
-  return { ...utils, onCreate, onDeactivate, onRetarget, onRename, onReschedule, onSetOwner, onCreateAcademy }
+  return { ...utils, onCreate, onDeactivate, onRetarget, onRename, onReschedule, onSetOwner, onCreateAcademy, onToggleAchieved }
 }
+
+const ACHIEVEMENT_GROUPS = [
+  {
+    domain: '국어' as const,
+    goals: [
+      { standardId: 'int-ko', statement: '받침 없는 단어를 소리 내어 읽는다', provenance: { kind: '공교육' as const, doc: '성취기준' as const }, done: false },
+      { standardId: 'int-ko2', statement: '자기 이름을 쓴다', provenance: { kind: '공교육' as const, doc: '성취기준' as const }, done: true },
+    ],
+  },
+]
 
 describe('활동 목록', () => {
   it('등록된 활동이 보인다', () => {
@@ -438,6 +452,8 @@ describe('⭐ 학원 (Academy) — 활동과 구분', () => {
         activities={ACTIVITIES}
         standards={STANDARDS}
         achieved={[]}
+        achievementGroups={ACHIEVEMENT_GROUPS}
+        onToggleAchieved={vi.fn()}
         onCreate={vi.fn()}
         onDeactivate={vi.fn()}
         onRetarget={vi.fn()}
@@ -485,5 +501,30 @@ describe('INV-UI-26 — owner 는 표시·선택만, 알림/요청 UI 없다', (
     for (const bad of [/알림/, /요청/, /보내기/, /리마인/]) {
       expect(screen.queryByRole('button', { name: bad })).not.toBeInTheDocument()
     }
+  })
+})
+
+describe('⭐ 성취 기록 (관리 탭) — "됨"은 여기서만 (⑥)', () => {
+  it('영역별 지금 목표와 됨 상태가 보인다', () => {
+    setup()
+    const g = screen.getByTestId('ach-국어')
+    expect(within(g).getByText('받침 없는 단어를 소리 내어 읽는다')).toBeInTheDocument()
+    // 됨인 목표는 토글이 눌린 상태
+    const doneBtn = within(screen.getByTestId('ach-goal-int-ko2')).getByRole('button')
+    expect(doneBtn).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('⭐ 됨으로 표시하면 onToggleAchieved 가 불린다', async () => {
+    const onToggleAchieved = vi.fn()
+    setup(ACTIVITIES, { onToggleAchieved })
+    await userEvent.click(
+      within(screen.getByTestId('ach-goal-int-ko')).getByRole('button', { name: /됨으로/ }),
+    )
+    expect(onToggleAchieved).toHaveBeenCalledWith('int-ko')
+  })
+
+  it('출처 배지가 성취 기록에도 붙는다 (공교육/자체 구분)', () => {
+    setup()
+    expect(within(screen.getByTestId('ach-goal-int-ko')).getByText('공교육·성취기준')).toBeInTheDocument()
   })
 })

@@ -55,7 +55,6 @@ export interface DomainCard {
 export interface DomainScreenProps {
   readonly cards: readonly DomainCard[]
   readonly onOffsetChange: (domain: Domain, months: OffsetMonths) => void
-  readonly onToggleAchieved: (standardId: StandardId) => void
   readonly warning: { readonly domain: Domain; readonly warning: OffsetWarning } | null
 }
 
@@ -83,12 +82,7 @@ const STATUS_LABEL: Record<GoalStatus, string> = {
   활동필요: '활동 필요',
 }
 
-export function DomainScreen({
-  cards,
-  onOffsetChange,
-  onToggleAchieved,
-  warning,
-}: DomainScreenProps) {
+export function DomainScreen({ cards, onOffsetChange, warning }: DomainScreenProps) {
   return (
     <main className="page">
       <p className="page__date">영역별 현황</p>
@@ -98,7 +92,6 @@ export function DomainScreen({
           key={card.domain}
           card={card}
           onOffsetChange={onOffsetChange}
-          onToggleAchieved={onToggleAchieved}
           warning={warning?.domain === card.domain ? warning.warning : null}
         />
       ))}
@@ -109,24 +102,28 @@ export function DomainScreen({
 function DomainCardView({
   card,
   onOffsetChange,
-  onToggleAchieved,
   warning,
 }: {
   card: DomainCard
   onOffsetChange: (domain: Domain, months: OffsetMonths) => void
-  onToggleAchieved: (standardId: StandardId) => void
   warning: OffsetWarning | null
 }) {
   const view = COVERAGE_VIEW[card.coverage]
   // 접기 — 기본은 접힘. 눌러야 자세한 목표·오프셋이 나온다 (프로토타입).
   const [expanded, setExpanded] = useState(false)
-  // ⑥ — '됨' 은 신중한 선언(선행 잠금에 영향). 브라우즈 중엔 못 바꾸고 이 모드에서만.
-  const [editing, setEditing] = useState(false)
 
   const total = card.targets.length
   const done = card.targets.filter((t) => t.status === '됨').length
   const doing = card.targets.filter((t) => t.status === '챙기는중').length
   const gap = card.targets.filter((t) => t.status === '활동필요').length
+
+  // 영역의 임무는 '빈 곳 찾기'. 됨은 목록에서 숨기고(개수만 요약에), 갭을 맨 위로.
+  // 됨 표시는 관리 탭(성취 기록)에서 한다.
+  const STATUS_ORDER: Record<GoalStatus, number> = { 활동필요: 0, 챙기는중: 1, 됨: 2 }
+  const visibleTargets = card.targets
+    .filter((t) => t.status !== '됨')
+    .slice()
+    .sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status])
 
   return (
     <section
@@ -203,31 +200,19 @@ function DomainCardView({
           {total > 0 && (
             <>
               <div className="dcard__targets-head">
-                <span className="dcard__targets-label">지금 시기 목표</span>
-                <button
-                  type="button"
-                  className="dcard__achieve"
-                  aria-pressed={editing}
-                  onClick={() => setEditing((v) => !v)}
-                >
-                  {editing ? '완료' : '성취 확인'}
-                </button>
+                <span className="dcard__targets-label">지금 챙길 목표</span>
+                {done > 0 && <span className="dcard__donehint">됨 {done}개 숨김 · 관리에서</span>}
               </div>
-              {editing && (
-                <p className="dcard__achieve-hint">‘됨’은 되돌릴 수 있고, 선행 잠금에 영향을 줘요.</p>
-              )}
 
-              <ul className="dcard__targets">
-                {card.targets.map((t) => (
-                  <TargetRow
-                    key={t.standard.id}
-                    domain={card.domain}
-                    target={t}
-                    editing={editing}
-                    onToggleAchieved={onToggleAchieved}
-                  />
-                ))}
-              </ul>
+              {visibleTargets.length > 0 ? (
+                <ul className="dcard__targets">
+                  {visibleTargets.map((t) => (
+                    <TargetRow key={t.standard.id} domain={card.domain} target={t} />
+                  ))}
+                </ul>
+              ) : (
+                <p className="dcard__allgood">지금 시기 목표를 다 챙기고 있어요</p>
+              )}
             </>
           )}
 
@@ -288,17 +273,7 @@ function OffsetButton({
   )
 }
 
-function TargetRow({
-  domain,
-  target,
-  editing,
-  onToggleAchieved,
-}: {
-  domain: Domain
-  target: DomainTarget
-  editing: boolean
-  onToggleAchieved: (standardId: StandardId) => void
-}) {
+function TargetRow({ domain, target }: { domain: Domain; target: DomainTarget }) {
   const s = target.standard
   const isDone = target.status === '됨'
   return (
@@ -338,21 +313,6 @@ function TargetRow({
           )
         )}
       </div>
-
-      {/*
-        ⑥ — '됨' 은 성취 확인 모드에서만 바꾼다. 브라우즈 중 실수 토글을 막는다.
-        INV-UI-39(개정) — 일상 완료(오늘)와 달리, 되돌릴 수 있는 신중한 선언이다.
-      */}
-      {editing && (
-        <button
-          type="button"
-          className="target__mark"
-          data-done={String(isDone)}
-          onClick={() => onToggleAchieved(s.id)}
-        >
-          {isDone ? '됨 취소' : '됨으로 표시'}
-        </button>
-      )}
     </li>
   )
 }

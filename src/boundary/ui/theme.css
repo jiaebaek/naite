@@ -1277,3 +1277,97 @@ body {
   background: transparent;
   min-width: 0;
 }
+
+/* ─────────────────────────────────────────────────────
+   성취 기록 (관리 탭) — '됨'은 여기서만 바꾼다 (⑥)
+   ───────────────────────────────────────────────────── */
+.asection__desc {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin: -2px 0 14px;
+  line-height: 1.5;
+}
+
+.achgroup {
+  margin: 0 0 14px;
+}
+
+.achgroup__domain {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin: 0 0 4px;
+  letter-spacing: 0.02em;
+}
+
+.achgroup__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.achrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-top: 1px solid var(--border);
+}
+
+.achrow:first-child {
+  border-top: none;
+}
+
+.achrow__main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.achrow__text {
+  font-size: 14px;
+}
+
+.achrow[data-done='true'] .achrow__text {
+  color: var(--text-muted);
+}
+
+.achrow__prov {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.achrow__toggle {
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 6px 12px;
+  min-height: 34px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+}
+
+.achrow__toggle[aria-pressed='true'] {
+  border-color: var(--done);
+  background: var(--done-bg);
+  color: var(--done);
+}
+
+/* 영역 카드 — 됨 숨김 안내 / 다 챙긴 경우 */
+.dcard__donehint {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.dcard__allgood {
+  font-size: 13px;
+  color: var(--ok-strong);
+  background: var(--ok-bg);
+  border-radius: 8px;
+  padding: 8px 11px;
+  margin: 0;
+}
