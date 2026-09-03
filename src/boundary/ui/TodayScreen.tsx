@@ -32,9 +32,14 @@ function formatDate(date: IsoDate): string {
 }
 
 export function TodayScreen({ date, tasks, onToggle, pet, schedule }: TodayScreenProps) {
+  // INV-UI-36(개정) — 이번 주 목표를 채운 '주N회' 활동은 오늘에서 내린다.
+  //   "이번 주 완료한 건 오늘에 안 떠야" (사용자). 되돌리기는 기록 탭에서 그날 체크 해제로.
+  //   ('매일'·일반 완료는 그대로 남는다 — 오늘에서 바로 되돌릴 수 있어야 하므로)
+  const shown = tasks.filter((t) => !(t.weeklyProgress?.met ?? false))
+
   // INV-UI-04 — 영역별 그룹핑. DOMAINS 순서를 따라 화면 순서를 고정한다.
   const byDomain = DOMAINS.map(
-    (domain) => [domain, tasks.filter((t) => t.domain === domain)] as const,
+    (domain) => [domain, shown.filter((t) => t.domain === domain)] as const,
     // INV-UI-05 — 할 일 없는 영역은 렌더하지 않는다
   ).filter(([, list]) => list.length > 0)
 

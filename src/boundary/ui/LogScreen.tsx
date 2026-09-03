@@ -116,12 +116,13 @@ export function LogScreen({
                   <span className="report__streak">🔥 {r.streak}일째</span>
                 )}
               </div>
-              {/* 막대 그래프 — 이번 주 '한 날' 빈도(요일 7칸 기준). 점수·목표대비 아님 (C-6) */}
+              {/* 막대 그래프 — 이번 주 리듬(target) 대비 한 만큼. 주1회 한 번 = 꽉 참 (INV-REPORT-03) */}
               <div className="report__bar" aria-hidden="true">
                 <span
                   className="report__bar-fill"
                   data-empty={String(r.done === 0)}
-                  style={{ width: `${Math.min(r.done / 7, 1) * 100}%` }}
+                  data-full={String(r.target > 0 && r.done >= r.target)}
+                  style={{ width: `${(r.target > 0 ? Math.min(r.done / r.target, 1) : r.done > 0 ? 1 : 0) * 100}%` }}
                 />
               </div>
             </li>

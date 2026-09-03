@@ -263,6 +263,24 @@ describe('⭐ P-6 실증 — 현재 우리 집 상태를 판정한다', () => {
   })
 })
 
+describe('⭐ INV-COV-09 — 다 됨인 영역은 비어있음이 아니다 (회귀 방지)', () => {
+  const 목표B: Standard = { ...목표A, id: 'target-b', statement: '자기 이름을 쓴다' }
+
+  it('목표가 있고 활동이 없어도, 목표가 다 됨이면 "비어있음"이 아니다', () => {
+    // 회귀: 성취해서 활동이 없는데 "비어있다"고 뜨던 버그
+    expect(evaluateCoverage('국어', [목표A, 목표B], [], ['target-a', 'target-b'])).not.toBe('비어있음')
+    expect(evaluateCoverage('국어', [목표A, 목표B], [], ['target-a', 'target-b'])).toBe('하는중')
+  })
+
+  it('일부만 됨이고 나머지에 활동이 없으면 여전히 비어있음 (갭 존재)', () => {
+    expect(evaluateCoverage('국어', [목표A, 목표B], [], ['target-a'])).toBe('비어있음')
+  })
+
+  it('achieved 를 안 주면 기존 판정 그대로 (하위호환)', () => {
+    expect(evaluateCoverage('국어', [목표A], [])).toBe('비어있음')
+  })
+})
+
 describe('⭐ goalStatusOf — 목표별 상태 (됨/챙기는중/아직). 현황 세그먼트용', () => {
   const 목표 = 목표A // int-like, id 'target-a'
   const 겨냥활동 = act({ id: 'a1', domain: '국어', targetIds: ['target-a'] })

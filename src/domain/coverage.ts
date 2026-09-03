@@ -48,13 +48,23 @@ export function evaluateCoverage(
   domain: Domain,
   currentTargets: readonly Standard[],
   activities: readonly Activity[],
+  achieved: readonly StandardId[] = [],
 ): Coverage {
   requireKnownDomain(domain)
 
   const active = activities.filter((a) => a.domain === domain && a.active)
+  // INV-COV-09 — 이미 '됨'으로 표시한 목표는 챙길 거리가 아니다. '비어있음' 판정에서 뺀다.
+  //   (achieved 는 수행 이력이 아니라 durable 성취라 INV-COV-05 와 충돌하지 않는다)
+  const achievedSet = new Set(achieved)
+  const unachieved = currentTargets.filter((t) => !achievedSet.has(t.id))
 
-  // INV-COV-08 — 목표도 활동도 없으면 '아직아님'. 아직 시기가 아닌 것이지 빠뜨린 게 아니다 (C-6).
-  if (active.length === 0) return currentTargets.length === 0 ? '아직아님' : '비어있음'
+  if (active.length === 0) {
+    // INV-COV-08 — 목표도 활동도 없으면 '아직아님' (아직 시기가 아닌 것, 빠뜨린 게 아니다 · C-6)
+    if (currentTargets.length === 0) return '아직아님'
+    // INV-COV-09 — 목표가 다 '됨'이면 챙길 게 없다. '비어있음'(빈 곳)이 아니다.
+    if (unachieved.length === 0) return '하는중'
+    return '비어있음'
+  }
   if (currentTargets.length === 0) return '기준밖'
 
   const targetIds = new Set(currentTargets.map((t) => t.id))

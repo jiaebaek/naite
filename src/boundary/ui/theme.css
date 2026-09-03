@@ -379,15 +379,16 @@ body {
   border: 1px solid var(--border);
 }
 
-/* 챙기는 중·됨 = 초록(비었지 않음). 활동 필요(갭) = 앰버로 도드라지게 */
+/* 3색 구분 — 챙기는중=초록 · 됨=파랑 · 활동필요=앰버 (INV-UI-60) */
 .seg[data-status='챙기는중'] {
   background: var(--ok);
   border-color: var(--ok);
 }
 
+/* 됨 = 파랑(정착·완료). 챙기는중(초록)·활동필요(앰버)와 3색으로 구분 (INV-UI-60) */
 .seg[data-status='됨'] {
-  background: var(--ok-strong);
-  border-color: var(--ok-strong);
+  background: var(--info);
+  border-color: var(--info);
 }
 
 .seg[data-status='활동필요'] {
@@ -1371,3 +1372,32 @@ body {
   padding: 8px 11px;
   margin: 0;
 }
+
+/* 영역 세그먼트 색 범례 (INV-UI-60) */
+.dlegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 0 0 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.dlegend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dlegend__dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  flex: 0 0 auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.dlegend__dot[data-status='챙기는중'] { background: var(--ok); border-color: var(--ok); }
+.dlegend__dot[data-status='됨'] { background: var(--info); border-color: var(--info); }
+.dlegend__dot[data-status='활동필요'] { background: var(--warn); border-color: var(--warn); }

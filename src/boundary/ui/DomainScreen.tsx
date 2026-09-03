@@ -86,6 +86,15 @@ export function DomainScreen({ cards, onOffsetChange, warning }: DomainScreenPro
   return (
     <main className="page">
       <p className="page__date">영역별 현황</p>
+      {/* 세그먼트 색 범례 — 챙기는 중 / 됨 / 활동 필요 (INV-UI-60) */}
+      <div className="dlegend">
+        {(['챙기는중', '됨', '활동필요'] as const).map((s) => (
+          <span key={s} className="dlegend__item">
+            <i className="dlegend__dot" data-status={s} aria-hidden="true" />
+            {STATUS_LABEL[s]}
+          </span>
+        ))}
+      </div>
       {/* INV-UI-14 — 7개 영역 전부. 필터로 숨기지 않는다 */}
       {cards.map((card) => (
         <DomainCardView
@@ -194,46 +203,41 @@ function DomainCardView({
         )}
       </div>
 
-      {/* ── 자세히 (눌러야 나온다) ── */}
-      {expanded && (
+      {/* INV-UI-17(회귀 고정) — 오프셋(선행 속도)은 **항상** 보인다. 접기 뒤로 숨기지 않는다 */}
+      {card.offsetApplicable ? (
+        <div className="offset" role="group" aria-label={`${card.domain} 선행 속도`}>
+          {card.offsetOptions.map((opt) => (
+            <OffsetButton
+              key={opt.months}
+              domain={card.domain}
+              opt={opt}
+              onOffsetChange={onOffsetChange}
+            />
+          ))}
+        </div>
+      ) : (
+        <p className="offset__na">공교육 기준이 없어 선행 개념이 성립하지 않습니다</p>
+      )}
+
+      {/* INV-UI-18 — 상향 경고. 오프셋과 함께 항상 노출. 건너뛰기 버튼은 두지 않는다 */}
+      {warning && <OffsetWarningBox warning={warning} />}
+
+      {/* ── 자세히 (눌러야 나온다) — 지금 챙길 목표 목록만 접는다 ── */}
+      {expanded && total > 0 && (
         <div className="dcard__detail">
-          {total > 0 && (
-            <>
-              <div className="dcard__targets-head">
-                <span className="dcard__targets-label">지금 챙길 목표</span>
-                {done > 0 && <span className="dcard__donehint">됨 {done}개 숨김 · 관리에서</span>}
-              </div>
-
-              {visibleTargets.length > 0 ? (
-                <ul className="dcard__targets">
-                  {visibleTargets.map((t) => (
-                    <TargetRow key={t.standard.id} domain={card.domain} target={t} />
-                  ))}
-                </ul>
-              ) : (
-                <p className="dcard__allgood">지금 시기 목표를 다 챙기고 있어요</p>
-              )}
-            </>
-          )}
-
-          {/* INV-UI-17 — 오프셋 조정은 이 화면에서 직접. 설정 메뉴로 보내지 않는다 */}
-          {card.offsetApplicable ? (
-            <div className="offset" role="group" aria-label={`${card.domain} 선행 속도`}>
-              {card.offsetOptions.map((opt) => (
-                <OffsetButton
-                  key={opt.months}
-                  domain={card.domain}
-                  opt={opt}
-                  onOffsetChange={onOffsetChange}
-                />
+          <div className="dcard__targets-head">
+            <span className="dcard__targets-label">지금 챙길 목표</span>
+            {done > 0 && <span className="dcard__donehint">됨 {done}개 숨김 · 관리에서</span>}
+          </div>
+          {visibleTargets.length > 0 ? (
+            <ul className="dcard__targets">
+              {visibleTargets.map((t) => (
+                <TargetRow key={t.standard.id} domain={card.domain} target={t} />
               ))}
-            </div>
+            </ul>
           ) : (
-            <p className="offset__na">공교육 기준이 없어 선행 개념이 성립하지 않습니다</p>
+            <p className="dcard__allgood">지금 시기 목표를 다 챙기고 있어요</p>
           )}
-
-          {/* INV-UI-18 — 상향 경고와 신호를 모두 노출. 건너뛰기 버튼은 두지 않는다 */}
-          {warning && <OffsetWarningBox warning={warning} />}
         </div>
       )}
     </section>

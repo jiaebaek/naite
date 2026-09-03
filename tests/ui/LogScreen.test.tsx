@@ -31,9 +31,10 @@ const DAY_TASKS: readonly Task[] = [
 ]
 
 const REPORT: readonly WeeklyReportRow[] = [
-  { activityId: 'en-book', name: '영어 원서 1권', domain: '영어', cadence: { kind: '매일' }, done: 3, streak: 2 },
-  { activityId: 'board', name: '보드게임', domain: '수학', cadence: { kind: '주N회', times: 2 }, done: 1 },
-  { activityId: 'alpha', name: '알파짱', domain: '수학', cadence: { kind: '주N회', times: 3 }, done: 0 },
+  { activityId: 'en-book', name: '영어 원서 1권', domain: '영어', cadence: { kind: '매일' }, done: 3, target: 7, streak: 2 },
+  { activityId: 'board', name: '보드게임', domain: '수학', cadence: { kind: '주N회', times: 2 }, done: 1, target: 2 },
+  { activityId: 'alpha', name: '알파짱', domain: '수학', cadence: { kind: '주N회', times: 3 }, done: 0, target: 3 },
+  { activityId: 'hw', name: '한글 숙제', domain: '국어', cadence: { kind: '주N회', times: 1 }, done: 1, target: 1 },
 ]
 
 const setup = (over: Partial<React.ComponentProps<typeof LogScreen>> = {}) => {
@@ -127,5 +128,17 @@ describe('주간 리포트 (⑧) — 한 것을 센다, 긍정 프레이밍', ()
   it('한 게 없는 활동은 "이번 주 기록 없음" (결핍 아닌 중립)', () => {
     setup()
     expect(within(screen.getByTestId('report-alpha')).getByText(/기록 없음/)).toBeInTheDocument()
+  })
+
+  it('⭐ INV-REPORT-03 — 주1회를 한 번 하면 막대가 꽉 찬다 (회귀 방지)', () => {
+    setup()
+    const fill = screen.getByTestId('report-hw').querySelector('.report__bar-fill')!
+    expect(fill).toHaveAttribute('data-full', 'true')
+  })
+
+  it('아직 리듬 미달이면 막대가 안 찼다 (주3회 중 0회)', () => {
+    setup()
+    const fill = screen.getByTestId('report-alpha').querySelector('.report__bar-fill')!
+    expect(fill).toHaveAttribute('data-full', 'false')
   })
 })

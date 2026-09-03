@@ -249,7 +249,7 @@ export function App() {
 
       return {
         domain,
-        coverage: evaluateCoverage(domain, domainTargets, coverageActivities),
+        coverage: evaluateCoverage(domain, domainTargets, coverageActivities, achieved),
         offsetApplicable: !NO_PUBLIC_STANDARD.includes(domain),
         targets: domainTargets.map((standard) => ({
           standard,

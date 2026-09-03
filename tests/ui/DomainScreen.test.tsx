@@ -115,18 +115,21 @@ describe('INV-UI-14 — 7개 영역 전부', () => {
 })
 
 describe('⭐ 과목 접기 (프로토타입) — 눌러야 자세히', () => {
-  it('기본은 접힘 — 목표·오프셋이 안 보인다', () => {
+  it('기본은 접힘 — 목표 목록은 안 보인다 (오프셋은 항상 보임)', () => {
     setup()
     const 국어 = screen.getByTestId('domain-국어')
     expect(국어).toHaveAttribute('data-expanded', 'false')
+    // 목표 목록(자세히)만 접힌다
     expect(within(국어).queryByText('공교육·성취기준')).not.toBeInTheDocument()
-    expect(within(국어).queryByRole('button', { name: /적기/ })).not.toBeInTheDocument()
+    // ⭐ 오프셋은 접혀도 보인다 (회귀 방지)
+    expect(within(국어).getByRole('button', { name: /적기/ })).toBeInTheDocument()
   })
 
-  it('요약(세그먼트 집계)은 접힌 상태에서도 보인다', () => {
+  it('요약(세그먼트 집계·오프셋)은 접힌 상태에서도 보인다', () => {
     setup()
     const 국어 = screen.getByTestId('domain-국어')
     expect(within(국어).getByText(/지금 목표 1/)).toBeInTheDocument()
+    expect(within(국어).getByRole('button', { name: /1년 선행/ })).toBeInTheDocument()
   })
 
   it('헤더를 누르면 펼쳐진다', async () => {
@@ -176,18 +179,16 @@ describe('INV-UI-16 — 자체를 공교육처럼 보이게 하지 않는다', (
 })
 
 describe('INV-UI-17 — 오프셋 조정은 카드 안에서', () => {
-  it('세 버튼이 있다', async () => {
+  it('세 버튼이 있다 (접지 않아도 보인다 — 회귀 방지)', () => {
     setup()
-    await openCard('국어')
     const 국어 = screen.getByTestId('domain-국어')
     for (const name of ['적기', '1년 선행', '2년 선행']) {
       expect(within(국어).getByRole('button', { name: new RegExp(name) })).toBeInTheDocument()
     }
   })
 
-  it('영어는 버튼 대신 이유를 보여준다', async () => {
+  it('영어는 버튼 대신 이유를 보여준다', () => {
     setup()
-    await openCard('영어')
     const 영어 = screen.getByTestId('domain-영어')
     expect(within(영어).queryByRole('button', { name: /1년 선행/ })).not.toBeInTheDocument()
     expect(within(영어).getByText(/공교육 기준이 없어/)).toBeInTheDocument()
@@ -196,9 +197,8 @@ describe('INV-UI-17 — 오프셋 조정은 카드 안에서', () => {
 
 // ── 달성 기반 선행 잠금 ─────────────────────────────────
 describe('⭐ INV-UI-40 — 적기 버튼은 절대 잠기지 않는다', () => {
-  it('모든 카드에서 적기는 열려 있다', async () => {
+  it('모든 카드에서 적기는 열려 있다', () => {
     setup()
-    await openCard('국어')
     const 국어 = screen.getByTestId('domain-국어')
     const 적기 = within(국어).getByRole('button', { name: /적기/ })
     expect(적기).toHaveAttribute('data-locked', 'false')
@@ -217,9 +217,8 @@ describe('⭐ INV-UI-37 — 잠긴 오프셋은 왜 잠겼는지 보여준다', 
     }),
   ]
 
-  it('잠긴 버튼에 몇 개 더 하면 열리는지 나온다', async () => {
+  it('잠긴 버튼에 몇 개 더 하면 열리는지 나온다', () => {
     setup(잠긴국어)
-    await openCard('국어')
     const btn = screen.getByRole('button', { name: /1년 선행/ })
     expect(btn).toHaveAttribute('data-locked', 'true')
     expect(btn).toHaveTextContent(/2개 더/)
@@ -227,7 +226,6 @@ describe('⭐ INV-UI-37 — 잠긴 오프셋은 왜 잠겼는지 보여준다', 
 
   it('⭐ 잠긴 버튼을 눌러도 오프셋이 바뀌지 않는다', async () => {
     const { onOffsetChange } = setup(잠긴국어)
-    await openCard('국어')
     await userEvent.click(screen.getByRole('button', { name: /1년 선행/ }))
     expect(onOffsetChange).not.toHaveBeenCalled()
   })
@@ -244,7 +242,6 @@ describe('⭐ INV-UI-37 — 잠긴 오프셋은 왜 잠겼는지 보여준다', 
       }),
     ]
     const { onOffsetChange } = setup(열린국어)
-    await openCard('국어')
     await userEvent.click(screen.getByRole('button', { name: /1년 선행/ }))
     expect(onOffsetChange).toHaveBeenCalledWith('국어', 12)
   })
@@ -303,6 +300,17 @@ describe('⭐ ⑤ 커버리지 세그먼트·집계 — 점수 아님', () => {
   it('진행바(progressbar) 역할을 쓰지 않는다', () => {
     setup()
     expect(screen.queryAllByRole('progressbar')).toHaveLength(0)
+  })
+
+  it('⭐ 세그먼트 3색 구분 — 범례(챙기는 중/됨/활동 필요)가 있다 (회귀 방지)', () => {
+    setup()
+    for (const label of ['챙기는 중', '됨', '활동 필요']) {
+      expect(screen.getAllByText(label).length).toBeGreaterThan(0)
+    }
+    // 범례 점이 상태별 data-status 로 색을 구분한다
+    const dots = document.querySelectorAll('.dlegend__dot')
+    const statuses = [...dots].map((d) => d.getAttribute('data-status'))
+    expect(statuses).toEqual(['챙기는중', '됨', '활동필요'])
   })
 
   it('목표 상태 집계 문구가 보인다 (점수·퍼센트 아님)', () => {
@@ -370,9 +378,8 @@ describe('INV-UI-18 — 오프셋 상향 경고', () => {
     },
   }
 
-  it('경고와 신호가 모두 보이고 건너뛰기 버튼이 없다', async () => {
+  it('경고와 신호가 모두 보이고 건너뛰기 버튼이 없다 (접지 않아도 보인다)', () => {
     setup(CARDS, {}, 경고)
-    await openCard('국어')
     const box = screen.getByRole('status')
     expect(box).toHaveTextContent(/발달 단계를 이기지 못합니다/)
     for (const s of 경고.warning.signals) expect(within(box).getByText(s)).toBeInTheDocument()

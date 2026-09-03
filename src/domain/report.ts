@@ -17,8 +17,23 @@ export interface WeeklyReportRow {
   readonly cadence: Cadence
   /** 이번 주(월~일) 완료한 날 수. 한 것만 센다 (결핍 아님) */
   readonly done: number
+  /**
+   * 이번 주 리듬 기준치 (막대가 꽉 차는 지점). 주N회→N, 매일→7, 요일지정→요일 수, 비정기→0.
+   * 막대는 done/target 로 채운다 — 주1회를 한 번 하면 꽉 찬다 (INV-REPORT-03).
+   */
+  readonly target: number
   /** '매일' 활동의 연속 기록. 없으면 undefined (INV-STREAK-04) */
   readonly streak?: number
+}
+
+/** 이번 주 리듬 기준치 (cadence 별). */
+function weeklyTarget(c: Cadence): number {
+  switch (c.kind) {
+    case '매일': return 7
+    case '주N회': return c.times
+    case '요일지정': return c.weekdays.length
+    case '비정기': return 0
+  }
 }
 
 /**
@@ -44,6 +59,7 @@ export function weeklyReport(
         domain: a.domain,
         cadence: a.cadence,
         done,
+        target: weeklyTarget(a.cadence),
         ...(streak !== undefined ? { streak } : {}),
       }
     })

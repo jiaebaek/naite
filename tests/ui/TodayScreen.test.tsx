@@ -185,7 +185,7 @@ describe('INV-UI-09 — 주N회는 주간 진행을 함께 보여준다', () => 
   })
 })
 
-describe('INV-UI-35 — 주간 목표를 채우면 기분 좋게 알려준다', () => {
+describe('⭐ INV-UI-36(개정) — 이번 주 목표를 채운 활동은 오늘에서 내린다', () => {
   const 완료한주간 = [
     task({
       activityId: 'done-week', domain: '수학', name: '팩토 숙제', nature: '필수',
@@ -193,60 +193,38 @@ describe('INV-UI-35 — 주간 목표를 채우면 기분 좋게 알려준다', 
     }),
   ]
 
-  it('⭐ "이번 주 완료" 배지가 뜬다', () => {
+  it('⭐ 주간 완료(met)한 주N회 활동은 오늘에 안 뜬다 (회귀 방지)', () => {
     setup(완료한주간)
-    expect(within(screen.getByTestId('task-done-week')).getByText(/이번 주 완료/)).toBeInTheDocument()
+    expect(screen.queryByTestId('task-done-week')).not.toBeInTheDocument()
   })
 
-  it('⭐ 진행 숫자(1/1)는 사라진다 — 다 했으면 숫자는 볼 일이 없다', () => {
+  it('그 활동만 있으면 영역 자체가 안 뜬다', () => {
     setup(완료한주간)
-    expect(
-      within(screen.getByTestId('task-done-week')).queryByText(/\d\s*\/\s*\d/),
-    ).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: '수학' })).not.toBeInTheDocument()
   })
 
-  it('INV-UI-13 — 그래도 "1/1 완료" 같은 집계 문자열은 만들지 않는다', () => {
-    const { container } = setup(완료한주간)
-    expect(container.textContent ?? '').not.toMatch(/\d+\s*\/\s*\d+\s*완료/)
-  })
-
-  it('경고 대상이 아니다 — 이번 주 할 일은 끝났다', () => {
-    setup(완료한주간)
-    expect(screen.getByTestId('task-done-week')).toHaveAttribute('data-warn', 'false')
-    expect(screen.getByTestId('task-done-week')).toHaveAttribute('data-week-met', 'true')
-  })
-
-  it('⭐ INV-UI-36 — 주간 목표를 채워도 체크박스는 남는다 (되돌릴 수 있어야 한다)', () => {
-    // 실수로 체크했을 때 되돌릴 길이 없으면 안 된다.
-    // 배지는 "이번 주", 체크박스는 "오늘" — 층위가 다르므로 공존한다.
-    setup(완료한주간)
-    expect(within(screen.getByTestId('task-done-week')).getByRole('checkbox')).toBeInTheDocument()
-  })
-
-  it('⭐ 오늘 체크해서 채운 경우 해제할 수 있다', async () => {
-    const onToggle = vi.fn()
-    const 오늘채움 = [
-      task({
-        activityId: 'today-met', domain: '수학', name: '팩토 숙제', nature: '필수',
-        done: true,
-        weeklyProgress: { done: 1, times: 1, met: true },
-      }),
-    ]
-    setup(오늘채움, onToggle)
-    const box = within(screen.getByTestId('task-today-met')).getByRole('checkbox')
-    expect(box).toBeChecked()
-    await userEvent.click(box)
-    expect(onToggle).toHaveBeenCalledWith('today-met')
-  })
-
-  it('미달 상태에서도 당연히 체크박스가 있다', () => {
-    setup()
+  it('⭐ 아직 미달(2/3)인 주N회는 그대로 뜬다 — 진행 표시와 함께', () => {
+    setup() // TASKS 의 board 는 2/3 (미달)
+    expect(screen.getByTestId('task-board')).toBeInTheDocument()
+    expect(within(screen.getByTestId('task-board')).getByText(/2\s*\/\s*3/)).toBeInTheDocument()
     expect(within(screen.getByTestId('task-board')).getByRole('checkbox')).toBeInTheDocument()
   })
 
-  it('미달 상태에서는 배지가 없다', () => {
+  it('미달로 돌아오면(기록 탭에서 해제) 다시 뜬다', () => {
+    const 미달로 = [
+      task({
+        activityId: 'back', domain: '수학', name: '팩토', nature: '필수',
+        weeklyProgress: { done: 0, times: 1, met: false },
+      }),
+    ]
+    setup(미달로)
+    expect(screen.getByTestId('task-back')).toBeInTheDocument()
+  })
+
+  it('오늘 완료(매일·일반)는 그대로 남아 되돌릴 수 있다 (met 아님)', () => {
+    // 매일 활동 done=true 는 weeklyProgress 가 없으므로 숨기지 않는다
     setup()
-    expect(within(screen.getByTestId('task-board')).queryByText(/이번 주 완료/)).not.toBeInTheDocument()
+    expect(within(screen.getByTestId('task-hw-facto')).getByRole('checkbox')).toBeChecked()
   })
 })
 

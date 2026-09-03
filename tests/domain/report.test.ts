@@ -70,3 +70,20 @@ describe('weeklyReport — 이번 주 한 것을 센다 (긍정 집계)', () => 
     expect(weeklyReport([원서], [], 수)[0]!.done).toBe(0)
   })
 })
+
+describe('⭐ INV-REPORT-03 — 막대 기준치(target)는 주간 리듬 (회귀 방지)', () => {
+  it("'주N회'는 target=N — 주1회를 한 번 하면 done==target(꽉 참)", () => {
+    const 주1 = act({ id: 'w1', name: '한글 숙제', cadence: { kind: '주N회', times: 1 } })
+    const rows = weeklyReport([주1], [{ activityId: 'w1', date: 수 }], 수)
+    expect(rows[0]!.target).toBe(1)
+    expect(rows[0]!.done).toBe(1) // done >= target → 막대 꽉 참
+  })
+
+  it("'매일'은 target=7", () => {
+    expect(weeklyReport([원서], [], 수)[0]!.target).toBe(7)
+  })
+
+  it("'주2회'는 target=2", () => {
+    expect(weeklyReport([보드], [], 수)[0]!.target).toBe(2)
+  })
+})
