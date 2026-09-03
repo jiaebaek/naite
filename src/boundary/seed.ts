@@ -26,7 +26,8 @@ export const SEED_ACTIVITIES: readonly Activity[] = [
     name: '한글 학원 숙제',
     domain: '국어',
     track: '학원',
-    targetIds: ['int-ko-letter-sounds'],
+    // 선행 제거 → 현재 시기(지금) 목표를 겨냥한다
+    targetIds: ['int-ko-find-letters'],
     cadence: { kind: '주N회', times: 1 },
     owner: '아빠',
     active: true,
@@ -37,7 +38,7 @@ export const SEED_ACTIVITIES: readonly Activity[] = [
     name: '팩토 숙제',
     domain: '수학',
     track: '학원',
-    targetIds: ['int-ma-count-20'],
+    targetIds: ['int-ma-count-10'],
     cadence: { kind: '주N회', times: 1 },
     owner: '아빠',
     active: true,

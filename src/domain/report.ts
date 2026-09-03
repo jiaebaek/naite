@@ -22,6 +22,12 @@ export interface WeeklyReportRow {
    * 막대는 done/target 로 채운다 — 주1회를 한 번 하면 꽉 찬다 (INV-REPORT-03).
    */
   readonly target: number
+  /**
+   * 이번 주 목표(target)를 채웠는가. `target>0 && done>=target`.
+   * INV-UI-00 — '완료'는 도메인이 판정한다. UI 가 done>=target 을 직접 비교하지 않는다.
+   * target 0(자유 활동)은 채울 목표가 없으므로 met 아님.
+   */
+  readonly met: boolean
   /** '매일' 활동의 연속 기록. 없으면 undefined (INV-STREAK-04) */
   readonly streak?: number
 }
@@ -53,13 +59,15 @@ export function weeklyReport(
         (c) => c.activityId === a.id && c.date >= from && c.date <= to,
       ).length
       const streak = streakOf(a, anchorDate, completions)
+      const target = weeklyTarget(a.cadence)
       return {
         activityId: a.id,
         name: a.name,
         domain: a.domain,
         cadence: a.cadence,
         done,
-        target: weeklyTarget(a.cadence),
+        target,
+        met: target > 0 && done >= target,
         ...(streak !== undefined ? { streak } : {}),
       }
     })

@@ -1,144 +1,114 @@
 /**
- * ARRR 사이클 #21 — (Boundary) 기록 화면 F4
- * 계약: docs/08-UI계약.md §6 · 피드백 ⑦⑧
+ * LogScreen (F4) — UX 리디자인 §12 + 보강 Addendum 01.
+ * 나이테 링 + 주간 목표 달성(pip) + 지난 날 backfill 진입. 한 것만 센다(C-6).
  */
-
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { LogScreen } from '../../src/boundary/ui/LogScreen'
-import type { WeekDay } from '../../src/boundary/ui/LogScreen'
-import type { WeeklyReportRow } from '../../src/domain/report'
-import type { Task } from '../../src/domain/types'
+import type { WeekDayVM, RecordRowVM } from '../../src/boundary/ui/LogScreen'
 
-const WEEK: readonly WeekDay[] = [
-  { date: '2026-11-02', dayNum: 2, dow: '월', isToday: false, isFuture: false, doneCount: 2 },
-  { date: '2026-11-03', dayNum: 3, dow: '화', isToday: false, isFuture: false, doneCount: 0 },
-  { date: '2026-11-04', dayNum: 4, dow: '수', isToday: true, isFuture: false, doneCount: 1 },
-  { date: '2026-11-05', dayNum: 5, dow: '목', isToday: false, isFuture: true, doneCount: 0 },
-  { date: '2026-11-06', dayNum: 6, dow: '금', isToday: false, isFuture: true, doneCount: 0 },
-  { date: '2026-11-07', dayNum: 7, dow: '토', isToday: false, isFuture: true, doneCount: 0 },
-  { date: '2026-11-08', dayNum: 8, dow: '일', isToday: false, isFuture: true, doneCount: 0 },
+const WEEK: readonly WeekDayVM[] = [
+  { date: '2026-08-31', dayNum: 31, dow: '월', isToday: false, isFuture: false, doneCount: 2 },
+  { date: '2026-09-01', dayNum: 1, dow: '화', isToday: false, isFuture: false, doneCount: 1 },
+  { date: '2026-09-02', dayNum: 2, dow: '수', isToday: false, isFuture: false, doneCount: 3 },
+  { date: '2026-09-03', dayNum: 3, dow: '목', isToday: true, isFuture: false, doneCount: 0 },
+  { date: '2026-09-04', dayNum: 4, dow: '금', isToday: false, isFuture: true, doneCount: 0 },
+  { date: '2026-09-05', dayNum: 5, dow: '토', isToday: false, isFuture: true, doneCount: 0 },
+  { date: '2026-09-06', dayNum: 6, dow: '일', isToday: false, isFuture: true, doneCount: 0 },
 ]
 
-const task = (over: Partial<Task> & Pick<Task, 'activityId' | 'domain' | 'name'>): Task => ({
-  nature: '자유', targets: [], done: false, ...over,
-})
-
-const DAY_TASKS: readonly Task[] = [
-  task({ activityId: 'en-book', domain: '영어', name: '영어 원서 1권', done: true }),
-  task({ activityId: 'hangul', domain: '국어', name: '한글 숙제', done: false }),
-]
-
-const REPORT: readonly WeeklyReportRow[] = [
-  { activityId: 'en-book', name: '영어 원서 1권', domain: '영어', cadence: { kind: '매일' }, done: 3, target: 7, streak: 2 },
-  { activityId: 'board', name: '보드게임', domain: '수학', cadence: { kind: '주N회', times: 2 }, done: 1, target: 2 },
-  { activityId: 'alpha', name: '알파짱', domain: '수학', cadence: { kind: '주N회', times: 3 }, done: 0, target: 3 },
-  { activityId: 'hw', name: '한글 숙제', domain: '국어', cadence: { kind: '주N회', times: 1 }, done: 1, target: 1 },
+// §보강 A 예시
+const ROWS: readonly RecordRowVM[] = [
+  { activityId: 'facto', name: '팩토 숙제', domain: '수학', count: 2, target: 2, met: true },
+  { activityId: 'hangul', name: '한글 학원 숙제', domain: '국어', count: 2, target: 3, met: false },
+  { activityId: 'video', name: '영어 영상 20분', domain: '영어', count: 3, target: 5, met: false },
+  { activityId: 'alpha', name: '알파짱 워크지', domain: '수학', count: 0, target: 0, met: false },
 ]
 
 const setup = (over: Partial<React.ComponentProps<typeof LogScreen>> = {}) => {
-  const onSelectDay = vi.fn()
-  const onToggleDay = vi.fn()
-  const utils = render(
-    <LogScreen
-      weekDays={WEEK}
-      selectedDate="2026-11-04"
-      selectedLabel="11월 4일 수요일"
-      selectedIsToday
-      onSelectDay={onSelectDay}
-      dayTasks={DAY_TASKS}
-      onToggleDay={onToggleDay}
-      report={REPORT}
-      {...over}
-    />,
-  )
-  return { ...utils, onSelectDay, onToggleDay }
+  const onDayClick = vi.fn()
+  const utils = render(<LogScreen pct={0.62} weekDoneDays={3} weekDays={WEEK} rows={ROWS} onDayClick={onDayClick} {...over} />)
+  return { ...utils, onDayClick }
 }
 
-describe('주간 스트립 (⑦) — 지난 날 선택', () => {
-  it('한 주 7일이 보인다', () => {
+describe('나이테 링 히어로', () => {
+  it('제목과 채움률 캡션', () => {
     setup()
-    for (const n of ['2', '3', '4', '5', '6', '7', '8']) {
-      expect(screen.getByText(n)).toBeInTheDocument()
-    }
-  })
-
-  it('지난 날을 누르면 onSelectDay 가 불린다', async () => {
-    const { onSelectDay } = setup()
-    await userEvent.click(screen.getByText('2')) // 월요일
-    expect(onSelectDay).toHaveBeenCalledWith('2026-11-02')
-  })
-
-  it('⭐ 미래 날짜는 누를 수 없다 (비활성)', async () => {
-    const { onSelectDay } = setup()
-    const future = screen.getByText('5').closest('button')!
-    expect(future).toBeDisabled()
-    await userEvent.click(future).catch(() => {})
-    expect(onSelectDay).not.toHaveBeenCalled()
+    expect(screen.getByText('한 겹씩 쌓이는 중')).toBeInTheDocument()
+    expect(screen.getByText(/62% 채움/)).toBeInTheDocument()
   })
 })
 
-describe('선택한 날 기록 — 소급 체크 (⑦)', () => {
-  it('그 날의 활동이 체크 상태로 보인다', () => {
+describe('⭐ 주간 목표 달성 표시 (보강 A · 회귀 방지)', () => {
+  it('목표를 채우면 "완료"로 보인다', () => {
     setup()
-    expect(within(screen.getByTestId('logrow-en-book')).getByText('영어 원서 1권')).toBeInTheDocument()
-    expect(screen.getByRole('checkbox', { name: /영어 원서/ })).toBeChecked()
-    expect(screen.getByRole('checkbox', { name: /한글 숙제/ })).not.toBeChecked()
+    expect(within(screen.getByTestId('rec-facto')).getByText('완료')).toBeInTheDocument()
   })
 
-  it('체크하면 onToggleDay 가 불린다', async () => {
-    const { onToggleDay } = setup()
-    await userEvent.click(screen.getByRole('checkbox', { name: /한글 숙제/ }))
-    expect(onToggleDay).toHaveBeenCalledWith('hangul')
-  })
-
-  it('오늘이 아니면 "지금 체크해도 기록돼요" 안내가 보인다', () => {
-    setup({ selectedIsToday: false, selectedLabel: '11월 2일 월요일' })
-    expect(screen.getByText(/지금 체크해도 기록돼요/)).toBeInTheDocument()
-  })
-
-  it('오늘이면 그 안내는 없다', () => {
+  it('진행 중이면 "N/M회"', () => {
     setup()
-    expect(screen.queryByText(/지금 체크해도 기록돼요/)).not.toBeInTheDocument()
+    expect(within(screen.getByTestId('rec-hangul')).getByText('2/3회')).toBeInTheDocument()
+    expect(within(screen.getByTestId('rec-video')).getByText('3/5회')).toBeInTheDocument()
   })
-})
 
-describe('주간 리포트 (⑧) — 한 것을 센다, 긍정 프레이밍', () => {
-  it('활동별 "이번 주 N일" 이 보인다', () => {
+  it('한 게 없으면 "이번 주 없음"', () => {
     setup()
-    const row = screen.getByTestId('report-en-book')
-    expect(within(row).getByText(/이번 주 3일/)).toBeInTheDocument()
+    expect(within(screen.getByTestId('rec-alpha')).getByText('이번 주 없음')).toBeInTheDocument()
   })
 
-  it("'매일' 활동엔 streak 이 붙는다", () => {
+  it('pip 행 — 목표 칸 수만큼, 완료한 만큼만 채운다', () => {
     setup()
-    expect(within(screen.getByTestId('report-en-book')).getByText(/2일째/)).toBeInTheDocument()
+    const pips = screen.getByTestId('rec-hangul').querySelectorAll('.rec-pips i')
+    expect(pips).toHaveLength(3) // target 3
+    expect(screen.getByTestId('rec-hangul').querySelectorAll('.rec-pips i.on')).toHaveLength(2) // done 2
   })
 
-  it('⭐ 결핍을 강조하지 않는다 — "달성"·점수·N/N·퍼센트 없음', () => {
+  it('⭐ 미완 pip 은 허니(갭색)가 아니다 — 주간 미완은 갭이 아님', () => {
+    setup()
+    // 미완 칸은 중립(.on 아님). 허니 전용 클래스(.gap)를 쓰지 않는다.
+    expect(screen.getByTestId('rec-hangul').querySelectorAll('.rec-pips i.gap')).toHaveLength(0)
+  })
+
+  it('자유 활동(target 0)엔 pip 행이 없다', () => {
+    setup()
+    expect(screen.getByTestId('rec-alpha').querySelector('.rec-pips')).toBeNull()
+  })
+
+  it('⭐ 결핍·성적표 어휘가 없다', () => {
     const { container } = setup()
     const text = container.textContent ?? ''
-    expect(text).not.toContain('달성')
-    expect(text).not.toContain('못한')
-    expect(text).not.toMatch(/\d+\s*\/\s*\d+/)
-    expect(text).not.toMatch(/\d+%/)
+    for (const bad of ['달성', '못한', '밀림', '미완료', '미달', '부족', '실패', '성공', '클리어']) {
+      expect(text).not.toContain(bad)
+    }
+  })
+})
+
+describe('⭐ 지난 날 backfill 진입 (보강 B · 회귀 방지)', () => {
+  it('이번 주 7일이 버튼으로 있다', () => {
+    setup()
+    expect(WEEK.every((d) => screen.getByTestId(`wd-${d.date}`))).toBe(true)
   })
 
-  it('한 게 없는 활동은 "이번 주 기록 없음" (결핍 아닌 중립)', () => {
-    setup()
-    expect(within(screen.getByTestId('report-alpha')).getByText(/기록 없음/)).toBeInTheDocument()
+  it('지난 날을 누르면 onDayClick(date) 가 불린다', async () => {
+    const { onDayClick } = setup()
+    await userEvent.click(screen.getByTestId('wd-2026-08-31'))
+    expect(onDayClick).toHaveBeenCalledWith('2026-08-31')
   })
 
-  it('⭐ INV-REPORT-03 — 주1회를 한 번 하면 막대가 꽉 찬다 (회귀 방지)', () => {
-    setup()
-    const fill = screen.getByTestId('report-hw').querySelector('.report__bar-fill')!
-    expect(fill).toHaveAttribute('data-full', 'true')
+  it('오늘도 누를 수 있다', async () => {
+    const { onDayClick } = setup()
+    await userEvent.click(screen.getByTestId('wd-2026-09-03'))
+    expect(onDayClick).toHaveBeenCalledWith('2026-09-03')
   })
 
-  it('아직 리듬 미달이면 막대가 안 찼다 (주3회 중 0회)', () => {
+  it('⭐ 미래 날짜는 비활성', () => {
     setup()
-    const fill = screen.getByTestId('report-alpha').querySelector('.report__bar-fill')!
-    expect(fill).toHaveAttribute('data-full', 'false')
+    expect(screen.getByTestId('wd-2026-09-04')).toBeDisabled()
+  })
+
+  it('안내 카피가 못 채운 날을 실패로 규정하지 않는다', () => {
+    setup()
+    expect(screen.getByText(/그냥 비어 있을 뿐이에요/)).toBeInTheDocument()
   })
 })

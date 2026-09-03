@@ -87,3 +87,21 @@ describe('⭐ INV-REPORT-03 — 막대 기준치(target)는 주간 리듬 (회�
     expect(weeklyReport([보드], [], 수)[0]!.target).toBe(2)
   })
 })
+
+describe('⭐ 주간 목표 달성(met) — 도메인이 판정 (보강 A)', () => {
+  it('done >= target 이면 met', () => {
+    const 주2 = act({ id: 'w2', name: '보드', cadence: { kind: '주N회', times: 2 } })
+    const done = [{ activityId: 'w2', date: 화 }, { activityId: 'w2', date: 수 }]
+    expect(weeklyReport([주2], done, 수)[0]!.met).toBe(true)
+  })
+
+  it('아직 미달이면 met 아님', () => {
+    const 주3 = act({ id: 'w3', name: '한글', cadence: { kind: '주N회', times: 3 } })
+    expect(weeklyReport([주3], [{ activityId: 'w3', date: 수 }], 수)[0]!.met).toBe(false)
+  })
+
+  it('자유 활동(target 0·비정기)은 채울 목표가 없어 met 아님', () => {
+    const 자유 = act({ id: 'free', name: '알파짱', cadence: { kind: '비정기' } })
+    expect(weeklyReport([자유], [{ activityId: 'free', date: 수 }], 수)[0]!.met).toBe(false)
+  })
+})
