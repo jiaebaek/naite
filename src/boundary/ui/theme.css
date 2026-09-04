@@ -238,6 +238,7 @@ body {
 .ring-row { display: flex; gap: 4px; margin-bottom: 10px; }
 .pip { flex: 1; height: 9px; border-radius: 99px; background: var(--line-strong); }
 .pip.on { background: var(--sage); }
+.pip.prog { background: color-mix(in srgb, var(--sage) 45%, transparent); }
 .pip.gap { background: var(--honey-2); }
 .d-status { font-size: 13px; color: var(--ink-soft); margin-bottom: 12px; }
 .d-status b { color: var(--honey-ink); font-weight: 700; }
@@ -292,11 +293,13 @@ body {
 .mlabel.good .cnt { color: var(--pine); }
 .ms { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--line-strong); border-radius: var(--r-md); padding: 14px 15px; margin-bottom: 9px; }
 .ms.empty { border-left-color: var(--honey-2); background: linear-gradient(180deg, var(--honey-soft), var(--surface)); }
-.ms.on { border-left-color: var(--sage); }
+.ms.prog { border-left-color: color-mix(in srgb, var(--sage) 55%, var(--line)); }
+.ms.done { border-left-color: var(--sage); background: var(--surface-2); }
 .ms-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .ms-name { font-size: 14.5px; font-weight: 700; line-height: 1.35; }
 .ms-meta { font-size: 12.5px; margin-top: 9px; display: flex; align-items: center; gap: 6px; font-weight: 500; }
-.ms.on .ms-meta { color: var(--pine); }
+.ms.prog .ms-meta { color: var(--pine); }
+.ms.done .ms-meta { color: var(--sage); }
 .ms.empty .ms-meta { color: var(--honey-ink); }
 .ms-meta svg { flex: 0 0 auto; }
 .ms-sub { font-size: 12px; color: var(--muted); margin-top: 2px; padding-left: 22px; }
@@ -316,6 +319,7 @@ body {
 .mrow .mn { font-size: 14px; font-weight: 700; }
 .mrow.mile .mn { font-size: 13.5px; font-weight: 500; }
 .mrow .ms2 { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.ms2.tending { color: var(--sage); font-weight: 500; }
 .mng-add { width: 100%; border: 1px dashed var(--line-strong); background: var(--surface-2); color: var(--pine); font-family: var(--sans); font-weight: 700; font-size: 13px; padding: 11px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 2px; }
 .mng-add:hover { border-color: var(--pine); }
 .mng-dl { font-size: 12px; font-weight: 700; color: var(--muted); margin: 16px 0 8px; }

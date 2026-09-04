@@ -12,9 +12,9 @@ const ACHIEVEMENT: readonly AchGroupVM[] = [
   {
     domain: '국어',
     goals: [
-      { standardId: 'int-ko-find-letters', statement: '아는 글자를 찾아낸다', done: false, coveredByActivity: true },
-      { standardId: 'int-ko-listen', statement: '책을 끝까지 듣는다', done: false, coveredByActivity: false },
-      { standardId: 'int-ko-name', statement: '자기 이름을 쓴다', done: true, coveredByActivity: false },
+      { standardId: 'int-ko-find-letters', statement: '아는 글자를 찾아낸다', done: false, coveredBy: '한글 학원 숙제' },
+      { standardId: 'int-ko-listen', statement: '책을 끝까지 듣는다', done: false, coveredBy: null },
+      { standardId: 'int-ko-name', statement: '자기 이름을 쓴다', done: true, coveredBy: null },
     ],
   },
 ]
@@ -46,12 +46,13 @@ describe('정보 표시', () => {
   })
 })
 
-describe('성취 됨-처리', () => {
-  it('활동으로 챙기는 목표는 "활동으로 챙김" 태그 (토글 없음)', () => {
+describe('성취 됨-처리 (2축 3상태)', () => {
+  it('⭐ 활동으로 챙기는 목표도 됨 토글을 그대로 노출한다 + "챙기는 중" 부제', () => {
     setup()
     const row = screen.getByTestId('goal-int-ko-find-letters')
-    expect(within(row).getByText('활동으로 챙김')).toBeInTheDocument()
-    expect(within(row).queryByRole('button')).not.toBeInTheDocument()
+    expect(within(row).getByText('한글 학원 숙제로 챙기는 중')).toBeInTheDocument()
+    expect(within(row).getByRole('button', { name: '됨으로' })).toBeInTheDocument()
+    expect(within(row).queryByText('활동으로 챙김')).not.toBeInTheDocument()
   })
 
   it('⭐ 비어있는 목표에 "됨으로"를 누르면 onToggleAchieved 가 불린다', async () => {

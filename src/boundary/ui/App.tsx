@@ -242,17 +242,20 @@ export function App() {
           badgeCls: badge.cls,
           badgeLabel: badge.label,
           status,
-          coveredBy: status === '됨' ? null : (covering[0]?.name ?? null),
+          // 활동이 이 목표를 겨냥하는지 — 됨이어도 유지('활동으로 이룸' 부제·관리 tending 용)
+          coveredBy: covering[0]?.name ?? null,
           done: status === '됨',
           ...(status === '활동필요' ? { recommend: recommendFor(std.id, domain) } : {}),
         }
       })
       const total = milestones.length
       const gap = milestones.filter((m) => m.status === '활동필요').length
+      const done = milestones.filter((m) => m.status === '됨').length
+      const prog = milestones.filter((m) => m.status === '챙기는중').length
       const on = total - gap
       const group: DomainVM['group'] =
         total === 0 ? 'full' : gap === total ? 'empty' : gap > 0 ? 'partial' : 'full'
-      return { domain, milestones, total, on, gap, group, noPublic: NO_PUBLIC_STANDARD.includes(domain) }
+      return { domain, milestones, total, on, done, prog, gap, group, noPublic: NO_PUBLIC_STANDARD.includes(domain) }
     })
   }, [targets, achieved, coverageActivities])
 
@@ -376,7 +379,7 @@ export function App() {
           standardId: m.standardId,
           statement: m.statement,
           done: m.status === '됨',
-          coveredByActivity: m.status === '챙기는중',
+          coveredBy: m.coveredBy,
         })),
       })),
     [domainVMs],
@@ -514,7 +517,7 @@ export function App() {
           <AreaScreen dateLabel={formatDate(date)} domains={domainVMs} onOpenDetail={openDetail} />
         )}
         {view === 'detail' && detailVM && (
-          <DetailScreen vm={detailVM} onBack={() => setView('area')} onOpenLink={openLink} onMarkDone={handleToggleAchieved} />
+          <DetailScreen vm={detailVM} onBack={() => setView('area')} onOpenLink={openLink} onToggleAchieved={handleToggleAchieved} />
         )}
         {view === 'manage' && (
           <ManageScreen

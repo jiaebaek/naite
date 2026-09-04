@@ -16,9 +16,11 @@ const ms = (status: MilestoneVM['status']): MilestoneVM => ({
 const dom = (domain: Domain, statuses: MilestoneVM['status'][], noPublic = false): DomainVM => {
   const milestones = statuses.map(ms)
   const gap = milestones.filter((m) => m.status === '활동필요').length
+  const done = milestones.filter((m) => m.status === '됨').length
+  const prog = milestones.filter((m) => m.status === '챙기는중').length
   const total = milestones.length
   const group: DomainVM['group'] = total === 0 ? 'full' : gap === total ? 'empty' : gap > 0 ? 'partial' : 'full'
-  return { domain, milestones, total, on: total - gap, gap, group, noPublic }
+  return { domain, milestones, total, on: total - gap, done, prog, gap, group, noPublic }
 }
 
 // 국어=부분, 과학·탐구=비어있음, 건강·안전=완료 (프로토타입 축약)

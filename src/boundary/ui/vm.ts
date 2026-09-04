@@ -69,13 +69,15 @@ export interface MilestoneVM {
   readonly recommend?: string
 }
 
-/** 영역 카드 · 상세 공용 */
+/** 영역 카드 · 상세 공용. 2축 3상태(§04): 이룸(done) · 챙기는 중(prog) · 비어있음(gap) */
 export interface DomainVM {
   readonly domain: Domain
   readonly milestones: readonly MilestoneVM[]
   readonly total: number
-  readonly on: number // 챙김(됨+챙기는중)
-  readonly gap: number // 활동필요
+  readonly on: number // 챙김(done+prog)
+  readonly done: number // 이룸 (됨)
+  readonly prog: number // 챙기는 중 (활동 연결·아직 이룸 아님)
+  readonly gap: number // 비어있음 (활동필요)
   readonly group: 'empty' | 'partial' | 'full'
   /** 영어처럼 공교육 기준 없는 영역 */
   readonly noPublic: boolean

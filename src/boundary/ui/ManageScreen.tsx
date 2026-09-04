@@ -3,7 +3,7 @@
  * 아이 정보 · 학원 · 활동 · 성취 됨-처리 · 기타. 추가/편집은 바텀시트 폼(ManageSheet)으로 연다.
  */
 import type { Domain, StandardId } from '../../domain/types'
-import { IconBack, IconCheck, IconPlus } from './icons'
+import { IconBack, IconPlus } from './icons'
 
 export interface EntityRowVM {
   readonly id: string
@@ -14,7 +14,8 @@ export interface AchGoalVM {
   readonly standardId: StandardId
   readonly statement: string
   readonly done: boolean
-  readonly coveredByActivity: boolean
+  /** 이 목표를 겨냥하는 활동 이름 (챙기는 중 부제용). 없으면 null */
+  readonly coveredBy: string | null
 }
 export interface AchGroupVM {
   readonly domain: Domain
@@ -95,25 +96,25 @@ export function ManageScreen(props: ManageScreenProps) {
         <div className="mng-sec">
           <div className="eyebrow">성취 기록</div>
           <h3 className="mng-title">이미 할 수 있는 것</h3>
-          <p className="mng-desc">‘됨’으로 표시하면 그 목표는 <b>챙김</b>으로 처리돼, 오늘·영역에서 비어있음으로 뜨지 않아요. 활동으로 챙기는 목표는 여기서 자동으로 빠져요.</p>
+          <p className="mng-desc">‘됨’은 이 목표를 <b>이루었다(달성)</b>는 표시예요. 활동으로 <b>챙기는 중이어도</b>, 아이가 해내면 됨으로 표시하세요. 됨도 활동도 없으면 ‘비어있음’이에요.</p>
           <div className="mng-dl-wrap">
             {achievement.map((g) => (
               <div key={g.domain}>
                 <div className="mng-dl">{g.domain}</div>
                 {g.goals.map((goal) => (
                   <div className="mrow mile" key={goal.standardId} data-testid={`goal-${goal.standardId}`}>
-                    <div className="mmain"><div className="mn">{goal.statement}</div></div>
-                    {goal.coveredByActivity && !goal.done ? (
-                      <span className="mtag"><IconCheck w={14} />활동으로 챙김</span>
-                    ) : (
-                      <button
-                        className={`mtoggle${goal.done ? ' on' : ''}`}
-                        aria-pressed={goal.done}
-                        onClick={() => onToggleAchieved(goal.standardId)}
-                      >
-                        {goal.done ? '됨' : '됨으로'}
-                      </button>
-                    )}
+                    <div className="mmain">
+                      <div className="mn">{goal.statement}</div>
+                      {!goal.done && goal.coveredBy && <div className="ms2 tending">{goal.coveredBy}로 챙기는 중</div>}
+                    </div>
+                    {/* 됨은 활동 연결과 무관하게 항상 토글 가능(§04·§12) */}
+                    <button
+                      className={`mtoggle${goal.done ? ' on' : ''}`}
+                      aria-pressed={goal.done}
+                      onClick={() => onToggleAchieved(goal.standardId)}
+                    >
+                      {goal.done ? '됨' : '됨으로'}
+                    </button>
                   </div>
                 ))}
               </div>

@@ -1,0 +1,1631 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>나이테</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+  :root{
+    --paper:#EFF1EA;
+    --canvas:#E4E7DD;
+    --surface:#FCFCF8;
+    --surface-2:#F5F6EF;
+    --ink:#23291F;
+    --ink-soft:#565E4E;
+    --muted:#8B9182;
+    --line:#E2E5DA;
+    --line-strong:#D2D6C8;
+    --pine:#245648;
+    --pine-2:#2F6E58;
+    --pine-soft:#E4EEE7;
+    --sage:#4F9A72;
+    --honey:#B87343;
+    --honey-2:#D1965C;
+    --honey-soft:#F3E8DA;
+    --honey-ink:#7A4520;
+    --shadow:0 1px 2px rgba(35,41,31,.05), 0 8px 24px rgba(35,41,31,.07);
+    --shadow-phone:0 4px 12px rgba(35,41,31,.10), 0 30px 70px rgba(35,41,31,.18);
+    --r-sm:10px; --r-md:16px; --r-lg:22px;
+    --serif:"Gowun Batang", Georgia, serif;
+    --sans:"Noto Sans KR", system-ui, -apple-system, sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#14170F;
+      --canvas:#0E110A;
+      --surface:#1D2119;
+      --surface-2:#252A1F;
+      --ink:#ECEDE3;
+      --ink-soft:#B7BCAC;
+      --muted:#868C79;
+      --line:#2C3225;
+      --line-strong:#3A4131;
+      --pine:#74C29A;
+      --pine-2:#5FB088;
+      --pine-soft:#1C2E24;
+      --sage:#74C29A;
+      --honey:#D69E68;
+      --honey-2:#E0AD7B;
+      --honey-soft:#2C2415;
+      --honey-ink:#E9C8A0;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.4);
+      --shadow-phone:0 4px 12px rgba(0,0,0,.5), 0 30px 70px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#14170F;
+    --canvas:#0E110A;
+    --surface:#1D2119;
+    --surface-2:#252A1F;
+    --ink:#ECEDE3;
+    --ink-soft:#B7BCAC;
+    --muted:#868C79;
+    --line:#2C3225;
+    --line-strong:#3A4131;
+    --pine:#74C29A;
+    --pine-2:#5FB088;
+    --pine-soft:#1C2E24;
+    --sage:#74C29A;
+    --honey:#D69E68;
+    --honey-2:#E0AD7B;
+    --honey-soft:#2C2415;
+    --honey-ink:#E9C8A0;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.4);
+    --shadow-phone:0 4px 12px rgba(0,0,0,.5), 0 30px 70px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html{color-scheme:light dark}
+  body{margin:0}
+  body{
+    background:var(--canvas);
+    color:var(--ink);
+    font-family:var(--sans);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    word-break:keep-all;
+    overflow-wrap:anywhere;
+  }
+  .wrap{
+    max-width:1120px;
+    margin:0 auto;
+    padding:40px 24px 64px;
+    display:grid;
+    grid-template-columns:minmax(0,390px) minmax(0,1fr);
+    gap:52px;
+    align-items:start;
+  }
+  @media (max-width:880px){
+    .wrap{grid-template-columns:1fr; gap:40px; justify-items:center; padding:28px 16px 48px}
+  }
+
+  /* ---------- phone ---------- */
+  .phone{
+    position:sticky; top:32px;
+    width:390px; max-width:100%;
+    height:800px;
+    background:var(--paper);
+    border-radius:38px;
+    box-shadow:var(--shadow-phone);
+    border:1px solid var(--line-strong);
+    padding:10px;
+    justify-self:end;
+  }
+  @media (max-width:880px){ .phone{position:static; justify-self:center} }
+  .device{
+    position:relative;
+    height:100%;
+    background:var(--paper);
+    border-radius:30px;
+    overflow:hidden;
+    display:flex; flex-direction:column;
+  }
+  .screen{
+    flex:1; min-height:0;
+    overflow-y:auto;
+    overflow-x:hidden;
+    scrollbar-width:none;
+  }
+  .screen::-webkit-scrollbar{display:none}
+  .view{display:none; padding:0 0 20px}
+  .view.active{display:block}
+
+  /* ---------- app header ---------- */
+  .appbar{
+    position:sticky; top:0; z-index:5;
+    background:color-mix(in srgb, var(--paper) 88%, transparent);
+    backdrop-filter:blur(8px);
+    padding:16px 18px 12px;
+    border-bottom:1px solid var(--line);
+  }
+  .brandrow{display:flex; align-items:center; justify-content:space-between}
+  .brand{display:flex; align-items:center; gap:9px}
+  .mark{width:26px; height:26px; flex:0 0 auto}
+  .brand h1{font-family:var(--serif); font-weight:700; font-size:22px; margin:0; letter-spacing:-.01em}
+  .tagline{font-family:var(--serif); color:var(--pine); font-size:12.5px; margin-top:3px; letter-spacing:.01em}
+  .gear{
+    width:34px; height:34px; border-radius:50%;
+    border:1px solid var(--line-strong); background:var(--surface);
+    color:var(--ink-soft); display:grid; place-items:center; cursor:pointer;
+  }
+  .gear:hover{border-color:var(--pine)}
+
+  .screen-pad{padding:16px 18px 0}
+  .datestrip{color:var(--muted); font-size:13px; font-weight:500; margin:0 0 14px}
+
+  /* ---------- gap / reassurance banner ---------- */
+  .gapcard{
+    border-radius:var(--r-lg);
+    padding:18px 18px 16px;
+    background:linear-gradient(180deg, var(--honey-soft), var(--surface));
+    border:1px solid color-mix(in srgb, var(--honey) 30%, var(--line));
+    box-shadow:var(--shadow);
+  }
+  .gapcard.clear{
+    background:linear-gradient(180deg, var(--pine-soft), var(--surface));
+    border-color:color-mix(in srgb, var(--pine) 26%, var(--line));
+  }
+  .eyebrow{font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--muted)}
+  .gap-head{font-family:var(--serif); font-size:26px; font-weight:700; line-height:1.2; margin:6px 0 2px; color:var(--honey-ink); text-wrap:balance}
+  .gapcard.clear .gap-head{color:var(--pine)}
+  .gap-sub{font-size:13px; color:var(--ink-soft); margin:0 0 13px}
+  .coverbar{display:flex; gap:4px; margin-bottom:13px}
+  .seg{height:8px; border-radius:99px; flex:1; background:var(--line-strong)}
+  .seg.on{background:var(--sage)}
+  .seg.gap{background:var(--honey-2)}
+  .chiprow{display:flex; flex-wrap:wrap; gap:7px; margin-bottom:14px}
+  .chip{
+    font-size:12.5px; font-weight:500; padding:5px 11px; border-radius:99px;
+    background:var(--surface); border:1px solid color-mix(in srgb, var(--honey) 34%, var(--line));
+    color:var(--honey-ink); display:inline-flex; align-items:center; gap:5px;
+  }
+  .chip .dot{width:6px; height:6px; border-radius:50%; background:var(--honey-2)}
+  .btn-primary{
+    width:100%; border:none; cursor:pointer;
+    background:var(--pine); color:#fff;
+    font-family:var(--sans); font-weight:700; font-size:14px;
+    padding:12px; border-radius:var(--r-md);
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    transition:background .15s;
+  }
+  :root[data-theme="dark"] .btn-primary, :root:not([data-theme="light"]) .btn-primary{color:#0E110A}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn-primary{color:#0E110A}}
+  .btn-primary:hover{background:var(--pine-2)}
+
+  /* ---------- section ---------- */
+  .sec{margin-top:24px}
+  .sec-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:11px}
+  .sec-title{font-family:var(--serif); font-size:18px; font-weight:700; margin:0}
+  .sec-count{font-size:13px; font-weight:700; color:var(--pine); font-variant-numeric:tabular-nums}
+
+  /* schedule strip */
+  .sched{
+    display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:16px;
+    scrollbar-width:none;
+  }
+  .sched::-webkit-scrollbar{display:none}
+  .sched-item{
+    flex:0 0 auto; background:var(--surface-2); border:1px solid var(--line);
+    border-radius:var(--r-sm); padding:8px 11px; min-width:112px;
+  }
+  .sched-time{font-size:12px; font-weight:700; color:var(--pine); font-variant-numeric:tabular-nums}
+  .sched-name{font-size:12.5px; color:var(--ink-soft); margin-top:1px}
+
+  /* domain group label */
+  .grp{font-size:12px; font-weight:700; color:var(--muted); letter-spacing:.04em; margin:16px 0 8px}
+  .grp:first-child{margin-top:0}
+
+  /* task card */
+  .task{
+    display:flex; gap:12px; align-items:flex-start;
+    background:var(--surface); border:1px solid var(--line);
+    border-left:3px solid var(--line-strong);
+    border-radius:var(--r-md); padding:13px 14px; margin-bottom:9px;
+    cursor:pointer; transition:border-color .15s, background .15s;
+  }
+  .task:hover{border-color:var(--line-strong)}
+  .task.done{background:var(--surface-2); border-left-color:var(--sage)}
+  .task.done .t-name{color:var(--muted); text-decoration:line-through}
+  .cbox{
+    flex:0 0 auto; width:22px; height:22px; margin-top:1px;
+    border-radius:7px; border:2px solid var(--line-strong); background:var(--surface);
+    display:grid; place-items:center; transition:all .15s;
+  }
+  .task.done .cbox{background:var(--sage); border-color:var(--sage)}
+  .cbox svg{opacity:0; transition:opacity .15s}
+  .task.done .cbox svg{opacity:1}
+  .t-body{flex:1; min-width:0}
+  .t-top{display:flex; align-items:flex-start; justify-content:space-between; gap:8px}
+  .t-name{font-size:15px; font-weight:700; line-height:1.3}
+  .badge{
+    flex:0 0 auto; font-size:10.5px; font-weight:700; letter-spacing:.02em;
+    padding:3px 8px; border-radius:99px; white-space:nowrap;
+  }
+  .badge.gov{background:var(--pine-soft); color:var(--pine)}
+  .badge.own{background:var(--surface-2); color:var(--ink-soft); border:1px solid var(--line)}
+  .badge.free{background:transparent; color:var(--muted); border:1px dashed var(--line-strong)}
+  .t-aim{font-size:12.5px; color:var(--ink-soft); margin-top:6px; display:flex; align-items:center; gap:6px}
+  .t-aim .arrow{color:var(--sage); font-weight:700}
+  .t-aim.none{color:var(--muted); font-style:italic}
+
+  /* pet footer */
+  .pet{
+    margin:22px 0 4px; display:flex; align-items:center; gap:13px;
+    background:var(--surface-2); border:1px solid var(--line); border-radius:var(--r-md);
+    padding:12px 14px;
+  }
+  .pet-icon{width:42px; height:42px; flex:0 0 auto; display:grid; place-items:center}
+  .pet-txt{flex:1; min-width:0}
+  .pet-title{font-size:13px; font-weight:700}
+  .pet-sub{font-size:12px; color:var(--muted); margin-top:1px}
+  .pet-meter{height:6px; border-radius:99px; background:var(--line-strong); margin-top:7px; overflow:hidden}
+  .pet-fill{height:100%; width:0; background:linear-gradient(90deg,var(--sage),var(--pine)); border-radius:99px; transition:width .4s ease}
+
+  /* ---------- 영역 view ---------- */
+  .overview{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg);
+    padding:16px 16px 14px; box-shadow:var(--shadow); margin-bottom:8px;
+  }
+  .ov-num{font-family:var(--serif); font-size:15px; font-weight:700; margin:4px 0 12px}
+  .ov-num b{color:var(--honey-ink)}
+  .legend{display:flex; gap:16px; margin-top:12px}
+  .legend span{font-size:12px; color:var(--ink-soft); display:flex; align-items:center; gap:6px}
+  .lg-dot{width:9px; height:9px; border-radius:50%}
+
+  .dgrp-label{font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:22px 0 10px; display:flex; align-items:center; gap:8px}
+  .dgrp-label::after{content:""; flex:1; height:1px; background:var(--line)}
+
+  .domain{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md);
+    padding:15px 16px; margin-bottom:10px; box-shadow:var(--shadow);
+  }
+  .domain.empty{border-color:color-mix(in srgb, var(--honey) 40%, var(--line)); background:linear-gradient(180deg,var(--honey-soft),var(--surface))}
+  .d-top{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px}
+  .d-name{font-size:16px; font-weight:700}
+  .pill{font-size:11px; font-weight:700; padding:4px 10px; border-radius:99px}
+  .pill.on{background:var(--pine-soft); color:var(--pine)}
+  .pill.empty{background:color-mix(in srgb,var(--honey-2) 30%, transparent); color:var(--honey-ink)}
+  .pill.full{background:var(--sage); color:#fff}
+  :root[data-theme="dark"] .pill.full,:root:not([data-theme="light"]) .pill.full{color:#0E110A}
+  .ring-row{display:flex; gap:4px; margin-bottom:10px}
+  .pip{flex:1; height:9px; border-radius:99px; background:var(--line-strong)}
+  .pip.on{background:var(--sage)}
+  .pip.gap{background:var(--honey-2)}
+  .d-status{font-size:13px; color:var(--ink-soft); margin-bottom:12px}
+  .d-status b{color:var(--honey-ink); font-weight:700}
+  .d-status.good b{color:var(--pine)}
+  .d-actions{display:flex; gap:8px}
+  .btn-sm{
+    font-family:var(--sans); font-size:12.5px; font-weight:700; cursor:pointer;
+    padding:9px 14px; border-radius:10px; border:1px solid var(--line-strong);
+    background:var(--surface); color:var(--ink-soft);
+  }
+  .btn-sm:hover{border-color:var(--pine); color:var(--pine)}
+  .btn-sm.fill{background:var(--honey); border-color:var(--honey); color:#fff}
+  .btn-sm.fill:hover{background:var(--honey-ink); border-color:var(--honey-ink); color:#fff}
+
+  /* ---------- 온보딩 ---------- */
+  .onboard{position:absolute; inset:0; z-index:20; background:var(--paper); display:flex; flex-direction:column; padding:18px 22px 22px}
+  .ob-skip{align-self:flex-end; background:none; border:none; color:var(--muted); font-family:var(--sans); font-size:13px; font-weight:700; cursor:pointer; padding:6px 2px}
+  .ob-skip:hover{color:var(--ink)}
+  .ob-stage{flex:1; min-height:0; position:relative}
+  .ob-slide{position:absolute; inset:0; display:none; flex-direction:column}
+  .ob-slide.active{display:flex}
+  .ob-art{flex:1; display:grid; place-items:center; padding:6px 0 4px}
+  .ob-h{font-family:var(--serif); font-size:27px; font-weight:700; line-height:1.3; margin:12px 0 12px; text-wrap:balance; letter-spacing:-.01em}
+  .ob-p{font-size:14.5px; color:var(--ink-soft); line-height:1.65; max-width:31ch}
+  .ob-p b{color:var(--pine); font-weight:700}
+  .ob-foot{display:flex; align-items:center; gap:16px; margin-top:20px}
+  .dots{display:flex; gap:7px}
+  .dot-i{width:8px; height:8px; border-radius:99px; background:var(--line-strong); transition:width .25s, background .25s}
+  .dot-i.on{width:22px; background:var(--pine)}
+  .ob-next{flex:1}
+  /* onboarding illustration bits */
+  .ob-mock{width:100%; max-width:286px}
+  .ob-rings{width:196px; height:196px; display:block; margin:0 auto}
+  .ob-rings text{fill:var(--ink)}
+  .ob-domrow{display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:11px 13px; margin-bottom:8px}
+  .ob-domrow.gap{border-color:color-mix(in srgb,var(--honey) 40%,var(--line)); background:linear-gradient(180deg,var(--honey-soft),var(--surface))}
+  .ob-domrow .nm{font-size:14px; font-weight:700}
+  .ob-task{display:flex; align-items:center; gap:11px; background:var(--surface-2); border:1px solid var(--line); border-left:3px solid var(--sage); border-radius:12px; padding:12px 13px}
+  .ob-task .cbox{width:22px;height:22px;border-radius:7px;background:var(--sage);border:2px solid var(--sage);display:grid;place-items:center;flex:0 0 auto}
+  .ob-task .nm{font-size:14px; font-weight:700; color:var(--muted); text-decoration:line-through}
+  .ob-arrow{display:grid; place-items:center; color:var(--muted); margin:10px 0}
+  .ob-grow{display:flex; align-items:center; gap:14px; justify-content:center; margin-top:2px}
+  .ob-grow .cap{font-size:12.5px; color:var(--muted)}
+
+  /* ---------- 영역 상세 ---------- */
+  .detbar{display:flex; align-items:center; gap:11px; margin:0 0 16px}
+  .back{width:34px; height:34px; border-radius:50%; border:1px solid var(--line-strong); background:var(--surface); color:var(--ink); display:grid; place-items:center; cursor:pointer; flex:0 0 auto}
+  .back:hover{border-color:var(--pine); color:var(--pine)}
+  .dt-name{font-family:var(--serif); font-size:21px; font-weight:700}
+  .det-summary{background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg); padding:16px; box-shadow:var(--shadow)}
+  .det-cover{font-family:var(--serif); font-size:15px; font-weight:700; margin:4px 0 12px}
+  .det-cover b{color:var(--honey-ink)}
+  .mlabel{font-size:12px; font-weight:700; letter-spacing:.05em; color:var(--muted); margin:24px 0 11px; display:flex; align-items:center; gap:8px}
+  .mlabel::after{content:""; flex:1; height:1px; background:var(--line)}
+  .mlabel .cnt{color:var(--honey-ink)}
+  .mlabel.good .cnt{color:var(--pine)}
+  .ms{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--line-strong); border-radius:var(--r-md); padding:14px 15px; margin-bottom:9px}
+  .ms.empty{border-left-color:var(--honey-2); background:linear-gradient(180deg,var(--honey-soft),var(--surface))}
+  .ms.prog{border-left-color:color-mix(in srgb, var(--sage) 55%, var(--line))}
+  .ms.done{border-left-color:var(--sage); background:var(--surface-2)}
+  .ms.prog .ms-meta{color:var(--pine)}
+  .ms.done .ms-meta{color:var(--sage)}
+  .ms .b-link, .ms .b-ach, .ms .b-undo{display:none}
+  .ms.empty .b-link{display:inline-flex}
+  .ms.empty .b-ach, .ms.prog .b-ach{display:inline-flex}
+  .ms.done .b-undo{display:inline-flex}
+  .ms.prog .suggest, .ms.done .suggest{display:none}
+  .pip.prog{background:color-mix(in srgb, var(--sage) 45%, transparent)}
+  .ms-top{display:flex; align-items:flex-start; justify-content:space-between; gap:8px}
+  .ms-name{font-size:14.5px; font-weight:700; line-height:1.35}
+  .ms-meta{font-size:12.5px; margin-top:9px; display:flex; align-items:center; gap:6px; font-weight:500}
+  .ms.on .ms-meta{color:var(--pine)}
+  .ms.empty .ms-meta{color:var(--honey-ink)}
+  .ms-meta svg{flex:0 0 auto}
+  .ms-sub{font-size:12px; color:var(--muted); margin-top:2px; padding-left:22px}
+  .ms-act{display:flex; gap:8px; margin-top:13px; flex-wrap:wrap}
+  .suggest{font-size:12px; color:var(--ink-soft); background:var(--surface-2); border:1px dashed var(--line-strong); border-radius:9px; padding:7px 11px; margin-top:11px; display:flex; gap:7px; align-items:center}
+  .suggest b{color:var(--pine); font-weight:700}
+  .suggest .lb{color:var(--muted); flex:0 0 auto}
+
+  /* ---------- 관리 ---------- */
+  .mng-sec{margin-top:26px}
+  .mng-sec:first-of-type{margin-top:4px}
+  .mng-title{font-family:var(--serif); font-size:17px; font-weight:700; margin:0 0 3px}
+  .mng-desc{font-size:12.5px; color:var(--ink-soft); margin:0 0 12px; line-height:1.55}
+  .mrow{display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:8px}
+  .mrow .mmain{min-width:0}
+  .mrow .mn{font-size:14px; font-weight:700}
+  .mrow.mile .mn{font-size:13.5px; font-weight:500}
+  .mrow .ms2{font-size:12px; color:var(--muted); margin-top:2px}
+  .mng-add{width:100%; border:1px dashed var(--line-strong); background:var(--surface-2); color:var(--pine); font-family:var(--sans); font-weight:700; font-size:13px; padding:11px; border-radius:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:7px; margin-top:2px}
+  .mng-add:hover{border-color:var(--pine)}
+  .mng-dl{font-size:12px; font-weight:700; color:var(--muted); margin:16px 0 8px}
+  .btn-edit{font-family:var(--sans); font-size:12.5px; font-weight:700; cursor:pointer; padding:7px 13px; border-radius:9px; border:1px solid var(--line-strong); background:var(--surface); color:var(--ink-soft); flex:0 0 auto}
+  .btn-edit:hover{border-color:var(--pine); color:var(--pine)}
+  .mtoggle{font-family:var(--sans); font-size:12.5px; font-weight:700; cursor:pointer; padding:7px 15px; border-radius:99px; border:1px solid var(--line-strong); background:var(--surface); color:var(--ink-soft); flex:0 0 auto}
+  .mtoggle.on{background:var(--sage); border-color:var(--sage); color:#fff}
+  :root[data-theme="dark"] .mtoggle.on,:root:not([data-theme="light"]) .mtoggle.on{color:#0E110A}
+  .mtag{font-size:11.5px; color:var(--pine); font-weight:700; flex:0 0 auto; display:flex; align-items:center; gap:5px}
+  .ms2.tending{color:var(--sage); font-weight:500}
+
+  /* ---------- 활동 연결 바텀시트 ---------- */
+  .sheet-wrap{position:absolute; inset:0; z-index:30}
+  .sheet-bg{position:absolute; inset:0; background:rgba(20,23,15,.42); animation:fade .2s ease}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .sheet{position:absolute; left:0; right:0; bottom:0; background:var(--surface); border-radius:24px 24px 0 0; padding:10px 18px 18px; max-height:90%; display:flex; flex-direction:column; box-shadow:0 -10px 40px rgba(0,0,0,.22); animation:slideup .28s cubic-bezier(.22,1,.36,1)}
+  @keyframes slideup{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  @media (prefers-reduced-motion:reduce){.sheet,.sheet-bg{animation:none}}
+  .grab{width:40px; height:4px; border-radius:99px; background:var(--line-strong); margin:2px auto 14px; flex:0 0 auto}
+  .sheet-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:13px; flex:0 0 auto}
+  .sheet-head h3{font-family:var(--serif); font-size:19px; font-weight:700; margin:0}
+  .sheet-x{width:30px; height:30px; border-radius:50%; border:1px solid var(--line); background:var(--surface-2); color:var(--ink-soft); cursor:pointer; display:grid; place-items:center}
+  .sheet-x:hover{color:var(--ink)}
+  .target{display:flex; align-items:center; gap:9px; background:var(--surface-2); border:1px solid var(--line); border-radius:12px; padding:11px 13px; margin-bottom:4px; flex:0 0 auto}
+  .target .tg-name{font-size:14px; font-weight:700}
+  .sheet-body{overflow-y:auto; padding:6px 2px 2px; margin:0 -2px}
+  .opt-label{font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:16px 0 8px}
+  .opt{display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:13px 14px; margin-bottom:8px; cursor:pointer; font-family:var(--sans); color:var(--ink)}
+  .opt:hover{border-color:var(--line-strong)}
+  .opt.sel{border-color:var(--pine); background:var(--pine-soft)}
+  .opt-radio{width:20px; height:20px; border-radius:50%; border:2px solid var(--line-strong); flex:0 0 auto; display:grid; place-items:center}
+  .opt.sel .opt-radio{border-color:var(--pine)}
+  .opt.sel .opt-radio::after{content:""; width:10px; height:10px; border-radius:50%; background:var(--pine)}
+  .opt-main{flex:1; min-width:0}
+  .opt-main b{font-size:14px; font-weight:700; display:block}
+  .opt-main small{font-size:12px; color:var(--muted)}
+  .opt-tag{font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:99px; background:var(--honey-soft); color:var(--honey-ink); flex:0 0 auto}
+  .opt.new{color:var(--pine); font-weight:700; justify-content:center; border-style:dashed; gap:7px}
+  .sheet-foot{margin-top:16px; flex:0 0 auto}
+
+  /* ---------- 폼(학원·활동 추가/편집) ---------- */
+  .field{margin-bottom:17px}
+  .field > label{display:block; font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-bottom:8px}
+  .field label .opt{font-weight:400; color:var(--muted)}
+  .inp{width:100%; font-family:var(--sans); font-size:14px; color:var(--ink); background:var(--surface); border:1px solid var(--line-strong); border-radius:10px; padding:11px 13px; -webkit-appearance:none; appearance:none}
+  .inp:focus{outline:none; border-color:var(--pine); box-shadow:0 0 0 3px var(--pine-soft)}
+  .inp::placeholder{color:var(--muted)}
+  select.inp{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' stroke='%238B9182' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>"); background-repeat:no-repeat; background-position:right 10px center; padding-right:38px}
+  .daychips{display:flex; gap:6px; flex-wrap:wrap}
+  .daychip{width:38px; height:38px; border-radius:10px; border:1px solid var(--line-strong); background:var(--surface); font-size:13px; font-weight:700; color:var(--ink-soft); cursor:pointer}
+  .daychip.on{background:var(--pine); border-color:var(--pine); color:var(--paper)}
+  .seg3{display:flex; gap:6px}
+  .seg3 button{flex:1; padding:11px; border-radius:10px; border:1px solid var(--line-strong); background:var(--surface); font-family:var(--sans); font-size:13px; font-weight:700; color:var(--ink-soft); cursor:pointer}
+  .seg3 button.on{background:var(--pine-soft); border-color:var(--pine); color:var(--pine)}
+  .subfield{margin-top:10px}
+  .stepper{display:inline-flex; align-items:center; border:1px solid var(--line-strong); border-radius:10px; overflow:hidden}
+  .stepper button{width:42px; height:42px; border:none; background:var(--surface); font-size:19px; font-weight:700; color:var(--pine); cursor:pointer}
+  .stepper button:hover{background:var(--surface-2)}
+  .stepper .val{min-width:70px; text-align:center; font-size:14px; font-weight:700; font-variant-numeric:tabular-nums; border-left:1px solid var(--line); border-right:1px solid var(--line); height:42px; line-height:42px}
+  .free-note{font-size:12.5px; color:var(--muted); margin-top:8px}
+  .aimrow{display:flex; align-items:center; gap:11px; padding:11px 2px; cursor:pointer; border-bottom:1px solid var(--line)}
+  .aimrow:last-child{border-bottom:none}
+  .aimrow .cbox{width:20px; height:20px; border-radius:6px; border:2px solid var(--line-strong); background:var(--surface); display:grid; place-items:center; flex:0 0 auto}
+  .aimrow.on .cbox{background:var(--sage); border-color:var(--sage)}
+  .aimrow .cbox svg{opacity:0}
+  .aimrow.on .cbox svg{opacity:1}
+  .aimrow .anm{font-size:13.5px; font-weight:500}
+  .aimrow .adm{margin-left:auto; font-size:11px; color:var(--muted); flex:0 0 auto}
+  .form-foot{display:flex; gap:10px}
+  .form-foot .btn-primary{flex:1}
+  .btn-danger{flex:0 0 auto; font-family:var(--sans); font-size:13px; font-weight:700; padding:12px 16px; border-radius:12px; border:1px solid var(--line-strong); background:var(--surface); color:#B0442E; cursor:pointer}
+  :root[data-theme="dark"] .btn-danger,:root:not([data-theme="light"]) .btn-danger{color:#E8988A}
+  .btn-danger:hover{border-color:#B0442E}
+
+  /* ---------- 기록 view ---------- */
+  .rec-hero{text-align:center; padding:10px 0 6px}
+  .rec-title{font-family:var(--serif); font-size:20px; font-weight:700; margin:0}
+  .rec-sub{font-size:13px; color:var(--muted); margin:5px 0 4px; max-width:260px; margin-inline:auto}
+  .rings{display:block; margin:6px auto 2px; width:210px; height:210px}
+  .rings text{fill:var(--ink)}
+  .rc-caption{font-size:12px; color:var(--muted); margin-top:0}
+  .week{display:flex; gap:6px; margin:20px 0 8px}
+  .wd{flex:1; text-align:center}
+  .wd-lbl{font-size:11px; color:var(--muted); margin-bottom:6px}
+  .wd-dot{width:100%; aspect-ratio:1; border-radius:12px; background:var(--surface-2); border:1px solid var(--line); display:grid; place-items:center; font-size:12px; font-weight:700; color:var(--muted)}
+  .wd.fill .wd-dot{background:var(--pine); color:#fff; border-color:var(--pine)}
+  :root[data-theme="dark"] .wd.fill .wd-dot,:root:not([data-theme="light"]) .wd.fill .wd-dot{color:#0E110A}
+  .wd.today .wd-dot{outline:2px solid var(--honey-2); outline-offset:2px}
+  .rec-list{margin-top:20px}
+  .rec-item{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px 2px; border-bottom:1px solid var(--line)}
+  .rec-item:last-child{border-bottom:none}
+  .rec-nm{font-size:14px; font-weight:500}
+  .rec-nm span{font-size:11.5px; color:var(--muted); font-weight:400; margin-left:6px}
+  .rec-cnt{font-size:12.5px; font-weight:700; color:var(--pine); font-variant-numeric:tabular-nums}
+  .rec-cnt.zero{color:var(--muted)}
+
+  /* ---------- 기록: 주간 편집 ---------- */
+  .wd{cursor:pointer}
+  .wd:not(.disabled):hover .wd-dot{border-color:var(--pine)}
+  .wd.disabled{opacity:.36; pointer-events:none}
+  .week-hint{font-size:12px; color:var(--muted); margin:10px 0 0; text-align:center; line-height:1.5}
+  .wact{padding:13px 2px; border-bottom:1px solid var(--line)}
+  .wact:last-child{border-bottom:none}
+  .wact-top{display:flex; align-items:baseline; justify-content:space-between; gap:10px}
+  .wact-nm{font-size:14px; font-weight:500}
+  .wact-nm span{font-size:11.5px; color:var(--muted); font-weight:400; margin-left:7px}
+  .wact-state{font-size:12.5px; font-weight:700; font-variant-numeric:tabular-nums; display:flex; align-items:center; gap:5px; flex:0 0 auto}
+  .wact-state.done{color:var(--sage)} .wact-state.prog{color:var(--ink-soft)} .wact-state.none{color:var(--muted)}
+  .wact-pips{display:flex; gap:4px; margin-top:9px; max-width:190px}
+  .wpip{flex:1; height:7px; border-radius:99px; background:var(--line-strong)}
+  .wpip.on{background:var(--sage)}
+  .day-hint{font-size:12.5px; color:var(--muted); margin:-2px 0 8px}
+  .dchk{display:flex; align-items:center; gap:12px; padding:13px 2px; border-bottom:1px solid var(--line); cursor:pointer}
+  .dchk:last-child{border-bottom:none}
+  .dchk.on .cbox{background:var(--sage); border-color:var(--sage)}
+  .dchk.on .cbox svg{opacity:1}
+  .dchk .dnm{font-size:14px; font-weight:600}
+  .dchk.on .dnm{color:var(--muted); text-decoration:line-through}
+  .dchk .dtag{font-size:11.5px; color:var(--muted); margin-left:auto}
+
+  /* ---------- tab bar ---------- */
+  .tabbar{
+    flex:0 0 auto; display:flex; background:var(--surface);
+    border-top:1px solid var(--line); padding:8px 6px 10px;
+  }
+  .tab{
+    flex:1; background:none; border:none; cursor:pointer; padding:6px 4px;
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    color:var(--muted); font-family:var(--sans); font-size:11px; font-weight:700;
+  }
+  .tab svg{width:23px; height:23px}
+  .tab.active{color:var(--pine)}
+
+  /* ---------- notes side ---------- */
+  .notes{max-width:520px; padding-top:6px}
+  @media (max-width:880px){ .notes{max-width:520px} }
+  .themebar{display:inline-flex; gap:2px; background:var(--surface-2); border:1px solid var(--line); border-radius:99px; padding:3px; margin-bottom:22px}
+  .themebar button{font-family:var(--sans); font-size:12.5px; font-weight:700; border:none; background:none; color:var(--muted); padding:6px 14px; border-radius:99px; cursor:pointer}
+  .themebar button.on{background:var(--pine); color:var(--paper)}
+  .notes .kicker{font-size:12px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--pine); margin-bottom:10px}
+  .notes h2{font-family:var(--serif); font-size:30px; font-weight:700; line-height:1.22; margin:0 0 14px; letter-spacing:-.01em; text-wrap:balance}
+  .notes .lede{font-size:15px; color:var(--ink-soft); margin:0 0 30px; max-width:46ch}
+  .notes .lede b{color:var(--ink); font-weight:700}
+  .change{display:flex; gap:15px; padding:17px 0; border-top:1px solid var(--line)}
+  .change:last-child{border-bottom:1px solid var(--line)}
+  .change .n{font-family:var(--serif); font-size:15px; font-weight:700; color:var(--pine); flex:0 0 auto; width:26px; line-height:1.4}
+  .change .c-body h3{font-size:15px; font-weight:700; margin:0 0 4px}
+  .change .c-body p{font-size:13.5px; color:var(--ink-soft); margin:0}
+  .change .c-body .was{color:var(--muted); font-size:12.5px; margin-top:5px}
+  .change .c-body .was b{color:var(--honey-ink); font-weight:700}
+  .footnote{font-size:12.5px; color:var(--muted); margin-top:22px; line-height:1.6}
+</style>
+
+<div class="wrap">
+  <!-- ============ PHONE ============ -->
+  <div class="phone">
+    <div class="device">
+
+      <!-- ============ 온보딩 (첫 방문) ============ -->
+      <div class="onboard" id="onboard">
+        <button class="ob-skip" onclick="closeOnboard()">건너뛰기</button>
+        <div class="ob-stage">
+
+          <!-- 1. 정체성 -->
+          <div class="ob-slide active">
+            <div class="ob-art">
+              <svg class="ob-rings" viewBox="0 0 200 200" role="img" aria-label="나이테">
+                <circle cx="100" cy="100" r="86" fill="none" stroke="var(--pine)" stroke-width="8" opacity=".95"/>
+                <circle cx="100" cy="100" r="66" fill="none" stroke="var(--pine)" stroke-width="8" opacity=".72"/>
+                <circle cx="100" cy="100" r="46" fill="none" stroke="var(--pine)" stroke-width="8" opacity=".5"/>
+                <circle cx="100" cy="100" r="27" fill="none" stroke="var(--pine)" stroke-width="8" opacity=".32"/>
+                <circle cx="100" cy="14" r="5.5" fill="var(--honey-2)"/>
+                <circle cx="100" cy="100" r="12" fill="var(--pine-soft)"/>
+                <path d="M100 110V99M100 100c-2-4-6-5-9-5 0 4 4 6 9 6zM100 98c1-3 4-5 8-5 0 4-3 6-8 6z" stroke="var(--pine)" stroke-width="1.7" fill="none" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="ob-text">
+              <div class="eyebrow">나이테</div>
+              <h2 class="ob-h">아이의 나이테를<br>함께 쌓아요</h2>
+              <p class="ob-p">지금 나이에 챙겨야 할 것들을 놓치지 않게. <b>앞서가지 않아도, 뒤쳐지지 않게</b> — 매년 한 겹씩이면 충분해요.</p>
+            </div>
+          </div>
+
+          <!-- 2. 갭 찾기 (차별점) -->
+          <div class="ob-slide">
+            <div class="ob-art">
+              <div class="ob-mock">
+                <div class="coverbar" style="margin-bottom:16px" aria-hidden="true">
+                  <span class="seg on"></span><span class="seg on"></span><span class="seg on"></span>
+                  <span class="seg on"></span><span class="seg on"></span>
+                  <span class="seg gap"></span><span class="seg gap"></span>
+                </div>
+                <div class="ob-domrow"><span class="nm">국어</span><span class="pill on">챙기는 중</span></div>
+                <div class="ob-domrow gap"><span class="nm">과학·탐구</span><span class="pill empty">비어있음</span></div>
+                <div class="ob-domrow gap"><span class="nm">사회·인성</span><span class="pill empty">비어있음</span></div>
+              </div>
+            </div>
+            <div class="ob-text">
+              <div class="eyebrow">이 앱이 하는 일</div>
+              <h2 class="ob-h">무엇이 비어있는지<br>찾아드려요</h2>
+              <p class="ob-p"><b>누리과정·성취기준</b> 등 국가 교육과정에 맞춰, 이 시기에 챙길 영역 중 비어있는 곳을 콕 집어줘요.</p>
+            </div>
+          </div>
+
+          <!-- 3. 일상 루프 -->
+          <div class="ob-slide">
+            <div class="ob-art">
+              <div class="ob-mock">
+                <div class="ob-task">
+                  <div class="cbox"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4"><path d="M4 12l5 5L20 6"/></svg></div>
+                  <span class="nm">한글 학원 숙제</span>
+                </div>
+                <div class="ob-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M6 13l6 6 6-6"/></svg></div>
+                <div class="ob-grow">
+                  <svg width="72" height="72" viewBox="0 0 80 80" aria-hidden="true">
+                    <circle cx="40" cy="40" r="33" fill="none" stroke="var(--line-strong)" stroke-width="7"/>
+                    <circle cx="40" cy="40" r="33" fill="none" stroke="var(--sage)" stroke-width="7" stroke-linecap="round" stroke-dasharray="135 73" transform="rotate(-90 40 40)"/>
+                    <circle cx="40" cy="40" r="16" fill="none" stroke="var(--pine)" stroke-width="7" opacity=".6"/>
+                  </svg>
+                  <span class="cap">오늘 체크할수록<br>한 겹씩 자라요</span>
+                </div>
+              </div>
+            </div>
+            <div class="ob-text">
+              <div class="eyebrow">매일 이렇게</div>
+              <h2 class="ob-h">오늘 하나씩,<br>한 겹씩</h2>
+              <p class="ob-p">매일 <b>‘오늘’ 화면</b>만 열면 돼요. 오늘 할 일을 체크하면 나이테가 자라고, 비어있는 곳은 알아서 알려드려요.</p>
+            </div>
+          </div>
+
+        </div>
+        <div class="ob-foot">
+          <div class="dots" aria-hidden="true">
+            <span class="dot-i on"></span><span class="dot-i"></span><span class="dot-i"></span>
+          </div>
+          <button class="btn-primary ob-next" id="obNext" onclick="nextOb()">다음</button>
+        </div>
+      </div>
+
+      <div class="screen" id="screen">
+
+        <!-- app bar -->
+        <header class="appbar">
+          <div class="brandrow">
+            <div class="brand">
+              <svg class="mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                <circle cx="16" cy="16" r="14" stroke="var(--pine)" stroke-width="1.6"/>
+                <circle cx="16" cy="16" r="9.5" stroke="var(--pine)" stroke-width="1.6" opacity=".75"/>
+                <circle cx="16" cy="16" r="5" stroke="var(--pine)" stroke-width="1.6" opacity=".5"/>
+                <circle cx="16" cy="16" r="1.7" fill="var(--honey-2)"/>
+              </svg>
+              <div>
+                <h1>나이테</h1>
+              </div>
+            </div>
+            <button class="gear" aria-label="관리" onclick="openManage()">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+          </div>
+          <div class="tagline">나이에 맞게, 놓치지 않게</div>
+        </header>
+
+        <!-- ============ VIEW: 오늘 ============ -->
+        <section class="view active" id="view-today">
+          <div class="screen-pad">
+            <p class="datestrip">9월 3일 목요일 · 만 5세 8개월</p>
+
+            <!-- gap banner -->
+            <div class="gapcard">
+              <div class="eyebrow">이번 시기 챙김</div>
+              <div class="gap-head">지금 2곳이 비어있어요</div>
+              <p class="gap-sub">7개 영역 중 5곳은 잘 챙기고 있어요. 나머지만 채우면 돼요.</p>
+              <div class="coverbar" aria-hidden="true">
+                <span class="seg on"></span><span class="seg on"></span><span class="seg on"></span>
+                <span class="seg on"></span><span class="seg on"></span>
+                <span class="seg gap"></span><span class="seg gap"></span>
+              </div>
+              <div class="chiprow">
+                <span class="chip"><span class="dot"></span>과학·탐구</span>
+                <span class="chip"><span class="dot"></span>사회·인성</span>
+              </div>
+              <button class="btn-primary" onclick="go('area')">
+                비어있는 곳 채우러 가기
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </button>
+            </div>
+
+            <!-- today tasks -->
+            <div class="sec">
+              <div class="sec-head">
+                <h2 class="sec-title">오늘 할 일</h2>
+                <span class="sec-count" id="todayCount">0 / 6</span>
+              </div>
+
+              <div class="sched">
+                <div class="sched-item"><div class="sched-time">15:00</div><div class="sched-name">한글교실 등원</div></div>
+                <div class="sched-item"><div class="sched-time">17:00</div><div class="sched-name">팩토수학 등원</div></div>
+              </div>
+
+              <div class="grp">국어</div>
+              <div class="task" onclick="toggle(this)">
+                <div class="cbox"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2"><path d="M4 12l5 5L20 6"/></svg></div>
+                <div class="t-body">
+                  <div class="t-top"><span class="t-name">한글 학원 숙제</span><span class="badge gov">공교육·성취기준</span></div>
+                  <div class="t-aim"><span class="arrow">겨냥</span> 자음·모음의 소릿값을 안다</div>
+                </div>
+              </div>
+
+              <div class="grp">수학</div>
+              <div class="task" onclick="toggle(this)">
+                <div class="cbox"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2"><path d="M4 12l5 5L20 6"/></svg></div>
+                <div class="t-body">
+                  <div class="t-top"><span class="t-name">팩토 숙제</span><span class="badge gov">공교육·성취기준</span></div>
+                  <div class="t-aim"><span class="arrow">겨냥</span> 20까지 세고 숫자를 읽는다</div>
+                </div>
+              </div>
+              <div class="task" onclick="toggle(this)">
+                <div class="cbox"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2"><path d="M4 12l5 5L20 6"/></svg></div>
+                <div class="t-body">
+                  <div class="t-top"><span class="t-name">수학 보드게임</span><span class="badge gov">공교육·누리과정</span></div>
+                  <div class="t-aim"><span class="arrow">겨냥</span> 반복 규칙(빨강-파랑-…)을 이어간다</div>
+                </div>
+              </div>
+              <div class="task" onclick="toggle(this)">
+                <div class="cbox"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2"><path d="M4 12l5 5L20 6"/></svg></div>
+                <div class="t-body">
+                  <div class="t-top"><span class="t-name">알파짱 워크지</span><span class="badge free">자유</span></div>
+                  <div class="t-aim none">겨냥 목표 없음</div>
+                </div>
+              </div>
+
+              <div class="grp">영어</div>
+              <div class="task" onclick="toggle(this)">
+                <div class="cbox"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2"><path d="M4 12l5 5L20 6"/></svg></div>
+                <div class="t-body">
+                  <div class="t-top"><span class="t-name">영어 원서 1권</span><span class="badge own">자체 목표</span></div>
+                  <div class="t-aim"><span class="arrow">겨냥</span> 그림책 한 권을 끝까지 듣는다</div>
+                </div>
+              </div>
+              <div class="task" onclick="toggle(this)">
+                <div class="cbox"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2"><path d="M4 12l5 5L20 6"/></svg></div>
+                <div class="t-body">
+                  <div class="t-top"><span class="t-name">영어 영상 20분</span><span class="badge own">자체 목표</span></div>
+                  <div class="t-aim"><span class="arrow">겨냥</span> 영어 영상을 하루 20분 본다</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- pet, demoted -->
+            <div class="pet">
+              <div class="pet-icon">
+                <svg width="38" height="38" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                  <path d="M20 34V20" stroke="var(--pine)" stroke-width="2.4" stroke-linecap="round"/>
+                  <path d="M20 22c-1-6-6-8-11-8 0 6 5 9 11 9z" fill="var(--pine-soft)" stroke="var(--pine)" stroke-width="1.8" stroke-linejoin="round"/>
+                  <path d="M20 19c1-5 5-7 10-7 0 5-4 8-10 8z" fill="var(--sage)" stroke="var(--pine)" stroke-width="1.8" stroke-linejoin="round" opacity=".85"/>
+                </svg>
+              </div>
+              <div class="pet-txt">
+                <div class="pet-title" id="petTitle">오늘 6개 채우면 물을 줄 수 있어요</div>
+                <div class="pet-sub">할 일을 하면 새싹이 한 뼘씩 자라요</div>
+                <div class="pet-meter"><div class="pet-fill" id="petFill"></div></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ VIEW: 영역 ============ -->
+        <section class="view" id="view-area">
+          <div class="screen-pad">
+            <p class="datestrip">지금 시기 · 만 5세 (취학 직전기)</p>
+
+            <div class="overview">
+              <div class="eyebrow">이 나이에 챙길 영역</div>
+              <div class="ov-num">7개 영역 중 5개 챙김 · <b>2곳 비어있음</b></div>
+              <div class="coverbar" aria-hidden="true">
+                <span class="seg on"></span><span class="seg on"></span><span class="seg on"></span>
+                <span class="seg on"></span><span class="seg on"></span>
+                <span class="seg gap"></span><span class="seg gap"></span>
+              </div>
+              <div class="legend">
+                <span><span class="lg-dot" style="background:var(--sage)"></span>챙기는 중</span>
+                <span><span class="lg-dot" style="background:var(--honey-2)"></span>비어있음</span>
+                <span><span class="lg-dot" style="background:var(--line-strong)"></span>아직 목표 아님</span>
+              </div>
+            </div>
+
+            <!-- gaps first -->
+            <div class="dgrp-label">먼저 챙기면 좋아요</div>
+
+            <div class="domain empty">
+              <div class="d-top"><span class="d-name">과학·탐구</span><span class="pill empty">비어있음</span></div>
+              <div class="ring-row"><span class="pip gap"></span><span class="pip gap"></span><span class="pip gap"></span></div>
+              <div class="d-status">지금 시기 목표 <b>3곳이 모두 비어있어요</b> · 활동이 아직 없어요</div>
+              <div class="d-actions">
+                <button class="btn-sm fill" onclick="openDetail()">활동 추가</button>
+                <button class="btn-sm" onclick="openDetail()">목표 3개 보기</button>
+              </div>
+            </div>
+
+            <div class="domain empty">
+              <div class="d-top"><span class="d-name">사회·인성</span><span class="pill empty">비어있음</span></div>
+              <div class="ring-row"><span class="pip gap"></span><span class="pip gap"></span></div>
+              <div class="d-status">지금 시기 목표 <b>2곳이 비어있어요</b> · 활동이 아직 없어요</div>
+              <div class="d-actions">
+                <button class="btn-sm fill" onclick="openDetail()">활동 추가</button>
+                <button class="btn-sm" onclick="openDetail()">목표 2개 보기</button>
+              </div>
+            </div>
+
+            <!-- partial -->
+            <div class="dgrp-label">채우는 중</div>
+
+            <div class="domain">
+              <div class="d-top"><span class="d-name">국어</span><span class="pill on">1곳 챙김</span></div>
+              <div class="ring-row"><span class="pip on"></span><span class="pip gap"></span><span class="pip gap"></span><span class="pip gap"></span><span class="pip gap"></span><span class="pip gap"></span></div>
+              <div class="d-status">목표 6곳 중 1곳 챙김 · <b>5곳 남음</b></div>
+              <div class="d-actions">
+                <button class="btn-sm fill" onclick="openDetail()">비어있는 목표 채우기</button>
+                <button class="btn-sm" onclick="openDetail()">자세히</button>
+              </div>
+            </div>
+
+            <div class="domain">
+              <div class="d-top"><span class="d-name">수학</span><span class="pill on">2곳 챙김</span></div>
+              <div class="ring-row"><span class="pip on"></span><span class="pip on"></span><span class="pip gap"></span><span class="pip gap"></span><span class="pip gap"></span><span class="pip gap"></span></div>
+              <div class="d-status">목표 6곳 중 2곳 챙김 · <b>4곳 남음</b></div>
+              <div class="d-actions">
+                <button class="btn-sm fill" onclick="openDetail()">비어있는 목표 채우기</button>
+                <button class="btn-sm" onclick="openDetail()">자세히</button>
+              </div>
+            </div>
+
+            <!-- done -->
+            <div class="dgrp-label">다 챙기고 있어요</div>
+
+            <div class="domain">
+              <div class="d-top"><span class="d-name">영어</span><span class="pill full">완료</span></div>
+              <div class="ring-row"><span class="pip on"></span><span class="pip on"></span></div>
+              <div class="d-status good">목표 2곳 모두 챙기는 중 · <b>잘하고 있어요</b><br><span style="color:var(--muted);font-size:12px">공교육 기준이 없어 선행 개념이 없어요</span></div>
+            </div>
+
+            <div class="domain">
+              <div class="d-top"><span class="d-name">예체능</span><span class="pill full">완료</span></div>
+              <div class="ring-row"><span class="pip on"></span><span class="pip on"></span></div>
+              <div class="d-status good">목표 2곳 모두 챙기는 중</div>
+            </div>
+
+            <div class="domain">
+              <div class="d-top"><span class="d-name">건강·안전</span><span class="pill full">완료</span></div>
+              <div class="ring-row"><span class="pip on"></span><span class="pip on"></span><span class="pip on"></span></div>
+              <div class="d-status good">목표 3곳 모두 챙기는 중</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ VIEW: 영역 상세 ============ -->
+        <section class="view" id="view-detail">
+          <div class="screen-pad">
+            <div class="detbar">
+              <button class="back" onclick="go('area')" aria-label="영역으로">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 6l-6 6 6 6"/></svg>
+              </button>
+              <span class="dt-name">국어</span>
+              <span class="pill on" style="margin-left:auto">채우는 중</span>
+            </div>
+
+            <div class="det-summary">
+              <div class="eyebrow">만 5세 · 이 시기 챙길 목표</div>
+              <div class="det-cover" id="detCover">목표 6곳 · 이룸 0 · 챙기는 중 1 · <b>비어있음 5곳</b></div>
+              <div class="ring-row" id="detPips">
+                <span class="pip prog"></span><span class="pip gap"></span><span class="pip gap"></span>
+                <span class="pip gap"></span><span class="pip gap"></span><span class="pip gap"></span>
+              </div>
+            </div>
+
+            <!-- empty milestones first -->
+            <div class="mlabel" id="mlabelEmpty">채우면 좋아요 · <span class="cnt">5곳</span></div>
+
+            <div class="ms empty">
+              <div class="ms-top"><span class="ms-name">자기 이름을 쓴다</span><span class="badge gov">공교육·성취기준</span></div>
+              <div class="ms-meta"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/></svg>아직 챙기는 활동이 없어요</div>
+              <div class="suggest"><span class="lb">추천 활동</span> <b>이름 따라쓰기 놀이</b> · 하루 3분</div>
+              <div class="ms-act">
+                <button class="btn-sm fill b-link" onclick="openLink(this)">활동 연결</button>
+                <button class="btn-sm b-ach" onclick="msAchieve(this)">이뤘어요</button>
+                <button class="btn-sm b-undo" onclick="msUndo(this)">이룸 해제</button>
+              </div>
+            </div>
+
+            <div class="ms empty">
+              <div class="ms-top"><span class="ms-name">받침 없는 단어를 소리 내어 읽는다</span><span class="badge gov">공교육·성취기준</span></div>
+              <div class="ms-meta"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/></svg>아직 챙기는 활동이 없어요</div>
+              <div class="suggest"><span class="lb">추천 활동</span> <b>단어 카드 소리 내어 읽기</b></div>
+              <div class="ms-act">
+                <button class="btn-sm fill b-link" onclick="openLink(this)">활동 연결</button>
+                <button class="btn-sm b-ach" onclick="msAchieve(this)">이뤘어요</button>
+                <button class="btn-sm b-undo" onclick="msUndo(this)">이룸 해제</button>
+              </div>
+            </div>
+
+            <div class="ms empty">
+              <div class="ms-top"><span class="ms-name">짧은 문장을 더듬더듬 읽는다</span><span class="badge gov">공교육·성취기준</span></div>
+              <div class="ms-meta"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/></svg>아직 챙기는 활동이 없어요</div>
+              <div class="suggest"><span class="lb">추천 활동</span> <b>짧은 그림책 함께 읽기</b></div>
+              <div class="ms-act">
+                <button class="btn-sm fill b-link" onclick="openLink(this)">활동 연결</button>
+                <button class="btn-sm b-ach" onclick="msAchieve(this)">이뤘어요</button>
+                <button class="btn-sm b-undo" onclick="msUndo(this)">이룸 해제</button>
+              </div>
+            </div>
+
+            <div class="ms empty">
+              <div class="ms-top"><span class="ms-name">책을 읽어주면 끝까지 듣는다</span><span class="badge own">공교육·누리과정</span></div>
+              <div class="ms-meta"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/></svg>아직 챙기는 활동이 없어요</div>
+              <div class="suggest"><span class="lb">추천 활동</span> <b>자기 전 그림책 읽어주기</b></div>
+              <div class="ms-act">
+                <button class="btn-sm fill b-link" onclick="openLink(this)">활동 연결</button>
+                <button class="btn-sm b-ach" onclick="msAchieve(this)">이뤘어요</button>
+                <button class="btn-sm b-undo" onclick="msUndo(this)">이룸 해제</button>
+              </div>
+            </div>
+
+            <div class="ms empty">
+              <div class="ms-top"><span class="ms-name">간판·과자봉지에서 아는 글자를 찾아낸다</span><span class="badge own">공교육·누리과정</span></div>
+              <div class="ms-meta"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/></svg>아직 챙기는 활동이 없어요</div>
+              <div class="suggest"><span class="lb">추천 활동</span> <b>마트에서 글자 찾기 놀이</b> · 생활 속</div>
+              <div class="ms-act">
+                <button class="btn-sm fill b-link" onclick="openLink(this)">활동 연결</button>
+                <button class="btn-sm b-ach" onclick="msAchieve(this)">이뤘어요</button>
+                <button class="btn-sm b-undo" onclick="msUndo(this)">이룸 해제</button>
+              </div>
+            </div>
+
+            <!-- 챙기는 중 -->
+            <div class="mlabel" id="mlabelProg">챙기는 중 · <span class="cnt">1곳</span></div>
+
+            <div class="ms prog" data-activity="한글 학원 숙제">
+              <div class="ms-top"><span class="ms-name">자음·모음의 소릿값을 안다</span><span class="badge gov">공교육·성취기준</span></div>
+              <div class="ms-meta"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="8"/></svg>한글 학원 숙제로 챙기는 중</div>
+              <div class="ms-sub">이번 주 3회 · 마지막 9월 2일</div>
+              <div class="ms-act">
+                <button class="btn-sm fill b-link" onclick="openLink(this)">활동 연결</button>
+                <button class="btn-sm b-ach" onclick="msAchieve(this)">이뤘어요</button>
+                <button class="btn-sm b-undo" onclick="msUndo(this)">이룸 해제</button>
+              </div>
+            </div>
+
+            <!-- 이룸 -->
+            <div class="mlabel good" id="mlabelDone" hidden>이룸 · <span class="cnt">0곳</span></div>
+          </div>
+        </section>
+
+        <!-- ============ VIEW: 관리 ============ -->
+        <section class="view" id="view-manage">
+          <div class="screen-pad">
+            <div class="detbar">
+              <button class="back" onclick="go('today')" aria-label="닫기">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 6l-6 6 6 6"/></svg>
+              </button>
+              <span class="dt-name">관리</span>
+            </div>
+
+            <!-- 아이 정보 -->
+            <div class="mng-sec">
+              <div class="eyebrow">아이 정보</div>
+              <h3 class="mng-title">시기의 기준</h3>
+              <p class="mng-desc">생년월을 기준으로 “지금 나이에 챙길 목표”가 정해져요.</p>
+              <div class="mrow">
+                <div class="mmain">
+                  <div class="mn">첫째</div>
+                  <div class="ms2">2021년 1월생 · 만 5세 8개월 · 2028년 3월 초등 입학</div>
+                </div>
+                <button class="btn-edit">편집</button>
+              </div>
+            </div>
+
+            <!-- 학원 -->
+            <div class="mng-sec">
+              <div class="eyebrow">학원</div>
+              <h3 class="mng-title">다니는 곳</h3>
+              <p class="mng-desc">학원 일정은 ‘오늘’ 화면에 등원 알림으로 떠요.</p>
+              <div class="mrow">
+                <div class="mmain"><div class="mn">한글교실</div><div class="ms2">월·수·금 15:00</div></div>
+                <button class="btn-edit" onclick="openAcademyForm('edit','한글교실')">편집</button>
+              </div>
+              <div class="mrow">
+                <div class="mmain"><div class="mn">팩토수학</div><div class="ms2">화·목 17:00</div></div>
+                <button class="btn-edit" onclick="openAcademyForm('edit','팩토수학')">편집</button>
+              </div>
+              <button class="mng-add" onclick="openAcademyForm('add')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>학원 추가</button>
+            </div>
+
+            <!-- 활동 -->
+            <div class="mng-sec">
+              <div class="eyebrow">활동</div>
+              <h3 class="mng-title">챙기는 방법</h3>
+              <p class="mng-desc">숙제·놀이 등 목표를 챙기는 활동. 학원 활동은 학원과 연결돼요.</p>
+              <div class="mrow"><div class="mmain"><div class="mn">한글 학원 숙제</div><div class="ms2">한글교실 · 주 3회 · 국어</div></div><button class="btn-edit" onclick="openActivityForm('edit','한글 학원 숙제')">편집</button></div>
+              <div class="mrow"><div class="mmain"><div class="mn">팩토 숙제</div><div class="ms2">팩토수학 · 수학</div></div><button class="btn-edit" onclick="openActivityForm('edit','팩토 숙제')">편집</button></div>
+              <div class="mrow"><div class="mmain"><div class="mn">수학 보드게임</div><div class="ms2">자체 · 수학</div></div><button class="btn-edit" onclick="openActivityForm('edit','수학 보드게임')">편집</button></div>
+              <div class="mrow"><div class="mmain"><div class="mn">알파짱 워크지</div><div class="ms2">자유 · 겨냥 목표 없음</div></div><button class="btn-edit" onclick="openActivityForm('edit','알파짱 워크지')">편집</button></div>
+              <div class="mrow"><div class="mmain"><div class="mn">영어 원서 1권</div><div class="ms2">자체 · 영어</div></div><button class="btn-edit" onclick="openActivityForm('edit','영어 원서 1권')">편집</button></div>
+              <div class="mrow"><div class="mmain"><div class="mn">영어 영상 20분</div><div class="ms2">자체 · 영어</div></div><button class="btn-edit" onclick="openActivityForm('edit','영어 영상 20분')">편집</button></div>
+              <button class="mng-add" onclick="openActivityForm('add')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>활동 추가</button>
+            </div>
+
+            <!-- 성취 됨 처리 -->
+            <div class="mng-sec">
+              <div class="eyebrow">성취 기록</div>
+              <h3 class="mng-title">이미 할 수 있는 것</h3>
+              <p class="mng-desc">‘됨’은 이 목표를 <b>이루었다(달성)</b>는 표시예요. 활동으로 <b>챙기는 중이어도</b>, 아이가 해내면 됨으로 표시하세요. 됨도 활동도 없으면 ‘비어있음’이에요.</p>
+
+              <div class="mng-dl">국어</div>
+              <div class="mrow mile"><div class="mmain"><div class="mn">자음·모음의 소릿값을 안다</div><div class="ms2 tending">한글 학원 숙제로 챙기는 중</div></div><button class="mtoggle" onclick="togglePill(this)">됨으로</button></div>
+              <div class="mrow mile"><div class="mmain"><div class="mn">자기 이름을 쓴다</div></div><button class="mtoggle" onclick="togglePill(this)">됨으로</button></div>
+              <div class="mrow mile"><div class="mmain"><div class="mn">받침 없는 단어를 소리 내어 읽는다</div></div><button class="mtoggle" onclick="togglePill(this)">됨으로</button></div>
+              <div class="mrow mile"><div class="mmain"><div class="mn">짧은 문장을 더듬더듬 읽는다</div></div><button class="mtoggle" onclick="togglePill(this)">됨으로</button></div>
+
+              <div class="mng-dl">건강·안전</div>
+              <div class="mrow mile"><div class="mmain"><div class="mn">스스로 손을 씻는 습관이 있다</div></div><button class="mtoggle on" onclick="togglePill(this)">됨</button></div>
+              <div class="mrow mile"><div class="mmain"><div class="mn">위험한 상황을 알고 피한다</div></div><button class="mtoggle on" onclick="togglePill(this)">됨</button></div>
+              <div class="mrow mile"><div class="mmain"><div class="mn">기본 교통 안전 규칙을 안다</div></div><button class="mtoggle on" onclick="togglePill(this)">됨</button></div>
+            </div>
+
+            <!-- 기타 -->
+            <div class="mng-sec">
+              <div class="eyebrow">기타</div>
+              <div class="mrow"><div class="mmain"><div class="mn">온보딩 다시 보기</div><div class="ms2">이 앱을 소개하는 3장</div></div><button class="btn-edit" onclick="openOnboard()">보기</button></div>
+              <div class="mrow"><div class="mmain"><div class="mn">등원 알림</div><div class="ms2">학원 시간 30분 전</div></div><button class="mtoggle on" onclick="togglePill(this)">켜짐</button></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ VIEW: 기록 ============ -->
+        <section class="view" id="view-log">
+          <div class="screen-pad">
+            <div class="rec-hero">
+              <h2 class="rec-title">한 겹씩 쌓이는 중</h2>
+              <p class="rec-sub">해온 것들이 나이테처럼 쌓여요. 앞서가지 않아도, 매년 한 겹씩.</p>
+              <svg class="rings" viewBox="0 0 220 220" role="img" aria-label="성장 나이테">
+                <circle cx="110" cy="110" r="96" fill="none" stroke="var(--line-strong)" stroke-width="9"/>
+                <circle cx="110" cy="110" r="96" fill="none" stroke="var(--honey-2)" stroke-width="9" stroke-linecap="round"
+                        stroke-dasharray="372 231" transform="rotate(-90 110 110)"/>
+                <circle cx="110" cy="110" r="74" fill="none" stroke="var(--pine)" stroke-width="9" opacity=".9"/>
+                <circle cx="110" cy="110" r="54" fill="none" stroke="var(--pine)" stroke-width="9" opacity=".7"/>
+                <circle cx="110" cy="110" r="34" fill="none" stroke="var(--pine)" stroke-width="9" opacity=".5"/>
+                <circle cx="110" cy="110" r="15" fill="var(--pine-soft)"/>
+                <path d="M110 122v-12M110 112c-2-4-6-5-9-5 0 4 4 6 9 6zM110 110c1-3 4-5 8-5 0 4-3 6-8 6z"
+                      stroke="var(--pine)" stroke-width="1.7" fill="none" stroke-linejoin="round"/>
+              </svg>
+              <p class="rc-caption">바깥 겹 = 지금 시기 (62% 채움) · 안쪽 = 지난 시기</p>
+            </div>
+
+            <div class="sec">
+              <div class="sec-head"><h2 class="sec-title" style="font-size:16px">이번 주</h2><span class="sec-count" id="weekSummary">3일 챙김</span></div>
+              <div class="week" id="weekStrip"></div>
+              <p class="week-hint">지난 날을 눌러 채울 수 있어요 · 못 채운 날은 그냥 비어 있을 뿐이에요.</p>
+            </div>
+
+            <div class="rec-list">
+              <div class="eyebrow" style="margin-bottom:10px">활동별 이번 주 · 주간 목표</div>
+              <div id="weekActs"></div>
+            </div>
+          </div>
+        </section>
+
+      </div><!-- /screen -->
+
+      <!-- ============ 활동 연결 바텀시트 ============ -->
+      <div class="sheet-wrap" id="linkSheet" hidden>
+        <div class="sheet-bg" onclick="closeLink()"></div>
+        <div class="sheet" role="dialog" aria-label="활동 연결">
+          <div class="grab"></div>
+          <div class="sheet-head">
+            <h3>활동 연결</h3>
+            <button class="sheet-x" onclick="closeLink()" aria-label="닫기">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
+          <div class="target">
+            <span class="badge gov">국어</span>
+            <span class="tg-name" id="linkTarget">자기 이름을 쓴다</span>
+          </div>
+          <div class="sheet-body">
+            <div class="opt-label">추천 활동</div>
+            <button class="opt sel" onclick="pick(this,'이름 따라쓰기 놀이')">
+              <span class="opt-radio"></span>
+              <span class="opt-main"><b>이름 따라쓰기 놀이</b><small>새 활동 · 자체 · 주 3회 추천</small></span>
+              <span class="opt-tag">추천</span>
+            </button>
+
+            <div class="opt-label">기존 활동에 연결</div>
+            <button class="opt" onclick="pick(this,'한글 학원 숙제')">
+              <span class="opt-radio"></span>
+              <span class="opt-main"><b>한글 학원 숙제</b><small>한글교실 학원 · 주 3회</small></span>
+            </button>
+            <button class="opt" onclick="pick(this,'알파짱 워크지')">
+              <span class="opt-radio"></span>
+              <span class="opt-main"><b>알파짱 워크지</b><small>자유 활동</small></span>
+            </button>
+
+            <div class="opt-label">직접 만들기</div>
+            <button class="opt new" onclick="pick(this,'새 활동')">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+              새 활동 직접 추가
+            </button>
+          </div>
+          <div class="sheet-foot">
+            <button class="btn-primary" onclick="confirmLink()">이 활동으로 연결하기</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 지난 날 기록 바텀시트 ============ -->
+      <div class="sheet-wrap" id="daySheet" hidden>
+        <div class="sheet-bg" onclick="closeDay()"></div>
+        <div class="sheet" role="dialog" aria-label="지난 날 기록">
+          <div class="grab"></div>
+          <div class="sheet-head">
+            <h3 id="dayTitle">9월 2일 수요일</h3>
+            <button class="sheet-x" onclick="closeDay()" aria-label="닫기">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
+          <p class="day-hint">한 걸 눌러서 체크해요. 지난 날도 채울 수 있어요.</p>
+          <div class="sheet-body" id="dayList"></div>
+        </div>
+      </div>
+
+      <!-- ============ 학원 추가/편집 폼 ============ -->
+      <div class="sheet-wrap" id="academySheet" hidden>
+        <div class="sheet-bg" onclick="closeSheet('academySheet')"></div>
+        <div class="sheet" role="dialog" aria-label="학원">
+          <div class="grab"></div>
+          <div class="sheet-head">
+            <h3 id="acTitle">학원 추가</h3>
+            <button class="sheet-x" onclick="closeSheet('academySheet')" aria-label="닫기">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
+          <div class="sheet-body">
+            <div class="field">
+              <label for="acName">학원 이름</label>
+              <input class="inp" id="acName" placeholder="예: 한글교실">
+            </div>
+            <div class="field">
+              <label>등원 요일</label>
+              <div class="daychips" id="acDays">
+                <button class="daychip" onclick="toggleClass(this)">월</button>
+                <button class="daychip" onclick="toggleClass(this)">화</button>
+                <button class="daychip" onclick="toggleClass(this)">수</button>
+                <button class="daychip" onclick="toggleClass(this)">목</button>
+                <button class="daychip" onclick="toggleClass(this)">금</button>
+                <button class="daychip" onclick="toggleClass(this)">토</button>
+                <button class="daychip" onclick="toggleClass(this)">일</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="acTime">등원 시간</label>
+              <input class="inp" id="acTime" type="time" value="15:00">
+            </div>
+            <div class="field">
+              <label for="acTel">연락처 <span class="opt">(선택)</span></label>
+              <input class="inp" id="acTel" type="tel" placeholder="02-000-0000">
+            </div>
+          </div>
+          <div class="sheet-foot form-foot">
+            <button class="btn-danger" id="acDelete" hidden onclick="closeSheet('academySheet')">삭제</button>
+            <button class="btn-primary" onclick="closeSheet('academySheet')">저장</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 활동 추가/편집 폼 ============ -->
+      <div class="sheet-wrap" id="activitySheet" hidden>
+        <div class="sheet-bg" onclick="closeSheet('activitySheet')"></div>
+        <div class="sheet" role="dialog" aria-label="활동">
+          <div class="grab"></div>
+          <div class="sheet-head">
+            <h3 id="actTitle">활동 추가</h3>
+            <button class="sheet-x" onclick="closeSheet('activitySheet')" aria-label="닫기">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
+          <div class="sheet-body">
+            <div class="field">
+              <label for="actName">활동 이름</label>
+              <input class="inp" id="actName" placeholder="예: 한글 학원 숙제">
+            </div>
+            <div class="field">
+              <label>어디서 하나요</label>
+              <div class="seg3" id="actKind">
+                <button data-k="학원" onclick="setActKind('학원')">학원</button>
+                <button data-k="자체" onclick="setActKind('자체')">자체</button>
+                <button data-k="자유" onclick="setActKind('자유')">자유</button>
+              </div>
+              <div class="subfield" id="actAcademyWrap">
+                <select class="inp" id="actAcademy" aria-label="학원 선택">
+                  <option>한글교실</option>
+                  <option>팩토수학</option>
+                </select>
+              </div>
+            </div>
+            <div class="field" id="actTargetField">
+              <label>주간 목표 횟수</label>
+              <div class="stepper">
+                <button onclick="stepTarget(-1)" aria-label="감소">−</button>
+                <span class="val" id="actTargetVal">주 3회</span>
+                <button onclick="stepTarget(1)" aria-label="증가">+</button>
+              </div>
+              <p class="free-note" id="actFreeNote" hidden>자유 활동은 목표 없이 한 것만 기록해요.</p>
+            </div>
+            <div class="field">
+              <label>겨냥 목표 <span class="opt">(이 활동으로 챙길 것)</span></label>
+              <div id="actAims"></div>
+            </div>
+          </div>
+          <div class="sheet-foot form-foot">
+            <button class="btn-danger" id="actDelete" hidden onclick="closeSheet('activitySheet')">삭제</button>
+            <button class="btn-primary" onclick="closeSheet('activitySheet')">저장</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- tab bar -->
+      <nav class="tabbar" aria-label="화면 전환">
+        <button class="tab active" id="tab-today" onclick="go('today')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21c-4-3-7-6-7-10a7 7 0 0 1 14 0c0 4-3 7-7 10z"/><path d="M12 11v6M12 11c-1.5-2.5-4-3-6-3 0 3 2.5 4.5 6 4.5z" stroke-width="1.6"/></svg>
+          오늘
+        </button>
+        <button class="tab" id="tab-area" onclick="go('area')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg>
+          영역
+        </button>
+        <button class="tab" id="tab-log" onclick="go('log')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5.5A2 2 0 0 1 6 4h5v16H6a2 2 0 0 1-2-2z"/><path d="M20 5.5A2 2 0 0 0 18 4h-5v16h5a2 2 0 0 0 2-2z"/></svg>
+          기록
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <!-- ============ DESIGN NOTES ============ -->
+  <aside class="notes">
+    <div class="themebar" role="group" aria-label="테마">
+      <button data-t="light" onclick="setTheme('light')">라이트</button>
+      <button data-t="dark" onclick="setTheme('dark')">다크</button>
+      <button data-t="system" onclick="setTheme('system')">시스템</button>
+    </div>
+    <div class="kicker">나이테 · 리디자인</div>
+    <h2>“오늘 뭘 해야 하지?”와 “놓친 건 없나?”를 첫 화면에서 동시에</h2>
+    <p class="lede">원래 앱은 첫 화면을 <b>펫 키우기</b>가 차지하고, 정작 핵심 가치인 <b>‘지금 나이에 비어있는 영역’</b>은 두 번째 탭에 숨어 있었어요. 이 리디자인은 그 순서를 뒤집습니다 — 매일 여는 화면이 곧바로 안심시켜 주거나, 채울 곳을 알려주도록.</p>
+
+    <div class="change">
+      <div class="n">01</div>
+      <div class="c-body">
+        <h3>첫 화면에 ‘갭 배너’</h3>
+        <p>오늘 화면 맨 위에서 “지금 2곳이 비어있어요 — 과학·탐구, 사회·인성”을 바로 보여주고, 한 번 탭하면 채우러 이동합니다.</p>
+        <p class="was">이전 → <b>비어있는 영역이 오늘 화면에 전혀 안 보였음</b></p>
+      </div>
+    </div>
+
+    <div class="change">
+      <div class="n">02</div>
+      <div class="c-body">
+        <h3>정체성 한 줄 + 오늘 총 진행</h3>
+        <p>헤더에 “나이에 맞게, 놓치지 않게”를 고정해 뭐하는 앱인지 즉시 전달하고, 할 일에 ‘0 / 6’ 총합을 붙였어요.</p>
+        <p class="was">이전 → 이름만 있고 설명 없음, 진행은 카드마다 흩어져 있었음</p>
+      </div>
+    </div>
+
+    <div class="change">
+      <div class="n">03</div>
+      <div class="c-body">
+        <h3>선행(先行) 기능 제거</h3>
+        <p>“1년/2년 선행” 잠금 버튼을 뺐어요. 가치는 <b>앞서가기가 아니라 뒤쳐지지 않기</b>니까요. 대신 ‘비어있는 곳 채우기’가 기본 액션입니다.</p>
+        <p class="was">이전 → 가장 강한 버튼이 검은색 ‘1년 선행’이라 철학과 충돌</p>
+      </div>
+    </div>
+
+    <div class="change">
+      <div class="n">04</div>
+      <div class="c-body">
+        <h3>영역 = 비어있는 곳부터 위로</h3>
+        <p>“먼저 챙기면 좋아요 → 채우는 중 → 다 챙기고 있어요” 순으로 정렬해, 주의가 필요한 것이 항상 맨 위에 옵니다.</p>
+      </div>
+    </div>
+
+    <div class="change">
+      <div class="n">05</div>
+      <div class="c-body">
+        <h3>펫은 하단 보상으로 강등 · 기록은 ‘나이테’로</h3>
+        <p>펫은 슬림한 진행 막대로 축소해 동기부여는 유지하되 자리를 비켰고, 기록 탭은 앱 이름 그대로 <b>겹겹이 쌓이는 나이테 링</b>으로 표현했어요.</p>
+      </div>
+    </div>
+
+    <div class="change">
+      <div class="n">06</div>
+      <div class="c-body">
+        <h3>첫 방문 온보딩 3장</h3>
+        <p>한 장에 개념 하나 — ①정체성(나이테·앞서가지 않아도 괜찮아요) → ②이 앱만의 방식(공교육 기준으로 비어있는 곳 찾기) → ③매일의 루프(체크하면 한 겹씩). 앱을 열자마자 “뭐하는 앱, 어떻게 쓰는지”가 심어져요.</p>
+        <p class="was">이전 → <b>온보딩이 아예 없어</b> 곧장 데이터로 떨어졌음</p>
+      </div>
+    </div>
+
+    <div class="change">
+      <div class="n">07</div>
+      <div class="c-body">
+        <h3>영역 상세 = 목표 단위의 갭</h3>
+        <p>영역 카드의 버튼을 누르면 <b>성취기준 하나하나로 쪼갠 상세</b>가 열려요. 비어있는 목표를 위로, 각 목표엔 추천 활동과 <b>‘활동 연결’ / ‘이미 해요’</b> 두 갈래를 뒀습니다 — 학원 활동으로 채우거나, 아이가 이미 하는 건 바로 챙김 처리.</p>
+        <p class="was">데모에선 영역 탭의 어느 카드를 눌러도 ‘국어’ 상세로 이어집니다</p>
+      </div>
+    </div>
+
+    <div class="change">
+      <div class="n">08</div>
+      <div class="c-body">
+        <h3>활동 연결 = 갭 루프의 종착점</h3>
+        <p>상세에서 <b>‘활동 연결’</b>을 누르면 바텀시트가 올라와요. 추천 활동 원터치 / 기존 학원 숙제에 연결 / 새 활동 직접 만들기 세 갈래. 연결하면 <b>커버리지 바가 실제로 차오르고</b> 그 목표가 ‘챙기는 중’으로 이동합니다. ‘이미 해요’는 활동 없이 바로 챙김 처리.</p>
+        <p class="was">상세에서 국어의 아무 ‘활동 연결/이미 해요’나 눌러 직접 확인해 보세요</p>
+      </div>
+    </div>
+
+    <div class="change">
+      <div class="n">09</div>
+      <div class="c-body">
+        <h3>관리 = 설정 + 데이터 + 성취 됨-처리</h3>
+        <p>헤더 기어로 진입. <b>아이 정보</b>(시기 기준) · <b>학원</b>(등원 알림 소스) · <b>활동</b> · <b>성취 됨-처리</b>(이미 하는 목표를 일괄 챙김) · 기타. 원래 앱의 ‘성취 기록’을 흡수하되 <b>선행 잠금 언급 카피는 제거</b>했어요.</p>
+        <p class="was">헤더 기어(⚙)를 눌러 확인 · ‘됨으로’ 토글로 gap을 바로 정리</p>
+      </div>
+    </div>
+
+    <div class="change">
+      <div class="n">10</div>
+      <div class="c-body">
+        <h3>기록 · 주간 목표 달성 + 지난 날 채우기</h3>
+        <p>활동마다 <b>주간 목표 횟수</b> 대비 달성을 pip으로 보여줘요(주1회는 한 번 하면 <b>완료</b>). 이번 주 스트립의 <b>지난 날짜를 탭하면</b> 그 날 체크시트가 열려 소급 기록 → 도트·주간 달성이 즉시 갱신. 미래 날짜는 비활성.</p>
+        <p class="was">기록 탭에서 지난 날(월·화·수)을 눌러보세요 · 되살린 두 기능</p>
+      </div>
+    </div>
+
+    <div class="change">
+      <div class="n">11</div>
+      <div class="c-body">
+        <h3>학원 · 활동 추가/편집 폼</h3>
+        <p>관리에서 추가/편집을 누르면 바텀시트 폼이 올라와요. <b>학원</b>: 이름·요일칩·시간·연락처. <b>활동</b>: 이름·소속(학원↔학원선택/자체/자유)·주간 목표 스텝퍼·<b>겨냥 목표 연결</b>. 편집은 기존 값이 채워지고 삭제 버튼이 붙어요.</p>
+        <p class="was">관리(⚙)에서 ‘활동 추가’·각 행 ‘편집’을 눌러보세요</p>
+      </div>
+    </div>
+
+    <div class="change">
+      <div class="n">12</div>
+      <div class="c-body">
+        <h3>상태 모델 정정 — 챙김 ≠ 이룸 (2축)</h3>
+        <p>‘활동 연결(챙기는 중)’과 ‘됨(이룸·달성)’은 <b>다른 축</b>이라 공존한다. 활동으로 챙기던 목표도 아이가 해내면 <b>이뤘어요</b>로 표시 — <b>비어있음 → 챙기는 중 → 이룸</b>의 흐름. gap은 ‘활동도 없고 이룸도 아닌’ 것만.</p>
+        <p class="was">영역 상세에서 ‘이뤘어요’·‘이룸 해제’, 관리에서 활동 연결된 목표의 ‘됨’ 토글을 확인하세요</p>
+      </div>
+    </div>
+
+    <p class="footnote">
+      팔레트 : 딥 파인그린(신뢰·정체성) + 허니 앰버(비어있음 — 경고 빨강 대신 “채우면 좋아요”의 따뜻한 톤) + 세이지(챙김).<br>
+      서체 : 고운바탕(정체성·감성 문구) + 본고딕(UI·데이터).<br>
+      → 오늘 할 일을 체크하면 진행·펫이 실제로 반응하고, 갭 배너·탭은 눌러서 이동할 수 있어요.
+    </p>
+    <p style="margin-top:16px">
+      <button onclick="openOnboard()" style="font-family:var(--sans);font-size:13px;font-weight:700;color:var(--pine);background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;padding:9px 15px;cursor:pointer">▶ 온보딩 3장 다시 보기</button>
+    </p>
+  </aside>
+</div>
+
+<script>
+  var TOTAL = 6;
+  function setTheme(t){
+    var r = document.documentElement;
+    if(t==='system') r.removeAttribute('data-theme'); else r.setAttribute('data-theme', t);
+    document.querySelectorAll('.themebar button').forEach(function(b){ b.classList.toggle('on', b.dataset.t===t); });
+  }
+  setTheme('light');
+  function show(view, tab){
+    ['today','area','log','detail','manage'].forEach(function(k){
+      var el = document.getElementById('view-'+k);
+      if(el) el.classList.toggle('active', k===view);
+    });
+    ['today','area','log'].forEach(function(k){
+      document.getElementById('tab-'+k).classList.toggle('active', k===tab);
+    });
+    document.getElementById('screen').scrollTop = 0;
+  }
+  function go(name){ show(name, name); }
+  function openDetail(){ show('detail', 'area'); }
+  function openManage(){ show('manage', null); }
+  function togglePill(el){
+    el.classList.toggle('on');
+    var on = el.classList.contains('on');
+    var t = el.textContent.trim();
+    if(t==='켜짐' || t==='꺼짐') el.textContent = on ? '켜짐' : '꺼짐';
+    else el.textContent = on ? '됨' : '됨으로';
+  }
+  function toggle(el){
+    el.classList.toggle('done');
+    update();
+  }
+  function update(){
+    var done = document.querySelectorAll('#view-today .task.done').length;
+    document.getElementById('todayCount').textContent = done + ' / ' + TOTAL;
+    document.getElementById('petFill').style.width = (done/TOTAL*100) + '%';
+    var left = TOTAL - done;
+    var t = document.getElementById('petTitle');
+    if(done===0) t.textContent = '오늘 6개 채우면 물을 줄 수 있어요';
+    else if(left>0) t.textContent = '오늘 ' + left + '개 더 채우면 물을 줄 수 있어요';
+    else t.textContent = '오늘 다 챙겼어요! 새싹에게 물을 주세요 💧';
+  }
+
+  /* ---- 온보딩 ---- */
+  var ob = 0, OBN = 3;
+  function renderOb(){
+    var slides = document.querySelectorAll('.ob-slide');
+    slides.forEach(function(s,i){ s.classList.toggle('active', i===ob); });
+    document.querySelectorAll('.dot-i').forEach(function(d,i){ d.classList.toggle('on', i===ob); });
+    document.getElementById('obNext').textContent = (ob===OBN-1) ? '시작하기' : '다음';
+  }
+  function nextOb(){ if(ob<OBN-1){ ob++; renderOb(); } else { closeOnboard(); } }
+  function closeOnboard(){ document.getElementById('onboard').hidden = true; }
+  function openOnboard(){ ob=0; renderOb(); document.getElementById('onboard').hidden = false; }
+  renderOb();
+
+  /* ---- 폼: 학원 · 활동 추가/편집 ---- */
+  function closeSheet(id){ document.getElementById(id).hidden = true; }
+  function toggleClass(el){ el.classList.toggle('on'); }
+
+  var ACADEMIES = ['한글교실','팩토수학'];
+  var MILES = [
+    {d:'국어', t:'자음·모음의 소릿값을 안다'},
+    {d:'국어', t:'자기 이름을 쓴다'},
+    {d:'수학', t:'20까지 세고 숫자를 읽는다'},
+    {d:'수학', t:'반복 규칙을 이어간다'},
+    {d:'과학·탐구', t:'주변 동식물에 관심을 갖는다'},
+    {d:'사회·인성', t:'차례·규칙을 지킨다'}
+  ];
+  var ACT_DATA = {
+    '한글 학원 숙제':{kind:'학원', academy:'한글교실', target:3, aims:[0]},
+    '팩토 숙제':{kind:'학원', academy:'팩토수학', target:2, aims:[2]},
+    '수학 보드게임':{kind:'자체', academy:null, target:1, aims:[3]},
+    '알파짱 워크지':{kind:'자유', academy:null, target:0, aims:[]},
+    '영어 원서 1권':{kind:'자체', academy:null, target:3, aims:[]},
+    '영어 영상 20분':{kind:'자체', academy:null, target:5, aims:[]}
+  };
+  var actTarget = 3, actKind = '학원';
+
+  // 학원 폼
+  function openAcademyForm(mode, name){
+    document.getElementById('acTitle').textContent = mode==='edit' ? '학원 편집' : '학원 추가';
+    document.getElementById('acDelete').hidden = (mode!=='edit');
+    document.getElementById('acName').value = (mode==='edit' && name) ? name : '';
+    // 요일/시간 데모 기본값
+    var days = {'한글교실':['월','수','금'], '팩토수학':['화','목']}[name] || [];
+    document.querySelectorAll('#acDays .daychip').forEach(function(b){ b.classList.toggle('on', days.indexOf(b.textContent)>=0); });
+    document.getElementById('acTime').value = (name==='팩토수학') ? '17:00' : '15:00';
+    document.getElementById('academySheet').hidden = false;
+  }
+
+  // 활동 폼
+  function setActKind(k){
+    actKind = k;
+    document.querySelectorAll('#actKind button').forEach(function(b){ b.classList.toggle('on', b.dataset.k===k); });
+    document.getElementById('actAcademyWrap').hidden = (k!=='학원');
+    document.getElementById('actTargetField').hidden = (k==='자유');
+    document.getElementById('actFreeNote').hidden = (k!=='자유');
+  }
+  function stepTarget(d){
+    actTarget = Math.max(1, Math.min(7, actTarget + d));
+    document.getElementById('actTargetVal').textContent = '주 ' + actTarget + '회';
+  }
+  function renderAims(checked){
+    var html = '';
+    for(var i=0;i<MILES.length;i++){
+      var on = checked.indexOf(i)>=0;
+      html += '<div class="aimrow'+(on?' on':'')+'" onclick="this.classList.toggle(\'on\')">'
+        + '<div class="cbox"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2"><path d="M4 12l5 5L20 6"/></svg></div>'
+        + '<div class="anm">'+MILES[i].t+'</div><div class="adm">'+MILES[i].d+'</div></div>';
+    }
+    document.getElementById('actAims').innerHTML = html;
+  }
+  function openActivityForm(mode, name){
+    var d = (mode==='edit' && ACT_DATA[name]) ? ACT_DATA[name] : {kind:'학원', academy:'한글교실', target:3, aims:[]};
+    document.getElementById('actTitle').textContent = mode==='edit' ? '활동 편집' : '활동 추가';
+    document.getElementById('actDelete').hidden = (mode!=='edit');
+    document.getElementById('actName').value = (mode==='edit' && name) ? name : '';
+    document.getElementById('actAcademy').value = d.academy || '한글교실';
+    actTarget = d.target>0 ? d.target : 3;
+    document.getElementById('actTargetVal').textContent = '주 ' + actTarget + '회';
+    renderAims(d.aims);
+    setActKind(d.kind);
+    document.getElementById('activitySheet').hidden = false;
+  }
+
+  /* ---- 기록: 주간 현황 + 지난 날 채우기 ---- */
+  var WK = ['월','화','수','목','금','토','일'];
+  var WK_DATE = ['8월 31일 월요일','9월 1일 화요일','9월 2일 수요일','9월 3일 목요일','9월 4일 금요일','9월 5일 토요일','9월 6일 일요일'];
+  var TODAY_I = 3; // 목요일
+  var ACTS = [
+    {n:'한글 학원 숙제', d:'국어', t:3},
+    {n:'팩토 숙제', d:'수학', t:2},
+    {n:'수학 보드게임', d:'수학', t:1},
+    {n:'알파짱 워크지', d:'자유', t:0},
+    {n:'영어 원서 1권', d:'영어', t:3},
+    {n:'영어 영상 20분', d:'영어', t:5}
+  ];
+  // daysState[day][activity] = 완료 여부
+  var daysState = [
+    [true,false,false,false,true,true],   // 월
+    [true,true,true,false,true,true],      // 화
+    [false,true,false,false,false,true],   // 수
+    [false,false,false,false,false,false], // 목 (오늘)
+    [false,false,false,false,false,false], // 금
+    [false,false,false,false,false,false], // 토
+    [false,false,false,false,false,false]  // 일
+  ];
+  var curDay = null;
+
+  function dayCount(i){ return daysState[i].reduce(function(a,b){return a+(b?1:0);},0); }
+  function actWeekDone(k){ var s=0; for(var i=0;i<7;i++){ if(daysState[i][k]) s++; } return s; }
+
+  function renderWeek(){
+    // 주간 스트립
+    var strip = document.getElementById('weekStrip');
+    var daysTended = 0, html = '';
+    for(var i=0;i<7;i++){
+      var c = dayCount(i);
+      if(c>0) daysTended++;
+      var cls = 'wd' + (c>0?' fill':'') + (i===TODAY_I?' today':'') + (i>TODAY_I?' disabled':'');
+      var click = (i<=TODAY_I) ? ' onclick="openDay('+i+')"' : '';
+      html += '<div class="'+cls+'"'+click+'><div class="wd-lbl">'+WK[i]+'</div><div class="wd-dot">'+(c>0?c:'·')+'</div></div>';
+    }
+    strip.innerHTML = html;
+    document.getElementById('weekSummary').textContent = daysTended + '일 챙김';
+
+    // 활동별 주간 목표
+    var list = '';
+    for(var k=0;k<ACTS.length;k++){
+      var a = ACTS[k], done = actWeekDone(k), state = '', pips = '';
+      if(a.t > 0){
+        for(var p=0;p<a.t;p++){ pips += '<span class="wpip'+(p<done?' on':'')+'"></span>'; }
+        pips = '<div class="wact-pips">'+pips+'</div>';
+        if(done>=a.t) state = '<span class="wact-state done"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path d="M5 12l5 5L20 6"/></svg>완료</span>';
+        else if(done>0) state = '<span class="wact-state prog">'+done+'/'+a.t+'회</span>';
+        else state = '<span class="wact-state none">이번 주 없음</span>';
+      } else {
+        state = done>0 ? '<span class="wact-state prog">'+done+'회</span>' : '<span class="wact-state none">이번 주 없음</span>';
+      }
+      list += '<div class="wact"><div class="wact-top"><div class="wact-nm">'+a.n+'<span>'+a.d+'</span></div>'+state+'</div>'+pips+'</div>';
+    }
+    document.getElementById('weekActs').innerHTML = list;
+  }
+
+  function openDay(i){
+    if(i>TODAY_I) return;
+    curDay = i;
+    document.getElementById('dayTitle').textContent = WK_DATE[i] + (i===TODAY_I ? ' · 오늘' : '');
+    var rows = '';
+    for(var k=0;k<ACTS.length;k++){
+      var on = daysState[i][k];
+      rows += '<div class="dchk'+(on?' on':'')+'" onclick="toggleDayAct('+k+')">'
+        + '<div class="cbox"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2"><path d="M4 12l5 5L20 6"/></svg></div>'
+        + '<div class="dnm">'+ACTS[k].n+'</div><div class="dtag">'+ACTS[k].d+'</div></div>';
+    }
+    document.getElementById('dayList').innerHTML = rows;
+    document.getElementById('daySheet').hidden = false;
+  }
+  function toggleDayAct(k){
+    daysState[curDay][k] = !daysState[curDay][k];
+    var row = document.getElementById('dayList').children[k];
+    row.classList.toggle('on', daysState[curDay][k]);
+    renderWeek();
+  }
+  function closeDay(){ document.getElementById('daySheet').hidden = true; curDay = null; }
+
+  renderWeek();
+
+  /* ---- 활동 연결 시트 ---- */
+  var pendingMs = null, pickedActivity = '이름 따라쓰기 놀이';
+  function openLink(btn){
+    pendingMs = btn.closest('.ms');
+    document.getElementById('linkTarget').textContent = pendingMs.querySelector('.ms-name').textContent;
+    // reset selection to the recommended (first) option
+    var opts = document.querySelectorAll('#linkSheet .opt');
+    opts.forEach(function(o,i){ o.classList.toggle('sel', i===0); });
+    pickedActivity = '이름 따라쓰기 놀이';
+    document.getElementById('linkSheet').hidden = false;
+  }
+  function closeLink(){ document.getElementById('linkSheet').hidden = true; pendingMs = null; }
+  function pick(el, name){
+    document.querySelectorAll('#linkSheet .opt').forEach(function(o){ o.classList.remove('sel'); });
+    el.classList.add('sel');
+    pickedActivity = name;
+  }
+  function confirmLink(){
+    if(pendingMs) msTo(pendingMs, 'prog', pickedActivity, '방금 연결됨');
+    closeLink();
+  }
+  function msAchieve(btn){
+    var ms = btn.closest('.ms'); var act = ms.dataset.activity;
+    msTo(ms, 'done', act, act ? '활동으로 이룸' : '직접 확인함');
+  }
+  function msUndo(btn){
+    var ms = btn.closest('.ms'); var act = ms.dataset.activity;
+    if(act) msTo(ms, 'prog', act, '챙기는 중');
+    else msTo(ms, 'empty', '', null);
+  }
+  function detMeta(state, act){
+    if(state==='done') return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M5 12l5 5L20 6"/></svg>이뤘어요';
+    if(state==='prog') return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="8"/></svg>' + act + '로 챙기는 중';
+    return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/></svg>아직 챙기는 활동이 없어요';
+  }
+  function msTo(ms, state, act, sub){
+    ms.className = 'ms ' + state;
+    ms.dataset.activity = act || '';
+    ms.querySelector('.ms-meta').innerHTML = detMeta(state, ms.dataset.activity);
+    var subEl = ms.querySelector('.ms-sub');
+    if(!subEl){ subEl = document.createElement('div'); subEl.className = 'ms-sub'; ms.querySelector('.ms-meta').after(subEl); }
+    if(sub){ subEl.textContent = sub; subEl.hidden = false; } else { subEl.hidden = true; }
+    var labelId = state==='empty' ? 'mlabelEmpty' : (state==='prog' ? 'mlabelProg' : 'mlabelDone');
+    document.getElementById(labelId).after(ms);
+    recomputeDetail();
+  }
+  function setLabelCnt(id, n){
+    var el = document.getElementById(id);
+    el.querySelector('.cnt').textContent = n + '곳';
+    el.hidden = (n===0);
+  }
+  function recomputeDetail(){
+    var view = document.getElementById('view-detail');
+    var e = view.querySelectorAll('.ms.empty').length;
+    var p = view.querySelectorAll('.ms.prog').length;
+    var d = view.querySelectorAll('.ms.done').length;
+    var total = e + p + d;
+    document.getElementById('detCover').innerHTML =
+      '목표 ' + total + '곳 · 이룸 ' + d + ' · 챙기는 중 ' + p +
+      (e>0 ? ' · <b>비어있음 ' + e + '곳</b>' : ' · <b style="color:var(--pine)">비어있음 없음</b>');
+    var pr = document.getElementById('detPips'); pr.innerHTML = '';
+    for(var i=0;i<d;i++) pr.insertAdjacentHTML('beforeend','<span class="pip on"></span>');
+    for(var j=0;j<p;j++) pr.insertAdjacentHTML('beforeend','<span class="pip prog"></span>');
+    for(var k=0;k<e;k++) pr.insertAdjacentHTML('beforeend','<span class="pip gap"></span>');
+    setLabelCnt('mlabelEmpty', e); setLabelCnt('mlabelProg', p); setLabelCnt('mlabelDone', d);
+  }
+  recomputeDetail();
+</script>
