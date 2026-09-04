@@ -397,10 +397,10 @@ body {
 :focus-visible { outline: 2px solid var(--pine); outline-offset: 2px; }
 
 /* ---------- 관리 인라인 폼 (학원·활동 추가) ---------- */
-.mng-form { background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin: 4px 0 8px; }
-.mng-form .fld { width: 100%; box-sizing: border-box; font-family: var(--sans); font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--line-strong); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
-.mng-form .fld:focus { outline: none; border-color: var(--pine); }
-.fld-label { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: var(--muted); margin: 2px 0 7px; }
+.fld { display: block; width: 100%; box-sizing: border-box; font-family: var(--sans); font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--line-strong); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; }
+.fld:focus { outline: none; border-color: var(--pine); }
+.fld-label { display: block; font-size: 11px; font-weight: 700; letter-spacing: .06em; color: var(--muted); margin: 2px 0 7px; }
+.fld-hint { font-weight: 400; letter-spacing: 0; color: var(--muted); }
 .daypick { display: flex; gap: 6px; margin-bottom: 12px; }
 .daypick.wrap { flex-wrap: wrap; }
 .daybtn { flex: 1 1 0; min-width: 34px; font-family: var(--sans); font-size: 13px; font-weight: 700; cursor: pointer; padding: 8px 4px; border-radius: 9px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--muted); }
@@ -408,4 +408,22 @@ body {
 .daybtn.on { background: var(--pine); border-color: var(--pine); color: #fff; }
 :root[data-theme="dark"] .daybtn.on, :root:not([data-theme="light"]) .daybtn.on { color: #0E110A; }
 .fld-err { color: var(--danger); font-size: 12.5px; margin: 0 0 10px; }
-.form-act { display: flex; gap: 8px; }
+
+/* 주간 목표 스텝퍼 */
+.stepper { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.stepper button { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font-size: 20px; font-weight: 700; cursor: pointer; display: grid; place-items: center; }
+.stepper button:hover { border-color: var(--pine); color: var(--pine); }
+.stepper .val { font-size: 15px; font-weight: 700; min-width: 60px; text-align: center; }
+
+/* 겨냥 목표 체크 리스트 */
+.tgt-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 8px; }
+.tgt { display: flex; align-items: flex-start; gap: 10px; text-align: left; width: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: 11px; padding: 11px 12px; cursor: pointer; font-family: var(--sans); color: var(--ink); }
+.tgt-box { flex: 0 0 auto; width: 20px; height: 20px; margin-top: 1px; border-radius: 6px; border: 2px solid var(--line-strong); background: var(--surface); position: relative; }
+.tgt.on { border-color: var(--pine); background: var(--pine-soft); }
+.tgt.on .tgt-box { background: var(--pine); border-color: var(--pine); }
+.tgt.on .tgt-box::after { content: ""; position: absolute; left: 5px; top: 1px; width: 5px; height: 10px; border: solid #fff; border-width: 0 2.4px 2.4px 0; transform: rotate(45deg); }
+.tgt-txt { font-size: 13.5px; line-height: 1.4; }
+
+/* 편집 삭제(위험색) — 앱에서 red 를 쓰는 유일한 자리 (§05) */
+.sheet-del { width: 100%; margin-top: 9px; background: none; border: none; color: var(--danger); font-family: var(--sans); font-size: 13px; font-weight: 700; cursor: pointer; padding: 8px; }
+.sheet-del:hover { text-decoration: underline; }

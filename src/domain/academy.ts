@@ -42,6 +42,26 @@ export function renameAcademy(academy: Academy, name: string): Academy {
   return { ...academy, name }
 }
 
+/**
+ * 편집 폼 저장(§12). id·active 보존, 나머지는 input 으로 교체.
+ *   coversDomains 는 폼에 없으므로(§12 학원 폼) input 에 없으면 원본 값을 유지한다
+ *   — 편집이 등원 커버(예: 유아체육→예체능)를 조용히 지우지 않게.
+ * @throws DomainError E-ACAD-EMPTY-NAME
+ */
+export function editAcademy(academy: Academy, input: AcademyInput): Academy {
+  requireNonEmptyName(input.name, 'E-ACAD-EMPTY-NAME')
+  const covers = input.coversDomains ?? academy.coversDomains
+  return {
+    id: academy.id,
+    active: academy.active,
+    name: input.name,
+    weekdays: [...input.weekdays],
+    ...(input.time !== undefined ? { time: input.time } : {}),
+    ...(input.contact !== undefined ? { contact: input.contact } : {}),
+    ...(covers !== undefined ? { coversDomains: [...covers] } : {}),
+  }
+}
+
 export function rescheduleAcademy(
   academy: Academy,
   weekdays: readonly Weekday[],

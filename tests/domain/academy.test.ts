@@ -12,6 +12,7 @@ import {
   attendanceActivities,
   createAcademy,
   deactivateAcademy,
+  editAcademy,
   homeworkOf,
   renameAcademy,
   rescheduleAcademy,
@@ -190,5 +191,34 @@ describe('⭐ attendanceActivities — 등원용 영역 커버리지 (INV-ACAD-0
     // 실제 활동 0개 + 등원 합성 → 하는중
     const synth = attendanceActivities([체육], CURRENT)
     expect(evaluateCoverage('예체능', [예체능목표], synth)).toBe('하는중')
+  })
+})
+
+describe('editAcademy (편집 폼 저장) ⭐', () => {
+  it('id·active 보존, 이름·요일·시간·연락처 교체', () => {
+    const a = deactivateAcademy(createAcademy(input(), newId))
+    const edited = editAcademy(a, { name: '한글교실', weekdays: [2, 4], time: '16:00', contact: '010-1234-5678' })
+    expect(edited.id).toBe(a.id)
+    expect(edited.active).toBe(false)
+    expect(edited.name).toBe('한글교실')
+    expect(edited.weekdays).toEqual([2, 4])
+    expect(edited.time).toBe('16:00')
+    expect(edited.contact).toBe('010-1234-5678')
+  })
+
+  it('⭐ 폼에 없는 coversDomains 는 원본 값을 유지한다 (등원 커버 보존)', () => {
+    const pe = createAcademy(input({ name: '유아체육', coversDomains: ['예체능', '건강·안전'] }), newId)
+    const edited = editAcademy(pe, { name: '유아체육', weekdays: [0], time: '13:30' })
+    expect(edited.coversDomains).toEqual(['예체능', '건강·안전'])
+  })
+
+  it('빈 이름은 E-ACAD-EMPTY-NAME', () => {
+    const a = createAcademy(input(), newId)
+    try {
+      editAcademy(a, { name: '  ', weekdays: [1] })
+      expect.unreachable('던져야 한다')
+    } catch (e) {
+      expect(isDomainError(e, 'E-ACAD-EMPTY-NAME')).toBe(true)
+    }
   })
 })

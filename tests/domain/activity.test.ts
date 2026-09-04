@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { createActivity, deactivate, rename, reschedule, retarget, setOwner } from '../../src/domain/activity'
+import { createActivity, deactivate, editActivity, rename, reschedule, retarget, setOwner } from '../../src/domain/activity'
 import { isDomainError } from '../../src/domain/errors'
 import type { ActivityInput, Standard } from '../../src/domain/types'
 
@@ -293,6 +293,51 @@ describe('INV-ACT-05 — owner 는 표시 전용이다 (OOS-1 / X-4)', () => {
       for (const bad of 금지) {
         expect(name.toLowerCase(), `${name} 이 ${bad} 를 포함한다`).not.toContain(bad)
       }
+    }
+  })
+})
+
+describe('INV-ACT-11 — editActivity (편집 폼 저장) ⭐', () => {
+  const make = () => createActivity(input({ name: '옛 이름', domain: '국어', track: '집', targetIds: [] }), STANDARDS, newId)
+
+  it('id·active 를 보존하고 나머지는 교체한다', () => {
+    const a = deactivate(make()) // active=false 인 것도 보존되는지
+    const edited = editActivity(a, input({ name: '새 이름', domain: '수학', track: '집', targetIds: ['int-ma'], cadence: { kind: '주N회', times: 2 } }), STANDARDS)
+    expect(edited.id).toBe(a.id)
+    expect(edited.active).toBe(false)
+    expect(edited.name).toBe('새 이름')
+    expect(edited.domain).toBe('수학')
+    expect(edited.targetIds).toEqual(['int-ma'])
+    expect(edited.cadence).toEqual({ kind: '주N회', times: 2 })
+  })
+
+  it("'학원'→'자체' 전환 시 academyId 가 제거된다", () => {
+    const a = createActivity(input({ track: '학원', academyId: 'ac-1' }), STANDARDS, newId)
+    expect(a.academyId).toBe('ac-1')
+    const edited = editActivity(a, input({ track: '집', targetIds: [] }), STANDARDS)
+    expect(edited.academyId).toBeUndefined()
+  })
+
+  it('academyId 를 새로 붙일 수 있다', () => {
+    const edited = editActivity(make(), input({ track: '학원', academyId: 'ac-2' }), STANDARDS)
+    expect(edited.academyId).toBe('ac-2')
+  })
+
+  it('빈 이름은 E-ACT-EMPTY-NAME', () => {
+    try {
+      editActivity(make(), input({ name: '  ' }), STANDARDS)
+      expect.unreachable('던져야 한다')
+    } catch (e) {
+      expect(isDomainError(e, 'E-ACT-EMPTY-NAME')).toBe(true)
+    }
+  })
+
+  it('영역과 다른 목표를 겨냥하면 E-ACT-TARGET-DOMAIN-MISMATCH', () => {
+    try {
+      editActivity(make(), input({ domain: '국어', targetIds: ['int-ma'] }), STANDARDS)
+      expect.unreachable('던져야 한다')
+    } catch (e) {
+      expect(isDomainError(e, 'E-ACT-TARGET-DOMAIN-MISMATCH')).toBe(true)
     }
   })
 })

@@ -42,6 +42,38 @@ export function createActivity(
     cadence: input.cadence,
     owner: input.owner,
     active: true,
+    // INV-ACT-12 — 학원 숙제면 academyId 를 보존한다(관리 폼의 '학원' 선택 → 학원 연결).
+    ...(input.academyId !== undefined ? { academyId: input.academyId } : {}),
+  }
+}
+
+/**
+ * INV-ACT-11 — 편집 폼 저장(§12). 한 번에 여러 필드를 바꾼다.
+ *   id·active 는 보존한다(지난 Completion 이 고아가 되지 않게).
+ *   나머지(name·domain·track·targetIds·cadence·owner·academyId)는 input 으로 교체.
+ *   academyId 는 input 에 없으면 제거된다('학원'→'자체/자유' 전환).
+ * create 와 같은 계약으로 검증한다 — 부분 세터를 여럿 두는 대신 폼 저장 1함수로 겸용.
+ * @throws DomainError E-ACT-EMPTY-NAME | E-ACT-EMPTY-WEEKDAYS | E-ACT-INVALID-TIMES
+ *                   | E-ACT-TARGET-NOT-FOUND | E-ACT-TARGET-DOMAIN-MISMATCH
+ */
+export function editActivity(
+  activity: Activity,
+  input: ActivityInput,
+  standards: readonly Standard[],
+): Activity {
+  requireNonEmptyName(input.name)
+  requireValidCadence(input.cadence)
+  requireValidTargets(input, standards)
+  return {
+    id: activity.id,
+    active: activity.active,
+    name: input.name,
+    domain: input.domain,
+    track: input.track,
+    targetIds: [...input.targetIds],
+    cadence: input.cadence,
+    owner: input.owner,
+    ...(input.academyId !== undefined ? { academyId: input.academyId } : {}),
   }
 }
 

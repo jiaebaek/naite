@@ -14,12 +14,13 @@ import { findCompletion, toggleCompletion } from '../../domain/completion'
 import { currentTargets } from '../../domain/pace'
 import { goalStatusOf } from '../../domain/coverage'
 import { provenanceOf } from '../../domain/provenance'
-import { createActivity, deactivate, retarget } from '../../domain/activity'
+import { createActivity, deactivate, editActivity, retarget } from '../../domain/activity'
 import {
   academiesToday,
   attendanceActivities,
   createAcademy,
   deactivateAcademy,
+  editAcademy,
 } from '../../domain/academy'
 import { INITIAL_CARE, grantToken } from '../../domain/pet'
 import type { CareState } from '../../domain/pet'
@@ -52,6 +53,8 @@ import { LogScreen } from './LogScreen'
 import type { WeekDayVM, RecordRowVM } from './LogScreen'
 import { Onboarding } from './Onboarding'
 import { DaySheet } from './DaySheet'
+import { ManageSheet } from './ManageSheet'
+import type { ManageSheetTarget } from './ManageSheet'
 import { LinkSheet } from './LinkSheet'
 import type { LinkChoice } from './LinkSheet'
 import { badgeOf, recommendFor } from './vm'
@@ -141,6 +144,8 @@ export function App() {
   const [linkTarget, setLinkTarget] = useState<MilestoneVM | null>(null)
   // 기록 탭: 지난 날 backfill 시트가 열린 날짜 (null = 닫힘)
   const [backfillDate, setBackfillDate] = useState<IsoDate | null>(null)
+  // 관리 탭: 학원/활동 추가·편집 시트 (null = 닫힘)
+  const [manageSheet, setManageSheet] = useState<ManageSheetTarget | null>(null)
   const [showOnboard, setShowOnboard] = useState<boolean>(() => {
     try {
       return localStorage.getItem(ONBOARD_KEY) !== '1'
@@ -349,15 +354,19 @@ export function App() {
   )
   const manageActivities = useMemo(
     () => activeActivities.map((a) => {
-      const sub = a.academyId
-        ? `${academyName(a.academyId)} · ${cadenceLabel(a.cadence)} · ${a.domain}`
-        : a.targetIds.length > 0
-          ? `자체 · ${a.domain}`
-          : '자유 · 겨냥 목표 없음'
-      return { id: a.id, name: a.name, sub }
+      // 소속 · 주기 · 겨냥 목표 (§12 활동 목록)
+      const 소속 = a.academyId ? academyName(a.academyId) : a.targetIds.length > 0 ? '자체' : '자유'
+      const 겨냥 = a.targetIds.length > 0 ? `${a.domain} 겨냥 ${a.targetIds.length}곳` : '겨냥 목표 없음'
+      return { id: a.id, name: a.name, sub: `${소속} · ${cadenceLabel(a.cadence)} · ${겨냥}` }
     }),
     [activeActivities, academyName],
   )
+  // 활동 폼의 '겨냥 목표' 옵션 — 이 시기 목표(영역·문장)
+  const targetOptions = useMemo(
+    () => targets.map((t) => ({ id: t.id, statement: t.statement, domain: t.domain })),
+    [targets],
+  )
+
   const achievement: readonly AchGroupVM[] = useMemo(
     () => domainVMs
       .filter((d) => d.total > 0)
@@ -429,17 +438,34 @@ export function App() {
     setLinkTarget(null)
   }
 
-  const handleCreateActivity = (input: ActivityInput) => {
-    setActivities((prev) => [...prev, createActivity(input, STANDARDS_2021, newId)])
+  // ── 관리 시트: 추가/편집/삭제 (createActivity·editActivity 가 계약 위반 시 던진다) ──
+  const handleSaveActivity = (input: ActivityInput, editingItem: Activity | null) => {
+    setActivities((prev) =>
+      editingItem
+        ? prev.map((a) => (a.id === editingItem.id ? editActivity(a, input, STANDARDS_2021) : a))
+        : [...prev, createActivity(input, STANDARDS_2021, newId)],
+    )
+    setManageSheet(null)
   }
-  const handleDeactivateActivity = (id: ActivityId) => {
-    setActivities((prev) => prev.map((a) => (a.id === id ? deactivate(a) : a)))
+  const handleSaveAcademy = (input: AcademyInput, editingItem: Academy | null) => {
+    setAcademies((prev) =>
+      editingItem
+        ? prev.map((a) => (a.id === editingItem.id ? editAcademy(a, input) : a))
+        : [...prev, createAcademy(input, newId)],
+    )
+    setManageSheet(null)
   }
-  const handleCreateAcademy = (input: AcademyInput) => {
-    setAcademies((prev) => [...prev, createAcademy(input, newId)])
-  }
-  const handleDeactivateAcademy = (id: string) => {
-    setAcademies((prev) => prev.map((a) => (a.id === id ? deactivateAcademy(a) : a)))
+  // INV-UI-27 / INV-ACAD — 삭제가 아니라 비활성화(지난 기록이 고아가 되지 않게). 편집 시트에서만.
+  const handleDeleteEntity = () => {
+    if (!manageSheet) return
+    if (manageSheet.kind === 'activity' && manageSheet.activity) {
+      const id = manageSheet.activity.id
+      setActivities((prev) => prev.map((a) => (a.id === id ? deactivate(a) : a)))
+    } else if (manageSheet.kind === 'academy' && manageSheet.academy) {
+      const id = manageSheet.academy.id
+      setAcademies((prev) => prev.map((a) => (a.id === id ? deactivateAcademy(a) : a)))
+    }
+    setManageSheet(null)
   }
 
   const closeOnboard = () => {
@@ -499,10 +525,10 @@ export function App() {
             onBack={() => setView('today')}
             onToggleAchieved={handleToggleAchieved}
             onOpenOnboarding={() => setShowOnboard(true)}
-            onCreateAcademy={handleCreateAcademy}
-            onDeactivateAcademy={handleDeactivateAcademy}
-            onCreateActivity={handleCreateActivity}
-            onDeactivateActivity={handleDeactivateActivity}
+            onAddAcademy={() => setManageSheet({ kind: 'academy' })}
+            onEditAcademy={(id) => { const a = academies.find((x) => x.id === id); if (a) setManageSheet({ kind: 'academy', academy: a }) }}
+            onAddActivity={() => setManageSheet({ kind: 'activity' })}
+            onEditActivity={(id) => { const a = activities.find((x) => x.id === id); if (a) setManageSheet({ kind: 'activity', activity: a }) }}
           />
         )}
         {view === 'log' && (
@@ -537,6 +563,18 @@ export function App() {
           existing={linkExisting}
           onConfirm={handleLinkConfirm}
           onClose={() => setLinkTarget(null)}
+        />
+      )}
+
+      {manageSheet && (
+        <ManageSheet
+          target={manageSheet}
+          academies={academies.filter((a) => a.active).map((a) => ({ id: a.id, name: a.name }))}
+          targets={targetOptions}
+          onSaveAcademy={handleSaveAcademy}
+          onSaveActivity={handleSaveActivity}
+          onDelete={handleDeleteEntity}
+          onClose={() => setManageSheet(null)}
         />
       )}
 
