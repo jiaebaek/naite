@@ -126,29 +126,41 @@ body {
 /* ---------- gap / reassurance banner ---------- */
 .gapcard {
   border-radius: var(--r-lg); padding: 18px 18px 16px;
-  background: linear-gradient(180deg, var(--honey-soft), var(--surface));
-  border: 1px solid color-mix(in srgb, var(--honey) 30%, var(--line));
+  background: linear-gradient(180deg, var(--pine-soft), var(--surface));
+  border: 1px solid color-mix(in srgb, var(--pine) 26%, var(--line));
   box-shadow: var(--shadow);
 }
-.gapcard.clear {
-  background: linear-gradient(180deg, var(--pine-soft), var(--surface));
-  border-color: color-mix(in srgb, var(--pine) 26%, var(--line));
+/* 갭이 많을 때 쓰는 허니 변형(현재 안도-우선에서는 미사용) */
+.gapcard.gapmode {
+  background: linear-gradient(180deg, var(--honey-soft), var(--surface));
+  border-color: color-mix(in srgb, var(--honey) 30%, var(--line));
 }
 .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
-.gap-head { font-family: var(--serif); font-size: 26px; font-weight: 700; line-height: 1.2; margin: 6px 0 2px; color: var(--honey-ink); text-wrap: balance; }
-.gapcard.clear .gap-head { color: var(--pine); }
+.gap-head { font-family: var(--serif); font-size: 26px; font-weight: 700; line-height: 1.2; margin: 6px 0 2px; color: var(--pine); text-wrap: balance; }
 .gap-sub { font-size: 13px; color: var(--ink-soft); margin: 0 0 13px; }
+.gap-sub b { color: var(--honey-ink); font-weight: 700; }
 .coverbar { display: flex; gap: 4px; margin-bottom: 13px; }
 .seg { height: 8px; border-radius: 99px; flex: 1; background: var(--line-strong); }
 .seg.on { background: var(--sage); }
+.seg.prog { background: color-mix(in srgb, var(--sage) 45%, transparent); }
 .seg.gap { background: var(--honey-2); }
 .chiprow { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
+.chip-lb { font-size: 11px; font-weight: 700; color: var(--muted); align-self: center; margin-right: 2px; }
 .chip {
   font-size: 12.5px; font-weight: 500; padding: 5px 11px; border-radius: 99px;
   background: var(--surface); border: 1px solid color-mix(in srgb, var(--honey) 34%, var(--line));
   color: var(--honey-ink); display: inline-flex; align-items: center; gap: 5px;
 }
 .chip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--honey-2); }
+.btn-soft {
+  width: 100%; cursor: pointer;
+  background: var(--surface); color: var(--pine);
+  border: 1px solid color-mix(in srgb, var(--pine) 32%, var(--line));
+  font-family: var(--sans); font-weight: 700; font-size: 14px;
+  padding: 11px; border-radius: var(--r-md);
+  display: flex; align-items: center; justify-content: center; gap: 8px; transition: background .15s;
+}
+.btn-soft:hover { background: var(--pine-soft); }
 .btn-primary {
   width: 100%; border: none; cursor: pointer;
   background: var(--pine); color: #fff;

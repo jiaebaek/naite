@@ -42,9 +42,9 @@ export function TodayScreen({ dateLabel, banner, progress, schedule, groups, onT
       <div className="screen-pad">
         <p className="datestrip">{dateLabel}</p>
 
-        {/* 갭 배너 */}
-        <div className={`gapcard${banner.clear ? ' clear' : ''}`}>
-          <div className="eyebrow">이번 시기 챙김</div>
+        {/* 현황 배너 — 안도 먼저, 갭은 넌지시 (원칙 6) */}
+        <div className="gapcard">
+          <div className="eyebrow">이번 시기 현황</div>
           {banner.clear ? (
             <>
               <div className="gap-head">지금은 놓친 곳이 없어요</div>
@@ -55,18 +55,27 @@ export function TodayScreen({ dateLabel, banner, progress, schedule, groups, onT
             </>
           ) : (
             <>
-              <div className="gap-head">지금 {banner.gapCount}곳이 비어있어요</div>
-              <p className="gap-sub">{banner.totalDomains}개 영역 중 {banner.onCount}곳은 잘 챙기고 있어요. 나머지만 채우면 돼요.</p>
+              {/* 안도 먼저: 이미 챙기고 있는 것 */}
+              <div className="gap-head">
+                {banner.onCount > 0 ? `벌써 ${banner.onCount}곳을 챙기고 있어요` : '이 시기 챙길 곳을 찾았어요'}
+              </div>
+              {/* 갭은 넌지시 */}
+              <p className="gap-sub">
+                {banner.onCount > 0
+                  ? <>{banner.totalDomains}개 영역 중 {banner.onCount}곳 · <b>{banner.gapCount}곳만 더 보면</b> 이 시기는 다 채워요.</>
+                  : <><b>{banner.gapCount}곳부터</b> 살펴보면 돼요. 급하지 않아요.</>}
+              </p>
               <div className="coverbar" aria-hidden="true">
                 {banner.segs.map((s, i) => <span key={i} className={`seg ${s}`} />)}
               </div>
               <div className="chiprow">
+                <span className="chip-lb">더 볼 곳</span>
                 {banner.gapNames.map((n) => (
                   <span key={n} className="chip"><span className="dot" />{n}</span>
                 ))}
               </div>
-              <button className="btn-primary" onClick={onGoArea}>
-                비어있는 곳 채우러 가기 <IconArrow />
+              <button className="btn-soft" onClick={onGoArea}>
+                비어있는 곳 보기 <IconArrow />
               </button>
             </>
           )}

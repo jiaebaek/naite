@@ -31,18 +31,19 @@ describe('첫 방문 — 온보딩', () => {
   })
 })
 
-describe('⭐ 갭 배너 — 시드로 과학·탐구/사회·인성 2곳 (회귀 방지)', () => {
+describe('⭐ 현황 배너 — 안도 먼저 (원칙 6 · 회귀 방지)', () => {
   beforeEach(() => localStorage.setItem(ONBOARD_KEY, '1'))
 
-  it('지금 비어있는 곳이 2곳으로 뜬다', async () => {
+  it('시드로 안도 먼저: "벌써 5곳을 챙기고 있어요"로 문을 연다', async () => {
     render(<App />)
-    expect(await screen.findByText(/2곳이 비어있어요/)).toBeInTheDocument()
+    expect(await screen.findByText(/벌써 5곳을 챙기고 있어요/)).toBeInTheDocument()
   })
 
-  it('갭 영역 이름이 과학·탐구와 사회·인성이다', async () => {
+  it('갭(2곳)은 서브에서 넌지시 + 영역 이름 칩', async () => {
     render(<App />)
     await screen.findByTestId('view-today')
-    const banner = screen.getByText(/2곳이 비어있어요/).closest('.gapcard')!
+    const banner = screen.getByText(/벌써 5곳을 챙기고 있어요/).closest('.gapcard')!
+    expect(banner.textContent).toContain('2곳만 더 보면')
     expect(banner.textContent).toContain('과학·탐구')
     expect(banner.textContent).toContain('사회·인성')
   })

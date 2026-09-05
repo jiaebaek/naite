@@ -159,21 +159,22 @@
   .gapcard{
     border-radius:var(--r-lg);
     padding:18px 18px 16px;
-    background:linear-gradient(180deg, var(--honey-soft), var(--surface));
-    border:1px solid color-mix(in srgb, var(--honey) 30%, var(--line));
+    background:linear-gradient(180deg, var(--pine-soft), var(--surface));
+    border:1px solid color-mix(in srgb, var(--pine) 26%, var(--line));
     box-shadow:var(--shadow);
   }
-  .gapcard.clear{
-    background:linear-gradient(180deg, var(--pine-soft), var(--surface));
-    border-color:color-mix(in srgb, var(--pine) 26%, var(--line));
+  .gapcard.gapmode{
+    background:linear-gradient(180deg, var(--honey-soft), var(--surface));
+    border-color:color-mix(in srgb, var(--honey) 30%, var(--line));
   }
   .eyebrow{font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--muted)}
-  .gap-head{font-family:var(--serif); font-size:26px; font-weight:700; line-height:1.2; margin:6px 0 2px; color:var(--honey-ink); text-wrap:balance}
-  .gapcard.clear .gap-head{color:var(--pine)}
+  .gap-head{font-family:var(--serif); font-size:26px; font-weight:700; line-height:1.2; margin:6px 0 2px; color:var(--pine); text-wrap:balance}
   .gap-sub{font-size:13px; color:var(--ink-soft); margin:0 0 13px}
+  .gap-sub b{color:var(--honey-ink); font-weight:700}
   .coverbar{display:flex; gap:4px; margin-bottom:13px}
   .seg{height:8px; border-radius:99px; flex:1; background:var(--line-strong)}
   .seg.on{background:var(--sage)}
+  .seg.prog{background:color-mix(in srgb, var(--sage) 45%, transparent)}
   .seg.gap{background:var(--honey-2)}
   .chiprow{display:flex; flex-wrap:wrap; gap:7px; margin-bottom:14px}
   .chip{
@@ -182,6 +183,22 @@
     color:var(--honey-ink); display:inline-flex; align-items:center; gap:5px;
   }
   .chip .dot{width:6px; height:6px; border-radius:50%; background:var(--honey-2)}
+  .chip-lb{font-size:11px; font-weight:700; color:var(--muted); align-self:center; margin-right:2px}
+  .btn-soft{
+    width:100%; cursor:pointer;
+    background:var(--surface); color:var(--pine);
+    border:1px solid color-mix(in srgb, var(--pine) 32%, var(--line));
+    font-family:var(--sans); font-weight:700; font-size:14px;
+    padding:11px; border-radius:var(--r-md);
+    display:flex; align-items:center; justify-content:center; gap:8px; transition:background .15s;
+  }
+  .btn-soft:hover{background:var(--pine-soft)}
+  .share-link{
+    width:100%; margin-top:8px; cursor:pointer; background:none; border:none;
+    color:var(--ink-soft); font-family:var(--sans); font-weight:700; font-size:12.5px;
+    padding:6px; display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .share-link:hover{color:var(--pine)}
   .btn-primary{
     width:100%; border:none; cursor:pointer;
     background:var(--pine); color:#fff;
@@ -335,6 +352,37 @@
   .ob-arrow{display:grid; place-items:center; color:var(--muted); margin:10px 0}
   .ob-grow{display:flex; align-items:center; gap:14px; justify-content:center; margin-top:2px}
   .ob-grow .cap{font-size:12.5px; color:var(--muted)}
+
+  /* ---------- 첫 실행 셋업 ---------- */
+  .setup-step{position:absolute; inset:0; display:none; flex-direction:column; overflow-y:auto}
+  .setup-step.active{display:flex}
+  .setup-top{flex:1; min-height:0}
+  .setup-h{font-family:var(--serif); font-size:24px; font-weight:700; line-height:1.3; margin:8px 0 6px; text-wrap:balance}
+  .setup-p{font-size:14px; color:var(--ink-soft); margin:0 0 20px}
+  .setup-reward{display:flex; align-items:center; gap:9px; background:var(--pine-soft); border:1px solid color-mix(in srgb,var(--pine) 22%,var(--line)); border-radius:12px; padding:12px 14px; font-size:13px; color:var(--pine); font-weight:700; margin-top:4px}
+  .setup-reward svg{flex:0 0 auto}
+
+  /* ---------- 공유(안도) 카드 ---------- */
+  .sharecard{
+    position:relative; border-radius:22px; padding:22px 20px 18px; text-align:center; overflow:hidden;
+    background:
+      radial-gradient(120% 90% at 50% 8%, color-mix(in srgb,var(--pine-soft) 90%, transparent), transparent 60%),
+      linear-gradient(180deg, var(--surface), var(--surface-2));
+    border:1px solid color-mix(in srgb, var(--pine) 22%, var(--line));
+    box-shadow:inset 0 1px 0 color-mix(in srgb,var(--paper) 60%,transparent);
+  }
+  .sc-eyebrow{font-family:var(--mono, monospace); font-size:11px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--pine); opacity:.8}
+  #shareArt{margin:6px 0 2px}
+  #shareArt svg{display:block; margin:0 auto; max-width:300px}
+  .sc-title{font-family:var(--serif); font-size:20px; font-weight:700; margin-top:4px}
+  .sc-sub{font-size:13.5px; color:var(--ink-soft); font-weight:500; margin-top:3px}
+  .sc-sub b{color:var(--pine); font-weight:700}
+  .sc-foot{display:flex; align-items:center; justify-content:center; gap:8px; margin-top:15px}
+  .sc-mark{font-family:var(--serif); font-size:13px; font-weight:700; color:var(--pine)}
+  .sc-code{font-family:var(--mono, monospace); font-size:10.5px; letter-spacing:.08em; color:var(--muted); border:1px solid var(--line); border-radius:6px; padding:2px 7px}
+  .sc-note{font-size:12px; color:var(--muted); text-align:center; margin:15px 2px; line-height:1.55}
+  .sc-actions{display:flex; gap:10px}
+  .sc-actions .btn-soft, .sc-actions .btn-primary{flex:1; width:auto}
 
   /* ---------- 영역 상세 ---------- */
   .detbar{display:flex; align-items:center; gap:11px; margin:0 0 16px}
@@ -575,14 +623,14 @@
                   <span class="seg gap"></span><span class="seg gap"></span>
                 </div>
                 <div class="ob-domrow"><span class="nm">국어</span><span class="pill on">챙기는 중</span></div>
+                <div class="ob-domrow"><span class="nm">건강·안전</span><span class="pill full">이룸</span></div>
                 <div class="ob-domrow gap"><span class="nm">과학·탐구</span><span class="pill empty">비어있음</span></div>
-                <div class="ob-domrow gap"><span class="nm">사회·인성</span><span class="pill empty">비어있음</span></div>
               </div>
             </div>
             <div class="ob-text">
               <div class="eyebrow">이 앱이 하는 일</div>
-              <h2 class="ob-h">무엇이 비어있는지<br>찾아드려요</h2>
-              <p class="ob-p"><b>누리과정·성취기준</b> 등 국가 교육과정에 맞춰, 이 시기에 챙길 영역 중 비어있는 곳을 콕 집어줘요.</p>
+              <h2 class="ob-h">지금 어디쯤인지<br>공교육 기준으로 보여줘요</h2>
+              <p class="ob-p">카더라 말고 <b>누리과정·성취기준</b>으로. 이미 챙긴 건 짚어주고, 비어있는 곳만 콕.</p>
             </div>
           </div>
 
@@ -621,6 +669,67 @@
         </div>
       </div>
 
+      <!-- ============ 첫 실행 셋업 (온보딩 직후 · draft 1.1 ③) ============ -->
+      <div class="onboard" id="setup" hidden>
+        <button class="ob-skip" onclick="closeSetup()">나중에</button>
+        <div class="ob-stage">
+
+          <!-- S1. 아이 정보 -->
+          <div class="setup-step active">
+            <div class="setup-top">
+              <div class="eyebrow">1 / 2 · 아이 정보</div>
+              <h2 class="setup-h">누구의 나이테를<br>쌓을까요?</h2>
+              <p class="setup-p">생년월만 있으면 지금 시기의 좌표를 준비해요.</p>
+              <div class="field">
+                <label for="suName">아이 이름 <span class="opt" style="color:var(--muted);font-weight:400">(애칭도 좋아요)</span></label>
+                <input class="inp" id="suName" placeholder="예: 첫째" value="첫째">
+              </div>
+              <div class="field">
+                <label for="suBirth">생년월</label>
+                <input class="inp" id="suBirth" type="month" value="2021-01">
+              </div>
+              <div class="setup-reward">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5L20 6"/></svg>
+                만 5세 8개월 · 취학 직전기 좌표를 준비했어요
+              </div>
+            </div>
+          </div>
+
+          <!-- S2. 내 학원 -->
+          <div class="setup-step">
+            <div class="setup-top">
+              <div class="eyebrow">2 / 2 · 어디 다녀요?</div>
+              <h2 class="setup-h">다니는 곳을<br>하나만 알려주세요</h2>
+              <p class="setup-p">넣는 순간, 그 활동이 챙기는 목표가 <b>첫 화면에 바로</b> 채워져요. 여러 개여도 하나면 충분해요.</p>
+              <div class="field">
+                <label for="suAcademy">학원 / 활동 이름</label>
+                <input class="inp" id="suAcademy" placeholder="예: 한글교실">
+              </div>
+              <div class="field">
+                <label>가는 요일</label>
+                <div class="daychips">
+                  <button class="daychip" onclick="toggleClass(this)">월</button>
+                  <button class="daychip" onclick="toggleClass(this)">화</button>
+                  <button class="daychip" onclick="toggleClass(this)">수</button>
+                  <button class="daychip" onclick="toggleClass(this)">목</button>
+                  <button class="daychip" onclick="toggleClass(this)">금</button>
+                  <button class="daychip" onclick="toggleClass(this)">토</button>
+                  <button class="daychip" onclick="toggleClass(this)">일</button>
+                </div>
+              </div>
+              <button class="share-link" style="justify-content:flex-start" onclick="closeSetup()">아직 없어요 · 나중에 추가할게요</button>
+            </div>
+          </div>
+
+        </div>
+        <div class="ob-foot">
+          <div class="dots" aria-hidden="true">
+            <span class="dot-i on" id="suDot0"></span><span class="dot-i" id="suDot1"></span>
+          </div>
+          <button class="btn-primary" id="suNext" onclick="nextSetup()">다음</button>
+        </div>
+      </div>
+
       <div class="screen" id="screen">
 
         <!-- app bar -->
@@ -649,23 +758,28 @@
           <div class="screen-pad">
             <p class="datestrip">9월 3일 목요일 · 만 5세 8개월</p>
 
-            <!-- gap banner -->
+            <!-- 현황 배너 · 안도 먼저, 갭은 넌지시 (draft 1.1 ①) -->
             <div class="gapcard">
-              <div class="eyebrow">이번 시기 챙김</div>
-              <div class="gap-head">지금 2곳이 비어있어요</div>
-              <p class="gap-sub">7개 영역 중 5곳은 잘 챙기고 있어요. 나머지만 채우면 돼요.</p>
+              <div class="eyebrow">이번 시기 현황</div>
+              <div class="gap-head">벌써 5곳을 챙기고 있어요</div>
+              <p class="gap-sub">7개 영역 중 5곳 · <b>2곳만 더 보면</b> 이 시기는 다 채워요.</p>
               <div class="coverbar" aria-hidden="true">
                 <span class="seg on"></span><span class="seg on"></span><span class="seg on"></span>
                 <span class="seg on"></span><span class="seg on"></span>
                 <span class="seg gap"></span><span class="seg gap"></span>
               </div>
               <div class="chiprow">
+                <span class="chip-lb">더 볼 곳</span>
                 <span class="chip"><span class="dot"></span>과학·탐구</span>
                 <span class="chip"><span class="dot"></span>사회·인성</span>
               </div>
-              <button class="btn-primary" onclick="go('area')">
-                비어있는 곳 채우러 가기
+              <button class="btn-soft" onclick="go('area')">
+                비어있는 곳 보기
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </button>
+              <button class="share-link" onclick="openShare()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 15V3M8 7l4-4 4 4"/></svg>
+                우리 아이 좌표 공유하기
               </button>
             </div>
 
@@ -755,16 +869,16 @@
 
             <div class="overview">
               <div class="eyebrow">이 나이에 챙길 영역</div>
-              <div class="ov-num">7개 영역 중 5개 챙김 · <b>2곳 비어있음</b></div>
+              <div class="ov-num">7개 영역 중 5곳 챙기고 있어요 · <b>비어있는 곳 2</b></div>
               <div class="coverbar" aria-hidden="true">
-                <span class="seg on"></span><span class="seg on"></span><span class="seg on"></span>
-                <span class="seg on"></span><span class="seg on"></span>
+                <span class="seg on"></span>
+                <span class="seg prog"></span><span class="seg prog"></span><span class="seg prog"></span><span class="seg prog"></span>
                 <span class="seg gap"></span><span class="seg gap"></span>
               </div>
               <div class="legend">
-                <span><span class="lg-dot" style="background:var(--sage)"></span>챙기는 중</span>
+                <span><span class="lg-dot" style="background:var(--sage)"></span>이룸</span>
+                <span><span class="lg-dot" style="background:color-mix(in srgb,var(--sage) 45%,transparent)"></span>챙기는 중</span>
                 <span><span class="lg-dot" style="background:var(--honey-2)"></span>비어있음</span>
-                <span><span class="lg-dot" style="background:var(--line-strong)"></span>아직 목표 아님</span>
               </div>
             </div>
 
@@ -795,9 +909,9 @@
             <div class="dgrp-label">채우는 중</div>
 
             <div class="domain">
-              <div class="d-top"><span class="d-name">국어</span><span class="pill on">1곳 챙김</span></div>
-              <div class="ring-row"><span class="pip on"></span><span class="pip gap"></span><span class="pip gap"></span><span class="pip gap"></span><span class="pip gap"></span><span class="pip gap"></span></div>
-              <div class="d-status">목표 6곳 중 1곳 챙김 · <b>5곳 남음</b></div>
+              <div class="d-top"><span class="d-name">국어</span><span class="pill on">1곳 챙기는 중</span></div>
+              <div class="ring-row"><span class="pip prog"></span><span class="pip gap"></span><span class="pip gap"></span><span class="pip gap"></span><span class="pip gap"></span><span class="pip gap"></span></div>
+              <div class="d-status">목표 6곳 · 챙기는 중 1 · <b>비어있음 5</b></div>
               <div class="d-actions">
                 <button class="btn-sm fill" onclick="openDetail()">비어있는 목표 채우기</button>
                 <button class="btn-sm" onclick="openDetail()">자세히</button>
@@ -805,34 +919,34 @@
             </div>
 
             <div class="domain">
-              <div class="d-top"><span class="d-name">수학</span><span class="pill on">2곳 챙김</span></div>
-              <div class="ring-row"><span class="pip on"></span><span class="pip on"></span><span class="pip gap"></span><span class="pip gap"></span><span class="pip gap"></span><span class="pip gap"></span></div>
-              <div class="d-status">목표 6곳 중 2곳 챙김 · <b>4곳 남음</b></div>
+              <div class="d-top"><span class="d-name">수학</span><span class="pill on">2곳 챙기는 중</span></div>
+              <div class="ring-row"><span class="pip prog"></span><span class="pip prog"></span><span class="pip gap"></span><span class="pip gap"></span><span class="pip gap"></span><span class="pip gap"></span></div>
+              <div class="d-status">목표 6곳 · 챙기는 중 2 · <b>비어있음 4</b></div>
               <div class="d-actions">
                 <button class="btn-sm fill" onclick="openDetail()">비어있는 목표 채우기</button>
                 <button class="btn-sm" onclick="openDetail()">자세히</button>
               </div>
             </div>
 
-            <!-- done -->
-            <div class="dgrp-label">다 챙기고 있어요</div>
+            <!-- 비어있는 곳 없음 -->
+            <div class="dgrp-label">비어있는 곳 없어요</div>
 
             <div class="domain">
-              <div class="d-top"><span class="d-name">영어</span><span class="pill full">완료</span></div>
-              <div class="ring-row"><span class="pip on"></span><span class="pip on"></span></div>
+              <div class="d-top"><span class="d-name">영어</span><span class="pill on">다 챙기는 중</span></div>
+              <div class="ring-row"><span class="pip prog"></span><span class="pip prog"></span></div>
               <div class="d-status good">목표 2곳 모두 챙기는 중 · <b>잘하고 있어요</b><br><span style="color:var(--muted);font-size:12px">공교육 기준이 없어 선행 개념이 없어요</span></div>
             </div>
 
             <div class="domain">
-              <div class="d-top"><span class="d-name">예체능</span><span class="pill full">완료</span></div>
-              <div class="ring-row"><span class="pip on"></span><span class="pip on"></span></div>
+              <div class="d-top"><span class="d-name">예체능</span><span class="pill on">다 챙기는 중</span></div>
+              <div class="ring-row"><span class="pip prog"></span><span class="pip prog"></span></div>
               <div class="d-status good">목표 2곳 모두 챙기는 중</div>
             </div>
 
             <div class="domain">
-              <div class="d-top"><span class="d-name">건강·안전</span><span class="pill full">완료</span></div>
+              <div class="d-top"><span class="d-name">건강·안전</span><span class="pill full">다 이뤘어요</span></div>
               <div class="ring-row"><span class="pip on"></span><span class="pip on"></span><span class="pip on"></span></div>
-              <div class="d-status good">목표 3곳 모두 챙기는 중</div>
+              <div class="d-status good">목표 3곳 <b>모두 이뤘어요</b> · 아이가 이미 해요</div>
             </div>
           </div>
         </section>
@@ -1111,6 +1225,37 @@
         </div>
       </div>
 
+      <!-- ============ 안도 공유 카드 (draft 1.1 ④) ============ -->
+      <div class="sheet-wrap" id="shareSheet" hidden>
+        <div class="sheet-bg" onclick="closeSheet('shareSheet')"></div>
+        <div class="sheet" role="dialog" aria-label="좌표 공유">
+          <div class="grab"></div>
+          <div class="sheet-head">
+            <h3>우리 아이 좌표</h3>
+            <button class="sheet-x" onclick="closeSheet('shareSheet')" aria-label="닫기">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
+          <div class="sheet-body">
+            <div class="sharecard" id="coordCard">
+              <div class="sc-eyebrow">우리 아이 나이테 좌표</div>
+              <div id="shareArt"></div>
+              <div class="sc-title" id="scName">첫째 · 만 5세 8개월</div>
+              <div class="sc-sub">7곳 중 <b>5곳</b> 챙기는 중 · 이룸 1</div>
+              <div class="sc-foot">
+                <span class="sc-mark">나이테</span>
+                <span class="sc-code" id="scCode">좌표 N5·3C7</span>
+              </div>
+            </div>
+            <p class="sc-note">모양은 아이마다 달라요 — 우리 아이만의 좌표. 이름은 기본으로 가려지고(애칭·이니셜), 자랑이 아니라 잘 챙기고 있다는 안도예요.</p>
+            <div class="sc-actions">
+              <button class="btn-soft">이미지 저장</button>
+              <button class="btn-primary" style="width:auto">링크 공유</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ============ 학원 추가/편집 폼 ============ -->
       <div class="sheet-wrap" id="academySheet" hidden>
         <div class="sheet-bg" onclick="closeSheet('academySheet')"></div>
@@ -1231,15 +1376,15 @@
       <button data-t="dark" onclick="setTheme('dark')">다크</button>
       <button data-t="system" onclick="setTheme('system')">시스템</button>
     </div>
-    <div class="kicker">나이테 · 리디자인</div>
+    <div class="kicker">나이테 · 리디자인 draft 1.1</div>
     <h2>“오늘 뭘 해야 하지?”와 “놓친 건 없나?”를 첫 화면에서 동시에</h2>
     <p class="lede">원래 앱은 첫 화면을 <b>펫 키우기</b>가 차지하고, 정작 핵심 가치인 <b>‘지금 나이에 비어있는 영역’</b>은 두 번째 탭에 숨어 있었어요. 이 리디자인은 그 순서를 뒤집습니다 — 매일 여는 화면이 곧바로 안심시켜 주거나, 채울 곳을 알려주도록.</p>
 
     <div class="change">
       <div class="n">01</div>
       <div class="c-body">
-        <h3>첫 화면에 ‘갭 배너’</h3>
-        <p>오늘 화면 맨 위에서 “지금 2곳이 비어있어요 — 과학·탐구, 사회·인성”을 바로 보여주고, 한 번 탭하면 채우러 이동합니다.</p>
+        <h3>첫 화면에 현황 배너 — 안도 먼저 (1.1 ①)</h3>
+        <p>맨 위에서 <b>“벌써 5곳을 챙기고 있어요”</b>로 안도부터. 갭은 “2곳만 더 보면” 하고 넌지시 + 더 볼 곳 칩. 판단받는 느낌으로 문을 열지 않아요(리퍼럴 생사).</p>
         <p class="was">이전 → <b>비어있는 영역이 오늘 화면에 전혀 안 보였음</b></p>
       </div>
     </div>
@@ -1341,6 +1486,24 @@
       </div>
     </div>
 
+    <div class="change">
+      <div class="n">13</div>
+      <div class="c-body">
+        <h3>첫 실행 셋업 — 아이 정보 + 내 학원 (1.1 ③)</h3>
+        <p>온보딩 직후 2스텝. 생년월(좌표 기준)과 <b>다니는 학원 하나</b>를 첫 흐름에서 받아요. 학부모가 넣은 학원 = 향후 학원 확보(B2B2C)의 쐐기라, 관리에 묻지 않고 승격.</p>
+        <p class="was">온보딩 마지막 ‘시작하기’ 다음에 이어져요 (온보딩 다시 보기로 확인)</p>
+      </div>
+    </div>
+
+    <div class="change">
+      <div class="n">14</div>
+      <div class="c-body">
+        <h3>안도 공유 카드 — 나이테 좌표 데이터-아트 (1.1 ④)</h3>
+        <p>오늘 배너의 <b>‘우리 아이 좌표 공유하기’</b> → <b>아이마다 실루엣이 다른</b> 유기적 좌표 이미지(7영역 방사형 블롭 + 나이테 결 + 상태 점). 링+숫자로는 안 퍼져요 — <b>‘나만의 좌표’</b>라야 스샷·공유됩니다. 자랑 아닌 안도 톤, 이름 기본 가림, 링크는 무료 갭 진단으로 → 리퍼럴 루프.</p>
+        <p class="was">오늘 화면 배너 아래 ‘우리 아이 좌표 공유하기’를 눌러보세요</p>
+      </div>
+    </div>
+
     <p class="footnote">
       팔레트 : 딥 파인그린(신뢰·정체성) + 허니 앰버(비어있음 — 경고 빨강 대신 “채우면 좋아요”의 따뜻한 톤) + 세이지(챙김).<br>
       서체 : 고운바탕(정체성·감성 문구) + 본고딕(UI·데이터).<br>
@@ -1403,10 +1566,95 @@
     document.querySelectorAll('.dot-i').forEach(function(d,i){ d.classList.toggle('on', i===ob); });
     document.getElementById('obNext').textContent = (ob===OBN-1) ? '시작하기' : '다음';
   }
-  function nextOb(){ if(ob<OBN-1){ ob++; renderOb(); } else { closeOnboard(); } }
+  function nextOb(){ if(ob<OBN-1){ ob++; renderOb(); } else { closeOnboard(); openSetup(); } }
   function closeOnboard(){ document.getElementById('onboard').hidden = true; }
   function openOnboard(){ ob=0; renderOb(); document.getElementById('onboard').hidden = false; }
   renderOb();
+
+  /* ---- 첫 실행 셋업 (온보딩 직후) ---- */
+  var su = 0, SUN = 2;
+  function renderSetup(){
+    var steps = document.querySelectorAll('#setup .setup-step');
+    steps.forEach(function(s,i){ s.classList.toggle('active', i===su); });
+    document.getElementById('suDot0').classList.toggle('on', su===0);
+    document.getElementById('suDot1').classList.toggle('on', su===1);
+    document.getElementById('suNext').textContent = (su===SUN-1) ? '나이테 시작하기' : '다음';
+  }
+  function nextSetup(){ if(su<SUN-1){ su++; renderSetup(); } else { closeSetup(); } }
+  function openSetup(){ su=0; renderSetup(); document.getElementById('setup').hidden = false; }
+  function closeSetup(){ document.getElementById('setup').hidden = true; }
+
+  /* ---- 안도 공유 카드 · 나이테 좌표 (데이터-아트) ---- */
+  // 영역별 챙김 정도(0~1)와 상태 → 아이마다 고유한 실루엣
+  var COORD = [
+    {n:'국어',     v:0.42, s:'prog'},
+    {n:'수학',     v:0.52, s:'prog'},
+    {n:'과학·탐구', v:0.16, s:'gap'},
+    {n:'영어',     v:0.80, s:'prog'},
+    {n:'사회·인성', v:0.16, s:'gap'},
+    {n:'예체능',   v:0.80, s:'prog'},
+    {n:'건강·안전', v:1.00, s:'done'}
+  ];
+  function smoothClosed(pts){
+    var n=pts.length, d='';
+    for(var i=0;i<n;i++){
+      var p0=pts[(i-1+n)%n], p1=pts[i], p2=pts[(i+1)%n], p3=pts[(i+2)%n];
+      if(i===0) d+='M'+p1.x.toFixed(1)+' '+p1.y.toFixed(1);
+      var c1x=p1.x+(p2.x-p0.x)/6, c1y=p1.y+(p2.y-p0.y)/6;
+      var c2x=p2.x-(p3.x-p1.x)/6, c2y=p2.y-(p3.y-p1.y)/6;
+      d+='C'+c1x.toFixed(1)+' '+c1y.toFixed(1)+' '+c2x.toFixed(1)+' '+c2y.toFixed(1)+' '+p2.x.toFixed(1)+' '+p2.y.toFixed(1);
+    }
+    return d+'Z';
+  }
+  function renderCoordCard(){
+    var cx=160, cy=150, R0=26, RG=94, N=COORD.length, RINGS=30, TWO=Math.PI*2;
+    // 각 영역의 방향과 바깥 반지름 (값이 실루엣을 만든다)
+    var dir=[], Rd=[];
+    for(var i=0;i<N;i++){ var a=-Math.PI/2 + i*(TWO/N); dir.push({x:Math.cos(a), y:Math.sin(a), a:a}); Rd.push(R0 + COORD[i].v*RG); }
+    // 하나의 실루엣을 안쪽으로 겹겹이 축소 = 나무 단면(나이테)
+    function ringPath(t, seed){
+      var p=[];
+      for(var i=0;i<N;i++){
+        var jit = 2.0*Math.sin(seed*1.27 + i*2.11) + 1.1*Math.cos(seed*0.6 + i*3.7);
+        var r = t*Rd[i] + jit;
+        p.push({x:cx+r*dir[i].x, y:cy+r*dir[i].y});
+      }
+      return smoothClosed(p);
+    }
+    var outer = ringPath(1, RINGS);
+    var rings='';
+    for(var k=1;k<RINGS;k++){
+      var t=Math.pow(k/RINGS, 1.05);
+      var op=(0.10 + 0.70*(k/RINGS)) + (k%2?0:0.06);
+      var w=(1.0 + 0.7*(k/RINGS)).toFixed(2);
+      var col=(k%3===0) ? 'var(--sage)' : 'var(--pine)';
+      rings+='<path d="'+ringPath(t,k)+'" fill="none" stroke="'+col+'" stroke-width="'+w+'" opacity="'+op.toFixed(2)+'"/>';
+    }
+    // 영역 팁 마커 + 라벨
+    var marks='';
+    for(var j=0;j<N;j++){
+      var tx=cx+Rd[j]*dir[j].x, ty=cy+Rd[j]*dir[j].y, s=COORD[j].s;
+      if(s==='done') marks+='<circle cx="'+tx.toFixed(1)+'" cy="'+ty.toFixed(1)+'" r="5" fill="var(--sage)" stroke="var(--paper)" stroke-width="1.8"/>';
+      else if(s==='prog') marks+='<circle cx="'+tx.toFixed(1)+'" cy="'+ty.toFixed(1)+'" r="4.2" fill="var(--paper)" stroke="var(--sage)" stroke-width="2"/>';
+      else marks+='<circle cx="'+tx.toFixed(1)+'" cy="'+ty.toFixed(1)+'" r="3.4" fill="none" stroke="var(--muted)" stroke-width="1.4" stroke-dasharray="2.2 2.2"/>';
+      var lr=Rd[j]+15, lx=cx+lr*dir[j].x, ly=cy+lr*dir[j].y+3, co=dir[j].x;
+      var anc = co>0.34 ? 'start' : (co<-0.34 ? 'end' : 'middle');
+      marks+='<text x="'+lx.toFixed(1)+'" y="'+ly.toFixed(1)+'" font-size="9" font-weight="700" text-anchor="'+anc+'" fill="var(--muted)">'+COORD[j].n+'</text>';
+    }
+    var svg='<svg viewBox="0 0 320 300" width="100%" role="img" aria-label="우리 아이 나이테 좌표">'
+      + '<defs><radialGradient id="cgf" cx="50%" cy="42%" r="62%">'
+      + '<stop offset="0%" stop-color="var(--sage)" stop-opacity="0.22"/>'
+      + '<stop offset="100%" stop-color="var(--pine)" stop-opacity="0.08"/></radialGradient></defs>'
+      + '<path d="'+outer+'" fill="url(#cgf)"/>'
+      + rings
+      + '<path d="'+outer+'" fill="none" stroke="var(--pine)" stroke-width="2.2"/>'
+      + marks
+      + '<circle cx="'+cx+'" cy="'+cy+'" r="14" fill="var(--paper)"/>'
+      + '<text x="'+cx+'" y="'+(cy+4)+'" font-size="10.5" font-weight="700" text-anchor="middle" fill="var(--pine)">5세</text>'
+      + '</svg>';
+    document.getElementById('shareArt').innerHTML=svg;
+  }
+  function openShare(){ renderCoordCard(); document.getElementById('shareSheet').hidden = false; }
 
   /* ---- 폼: 학원 · 활동 추가/편집 ---- */
   function closeSheet(id){ document.getElementById(id).hidden = true; }

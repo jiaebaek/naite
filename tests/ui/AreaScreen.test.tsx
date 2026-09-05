@@ -41,7 +41,7 @@ describe('갭 우선 정렬', () => {
     setup()
     expect(screen.getByText('먼저 챙기면 좋아요')).toBeInTheDocument()
     expect(screen.getByText('채우는 중')).toBeInTheDocument()
-    expect(screen.getByText('다 챙기고 있어요')).toBeInTheDocument()
+    expect(screen.getByText('비어있는 곳 없어요')).toBeInTheDocument()
   })
 
   it('⭐ 비어있는 영역이 DOM 상 맨 위에 온다', () => {
@@ -54,8 +54,8 @@ describe('갭 우선 정렬', () => {
 describe('개요 — 몇 곳이 비어있는가', () => {
   it('챙김/비어있음 수가 요약된다', () => {
     setup()
-    expect(screen.getByText(/3개 영역 중 2개 챙김/)).toBeInTheDocument()
-    expect(screen.getByText(/1곳 비어있음/)).toBeInTheDocument()
+    expect(screen.getByText(/3개 영역 중 2곳 챙기고 있어요/)).toBeInTheDocument()
+    expect(screen.getByText(/비어있는 곳 1/)).toBeInTheDocument()
   })
 })
 

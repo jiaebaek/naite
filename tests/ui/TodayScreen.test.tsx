@@ -48,24 +48,32 @@ const setup = (over: Partial<Parameters<typeof TodayScreen>[0]> = {}) => {
   return { ...utils, onToggle, onGoArea }
 }
 
-describe('갭 배너 — 최우선 (원칙 1·4)', () => {
-  it('비어있는 곳 수와 갭 영역 이름이 배너에 뜬다', () => {
+describe('현황 배너 — 안도 먼저, 갭은 넌지시 (원칙 6)', () => {
+  it('⭐ 헤드라인은 안도로 시작한다 ("벌써 N곳") — "비어있어요"로 문 열지 않는다', () => {
     setup()
-    expect(screen.getByText(/2곳이 비어있어요/)).toBeInTheDocument()
+    const head = screen.getByText(/벌써 5곳을 챙기고 있어요/)
+    expect(head).toBeInTheDocument()
+    // 배너 헤드가 갭 문구로 시작하지 않음
+    expect(head.textContent).not.toMatch(/비어있어요/)
+  })
+
+  it('갭은 서브에서 넌지시 + 갭 영역 칩', () => {
+    setup()
+    expect(screen.getByText(/2곳만 더 보면/)).toBeInTheDocument()
     expect(screen.getByText('과학·탐구')).toBeInTheDocument()
     expect(screen.getByText('사회·인성')).toBeInTheDocument()
   })
 
-  it('CTA 를 누르면 영역으로 이동한다', async () => {
+  it('CTA "비어있는 곳 보기"를 누르면 영역으로 이동한다', async () => {
     const { onGoArea } = setup()
-    await userEvent.click(screen.getByRole('button', { name: /비어있는 곳 채우러 가기/ }))
+    await userEvent.click(screen.getByRole('button', { name: /비어있는 곳 보기/ }))
     expect(onGoArea).toHaveBeenCalledTimes(1)
   })
 
   it('갭이 없으면 안심 문구가 뜨고 CTA 는 없다', () => {
     setup({ banner: CLEAR_BANNER })
     expect(screen.getByText(/놓친 곳이 없어요/)).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /채우러 가기/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /비어있는 곳 보기/ })).not.toBeInTheDocument()
   })
 })
 
