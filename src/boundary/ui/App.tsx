@@ -52,6 +52,10 @@ import type { AchGroupVM } from './ManageScreen'
 import { LogScreen } from './LogScreen'
 import type { WeekDayVM, RecordRowVM } from './LogScreen'
 import { Onboarding } from './Onboarding'
+import { SetupFlow } from './SetupFlow'
+import type { SetupResult } from './SetupFlow'
+import { ShareSheet } from './ShareSheet'
+import type { CoordArea } from './NaiteCoordArt'
 import { DaySheet } from './DaySheet'
 import { ManageSheet } from './ManageSheet'
 import type { ManageSheetTarget } from './ManageSheet'
@@ -65,6 +69,15 @@ let idCounter = 0
 const newId = (): string => `act-${Date.now()}-${idCounter++}`
 
 const ONBOARD_KEY = 'naite.onboarded'
+const SETUP_KEY = 'naite.setup'
+const CHILD_NAME_KEY = 'naite.childName'
+const CHILD_BIRTH_KEY = 'naite.childBirthYm'
+const readLS = (k: string, fallback: string): string => {
+  try { return localStorage.getItem(k) ?? fallback } catch { return fallback }
+}
+const writeLS = (k: string, v: string): void => {
+  try { localStorage.setItem(k, v) } catch { /* private mode */ }
+}
 const DOW = ['일', '월', '화', '수', '목', '금', '토']
 
 /** 로컬 날짜를 'YYYY-MM-DD' 로. 시간대 이동 없이 그대로 읽는다. */
@@ -88,11 +101,17 @@ function ageMonths(birthYm: string, date: IsoDate): number {
   return (y ?? 0) * 12 + (m ?? 1) - ((by ?? 0) * 12 + (bm ?? 1))
 }
 
-function childLabelOf(date: IsoDate): string {
-  const [by, bm] = CHILD_BIRTH_YM.split('-').map(Number)
+function childLabelOf(birthYm: string, date: IsoDate): string {
+  const [by, bm] = birthYm.split('-').map(Number)
   const [ey, em] = SCHOOL_ENTRY_YM.split('-').map(Number)
-  const months = ageMonths(CHILD_BIRTH_YM, date)
+  const months = ageMonths(birthYm, date)
   return `${by}년 ${bm}월생 · 만 ${Math.floor(months / 12)}세 ${months % 12}개월 · ${ey}년 ${em}월 초등 입학`
+}
+
+/** 만 N세 M개월 (셋업 리워드·좌표 라벨용) */
+function ageLabelOf(birthYm: string, date: IsoDate): string {
+  const months = ageMonths(birthYm, date)
+  return `만 ${Math.floor(months / 12)}세 ${months % 12}개월`
 }
 
 function cadenceLabel(c: Cadence): string {
@@ -146,13 +165,13 @@ export function App() {
   const [backfillDate, setBackfillDate] = useState<IsoDate | null>(null)
   // 관리 탭: 학원/활동 추가·편집 시트 (null = 닫힘)
   const [manageSheet, setManageSheet] = useState<ManageSheetTarget | null>(null)
-  const [showOnboard, setShowOnboard] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem(ONBOARD_KEY) !== '1'
-    } catch {
-      return true
-    }
-  })
+  const [showOnboard, setShowOnboard] = useState<boolean>(() => readLS(ONBOARD_KEY, '') !== '1')
+  // 첫 실행 셋업(§06-A) — 온보딩 직후 1회
+  const [showSetup, setShowSetup] = useState<boolean>(() => readLS(SETUP_KEY, '') !== '1')
+  const [childName, setChildName] = useState<string>(() => readLS(CHILD_NAME_KEY, '첫째'))
+  const [childBirthYm, setChildBirthYm] = useState<string>(() => readLS(CHILD_BIRTH_KEY, CHILD_BIRTH_YM))
+  // 안도 공유 카드(§07-A)
+  const [showShare, setShowShare] = useState(false)
 
   const [date] = useState<IsoDate>(todayIso)
   const [activities, setActivities] = useState<readonly Activity[]>(SEED_ACTIVITIES)
@@ -473,8 +492,32 @@ export function App() {
 
   const closeOnboard = () => {
     setShowOnboard(false)
-    try { localStorage.setItem(ONBOARD_KEY, '1') } catch { /* private mode */ }
+    writeLS(ONBOARD_KEY, '1')
   }
+
+  // 첫 실행 셋업 완료(§06-A): 아이 정보 저장 + (있으면) 학원 등록 → 첫 세션 안도가 실데이터로
+  const completeSetup = (r: SetupResult) => {
+    setChildName(r.name); writeLS(CHILD_NAME_KEY, r.name)
+    setChildBirthYm(r.birthYm); writeLS(CHILD_BIRTH_KEY, r.birthYm)
+    if (r.academy) {
+      setAcademies((prev) => [...prev, createAcademy({ name: r.academy!.name, weekdays: [...r.academy!.weekdays] }, newId)])
+    }
+    setShowSetup(false); writeLS(SETUP_KEY, '1')
+  }
+
+  // 안도 공유 카드 데이터(§07-A) — 영역별 챙김 정도로 좌표 실루엣 생성
+  const coordAreas: readonly CoordArea[] = useMemo(
+    () => domainVMs.map((d) => ({
+      name: d.domain,
+      v: d.total > 0 ? Math.max(0.15, d.on / d.total) : 0.15,
+      s: d.group === 'empty' ? 'gap' : d.total > 0 && d.done === d.total ? 'done' : 'prog',
+    })),
+    [domainVMs],
+  )
+  const shareOnCount = useMemo(() => domainVMs.filter((d) => d.group !== 'empty').length, [domainVMs])
+  const shareDoneCount = useMemo(() => domainVMs.filter((d) => d.total > 0 && d.done === d.total).length, [domainVMs])
+  const ageYears = Math.floor(ageMonths(childBirthYm, date) / 12)
+  const shareCode = `N${ageYears}·${domainVMs.filter((d) => d.group === 'empty').length}C${shareOnCount}`
 
   const detailVM = detailDomain ? domainVMs.find((d) => d.domain === detailDomain) ?? null : null
   const linkStd = linkTarget ? STANDARDS_2021.find((s) => s.id === linkTarget.standardId) : undefined
@@ -511,6 +554,7 @@ export function App() {
             groups={todayGroups}
             onToggle={handleToggle}
             onGoArea={() => setView('area')}
+            onShare={() => setShowShare(true)}
           />
         )}
         {view === 'area' && (
@@ -521,7 +565,8 @@ export function App() {
         )}
         {view === 'manage' && (
           <ManageScreen
-            childLabel={childLabelOf(date)}
+            childName={childName}
+            childLabel={childLabelOf(childBirthYm, date)}
             academies={manageAcademies}
             activities={manageActivities}
             achievement={achievement}
@@ -591,7 +636,28 @@ export function App() {
         />
       )}
 
+      {showShare && (
+        <ShareSheet
+          childLabel={`${childName} · ${ageLabelOf(childBirthYm, date)}`}
+          ageLabel={`${ageYears}세`}
+          onCount={shareOnCount}
+          doneCount={shareDoneCount}
+          totalDomains={domainVMs.length}
+          code={shareCode}
+          areas={coordAreas}
+          onClose={() => setShowShare(false)}
+        />
+      )}
+
       {showOnboard && <Onboarding onClose={closeOnboard} />}
+      {!showOnboard && showSetup && (
+        <SetupFlow
+          initialName={childName}
+          initialBirthYm={childBirthYm}
+          ageLabelOf={(ym) => ageLabelOf(ym, date)}
+          onComplete={completeSetup}
+        />
+      )}
     </div>
   )
 }

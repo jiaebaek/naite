@@ -23,6 +23,7 @@ export interface AchGroupVM {
 }
 
 export interface ManageScreenProps {
+  readonly childName: string
   readonly childLabel: string
   readonly academies: readonly EntityRowVM[]
   readonly activities: readonly EntityRowVM[]
@@ -47,7 +48,7 @@ function Row({ vm, onEdit, testid }: { vm: EntityRowVM; onEdit: () => void; test
 
 export function ManageScreen(props: ManageScreenProps) {
   const {
-    childLabel, academies, activities, achievement,
+    childName, childLabel, academies, activities, achievement,
     onBack, onToggleAchieved, onOpenOnboarding,
     onAddAcademy, onEditAcademy, onAddActivity, onEditActivity,
   } = props
@@ -66,7 +67,7 @@ export function ManageScreen(props: ManageScreenProps) {
           <h3 className="mng-title">시기의 기준</h3>
           <p className="mng-desc">생년월을 기준으로 “지금 나이에 챙길 목표”가 정해져요.</p>
           <div className="mrow">
-            <div className="mmain"><div className="mn">첫째</div><div className="ms2">{childLabel}</div></div>
+            <div className="mmain"><div className="mn">{childName}</div><div className="ms2">{childLabel}</div></div>
           </div>
         </div>
 

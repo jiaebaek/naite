@@ -26,6 +26,7 @@ const setup = (over: Partial<React.ComponentProps<typeof ManageScreen>> = {}) =>
   }
   render(
     <ManageScreen
+      childName="첫째"
       childLabel="2021년 1월생 · 만 5세 8개월 · 2028년 3월 초등 입학"
       academies={[{ id: 'ac-plus', name: '더하다사고력', sub: '월 14:30' }]}
       activities={[{ id: 'hw-hangul', name: '한글 학원 숙제', sub: '더하다사고력 · 주 1회 · 국어 겨냥 1곳' }]}

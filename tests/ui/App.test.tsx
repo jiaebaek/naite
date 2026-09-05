@@ -7,6 +7,9 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { App } from '../../src/boundary/ui/App'
 
 const ONBOARD_KEY = 'naite.onboarded'
+const SETUP_KEY = 'naite.setup'
+/** 온보딩·셋업을 건너뛴 정상 상태로 */
+const ready = () => { localStorage.setItem(ONBOARD_KEY, '1'); localStorage.setItem(SETUP_KEY, '1') }
 
 beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true })
@@ -24,15 +27,47 @@ describe('첫 방문 — 온보딩', () => {
   })
 
   it('플래그가 있으면 온보딩이 안 뜬다', async () => {
-    localStorage.setItem(ONBOARD_KEY, '1')
+    ready()
     render(<App />)
     await screen.findByTestId('view-today')
     expect(screen.queryByTestId('onboard')).not.toBeInTheDocument()
   })
 })
 
+describe('⭐ 첫 실행 셋업 (§06-A · 온보딩 직후)', () => {
+  it('온보딩만 끝나면 셋업이 뜨고, 완료하면 오늘로 간다', async () => {
+    localStorage.setItem(ONBOARD_KEY, '1') // 온보딩만 완료, 셋업은 아직
+    render(<App />)
+    expect(await screen.findByTestId('setup')).toBeInTheDocument()
+    // S1 다음 → S2 → 시작하기
+    fireEvent.click(screen.getByRole('button', { name: '다음' }))
+    fireEvent.click(screen.getByRole('button', { name: /나이테 시작하기/ }))
+    await screen.findByTestId('view-today')
+    expect(screen.queryByTestId('setup')).not.toBeInTheDocument()
+  })
+
+  it('셋업 완료 플래그가 있으면 셋업이 안 뜬다', async () => {
+    ready()
+    render(<App />)
+    await screen.findByTestId('view-today')
+    expect(screen.queryByTestId('setup')).not.toBeInTheDocument()
+  })
+})
+
+describe('⭐ 안도 공유 카드 (§07-A)', () => {
+  beforeEach(ready)
+
+  it('"우리 아이 좌표 공유하기"를 누르면 좌표 카드(데이터-아트)가 뜬다', async () => {
+    render(<App />)
+    await screen.findByTestId('view-today')
+    fireEvent.click(screen.getByRole('button', { name: /우리 아이 좌표 공유하기/ }))
+    expect(await screen.findByTestId('share-sheet')).toBeInTheDocument()
+    expect(screen.getByTestId('coord-art')).toBeInTheDocument()
+  })
+})
+
 describe('⭐ 현황 배너 — 안도 먼저 (원칙 6 · 회귀 방지)', () => {
-  beforeEach(() => localStorage.setItem(ONBOARD_KEY, '1'))
+  beforeEach(ready)
 
   it('시드로 안도 먼저: "벌써 5곳을 챙기고 있어요"로 문을 연다', async () => {
     render(<App />)
@@ -50,7 +85,7 @@ describe('⭐ 현황 배너 — 안도 먼저 (원칙 6 · 회귀 방지)', () =
 })
 
 describe('⭐ 원칙 5 — 앱 어디에도 선행 UI 가 없다 (회귀 방지)', () => {
-  beforeEach(() => localStorage.setItem(ONBOARD_KEY, '1'))
+  beforeEach(ready)
 
   it('오늘 화면에 "선행" 문구가 없다', async () => {
     const { container } = render(<App />)
@@ -60,7 +95,7 @@ describe('⭐ 원칙 5 — 앱 어디에도 선행 UI 가 없다 (회귀 방지)
 })
 
 describe('일상 3탭 구조', () => {
-  beforeEach(() => localStorage.setItem(ONBOARD_KEY, '1'))
+  beforeEach(ready)
 
   it('오늘·영역·기록 탭이 있다', async () => {
     render(<App />)
@@ -73,7 +108,7 @@ describe('일상 3탭 구조', () => {
 })
 
 describe('⭐ 기록 탭 — 지난 날 backfill (보강 B · 회귀 방지)', () => {
-  beforeEach(() => localStorage.setItem(ONBOARD_KEY, '1'))
+  beforeEach(ready)
 
   it('지난 날을 누르면 그 날 체크시트가 열리고, 토글하면 기록된다', async () => {
     render(<App />)

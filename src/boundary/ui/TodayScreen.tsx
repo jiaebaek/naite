@@ -23,9 +23,11 @@ export interface TodayScreenProps {
   readonly groups: readonly { readonly domain: Domain; readonly tasks: readonly TaskVM[] }[]
   readonly onToggle: (activityId: string) => void
   readonly onGoArea: () => void
+  /** 안도 공유 카드 열기(§07-A) */
+  readonly onShare: () => void
 }
 
-export function TodayScreen({ dateLabel, banner, progress, schedule, groups, onToggle, onGoArea }: TodayScreenProps) {
+export function TodayScreen({ dateLabel, banner, progress, schedule, groups, onToggle, onGoArea, onShare }: TodayScreenProps) {
   const left = progress.total - progress.done
   const petTitle =
     progress.total === 0
@@ -79,6 +81,12 @@ export function TodayScreen({ dateLabel, banner, progress, schedule, groups, onT
               </button>
             </>
           )}
+          <button className="share-link" onClick={onShare}>
+            <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" /><path d="M12 15V3M8 7l4-4 4 4" />
+            </svg>
+            우리 아이 좌표 공유하기
+          </button>
         </div>
 
         {/* 오늘 할 일 */}

@@ -33,6 +33,7 @@ const GROUPS: { domain: TaskVM['domain']; tasks: TaskVM[] }[] = [
 const setup = (over: Partial<Parameters<typeof TodayScreen>[0]> = {}) => {
   const onToggle = vi.fn()
   const onGoArea = vi.fn()
+  const onShare = vi.fn()
   const utils = render(
     <TodayScreen
       dateLabel="9월 3일 목요일"
@@ -42,10 +43,11 @@ const setup = (over: Partial<Parameters<typeof TodayScreen>[0]> = {}) => {
       groups={GROUPS}
       onToggle={onToggle}
       onGoArea={onGoArea}
+      onShare={onShare}
       {...over}
     />,
   )
-  return { ...utils, onToggle, onGoArea }
+  return { ...utils, onToggle, onGoArea, onShare }
 }
 
 describe('현황 배너 — 안도 먼저, 갭은 넌지시 (원칙 6)', () => {

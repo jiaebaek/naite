@@ -443,3 +443,45 @@ body {
 /* 편집 삭제(위험색) — 앱에서 red 를 쓰는 유일한 자리 (§05) */
 .sheet-del { width: 100%; margin-top: 9px; background: none; border: none; color: var(--danger); font-family: var(--sans); font-size: 13px; font-weight: 700; cursor: pointer; padding: 8px; }
 .sheet-del:hover { text-decoration: underline; }
+
+/* ---------- 첫 실행 셋업 (§06-A) ---------- */
+.setup-step { position: absolute; inset: 0; display: none; flex-direction: column; overflow-y: auto; }
+.setup-step.active { display: flex; }
+.setup-top { flex: 1; min-height: 0; }
+.setup-h { font-family: var(--serif); font-size: 24px; font-weight: 700; line-height: 1.3; margin: 8px 0 6px; text-wrap: balance; }
+.setup-p { font-size: 14px; color: var(--ink-soft); margin: 0 0 20px; }
+.setup-reward { display: flex; align-items: center; gap: 9px; background: var(--pine-soft); border: 1px solid color-mix(in srgb, var(--pine) 22%, var(--line)); border-radius: 12px; padding: 12px 14px; font-size: 13px; color: var(--pine); font-weight: 700; margin-top: 4px; }
+.setup-reward svg { flex: 0 0 auto; stroke: var(--pine); }
+.field { margin-bottom: 17px; }
+.field > label { display: block; font-size: 12.5px; font-weight: 700; color: var(--ink-soft); margin-bottom: 8px; }
+.field label .opt { display: inline; font-weight: 400; color: var(--muted); }
+.inp { width: 100%; box-sizing: border-box; font-family: var(--sans); font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--line-strong); border-radius: 10px; padding: 11px 13px; -webkit-appearance: none; appearance: none; }
+.inp:focus { outline: none; border-color: var(--pine); box-shadow: 0 0 0 3px var(--pine-soft); }
+.inp::placeholder { color: var(--muted); }
+.daychips { display: flex; gap: 6px; flex-wrap: wrap; }
+.daychip { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--line-strong); background: var(--surface); font-size: 13px; font-weight: 700; color: var(--ink-soft); cursor: pointer; }
+.daychip.on { background: var(--pine); border-color: var(--pine); color: var(--paper); }
+
+/* ---------- 안도 공유 카드 (§07-A) ---------- */
+.share-link { width: 100%; margin-top: 8px; cursor: pointer; background: none; border: none; color: var(--ink-soft); font-family: var(--sans); font-weight: 700; font-size: 12.5px; padding: 6px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.share-link:hover { color: var(--pine); }
+.share-link svg { stroke: currentColor; }
+.sharecard {
+  position: relative; border-radius: 22px; padding: 22px 20px 18px; text-align: center; overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 50% 8%, color-mix(in srgb, var(--pine-soft) 90%, transparent), transparent 60%),
+    linear-gradient(180deg, var(--surface), var(--surface-2));
+  border: 1px solid color-mix(in srgb, var(--pine) 22%, var(--line));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--paper) 60%, transparent);
+}
+.sc-eyebrow { font-family: monospace; font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--pine); opacity: .8; }
+.sc-title { font-family: var(--serif); font-size: 20px; font-weight: 700; margin-top: 4px; }
+.sc-sub { font-size: 13.5px; color: var(--ink-soft); font-weight: 500; margin-top: 3px; }
+.sc-sub b { color: var(--pine); font-weight: 700; }
+.sc-foot { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 15px; }
+.sc-mark { font-family: var(--serif); font-size: 13px; font-weight: 700; color: var(--pine); }
+.sc-code { font-family: monospace; font-size: 10.5px; letter-spacing: .08em; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px; }
+.sc-note { font-size: 12px; color: var(--muted); text-align: center; margin: 15px 2px; line-height: 1.55; }
+.sc-msg { font-size: 12.5px; color: var(--pine); text-align: center; margin: 0 2px 12px; font-weight: 700; }
+.sc-actions { display: flex; gap: 10px; }
+.sc-actions .btn-soft, .sc-actions .btn-primary { flex: 1; width: auto; }
