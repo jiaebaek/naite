@@ -35,6 +35,8 @@ export interface ManageScreenProps {
   readonly onEditAcademy: (id: string) => void
   readonly onAddActivity: () => void
   readonly onEditActivity: (id: string) => void
+  /** 모든 로컬 데이터를 지우고 처음부터(온보딩·셋업) 다시 */
+  readonly onReset: () => void
 }
 
 function Row({ vm, onEdit, testid }: { vm: EntityRowVM; onEdit: () => void; testid: string }) {
@@ -50,7 +52,7 @@ export function ManageScreen(props: ManageScreenProps) {
   const {
     childName, childLabel, academies, activities, achievement,
     onBack, onToggleAchieved, onOpenOnboarding,
-    onAddAcademy, onEditAcademy, onAddActivity, onEditActivity,
+    onAddAcademy, onEditAcademy, onAddActivity, onEditActivity, onReset,
   } = props
 
   return (
@@ -129,6 +131,10 @@ export function ManageScreen(props: ManageScreenProps) {
           <div className="mrow">
             <div className="mmain"><div className="mn">온보딩 다시 보기</div><div className="ms2">이 앱을 소개하는 3장</div></div>
             <button className="btn-edit" onClick={onOpenOnboarding}>보기</button>
+          </div>
+          <div className="mrow">
+            <div className="mmain"><div className="mn">처음부터 다시 하기</div><div className="ms2">입력한 데이터를 지우고 온보딩부터</div></div>
+            <button className="sheet-del" style={{ width: 'auto', margin: 0, padding: '7px 13px' }} onClick={onReset}>초기화</button>
           </div>
         </div>
       </div>

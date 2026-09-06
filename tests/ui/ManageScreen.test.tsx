@@ -22,7 +22,7 @@ const ACHIEVEMENT: readonly AchGroupVM[] = [
 const setup = (over: Partial<React.ComponentProps<typeof ManageScreen>> = {}) => {
   const h = {
     onBack: vi.fn(), onToggleAchieved: vi.fn(), onOpenOnboarding: vi.fn(),
-    onAddAcademy: vi.fn(), onEditAcademy: vi.fn(), onAddActivity: vi.fn(), onEditActivity: vi.fn(),
+    onAddAcademy: vi.fn(), onEditAcademy: vi.fn(), onAddActivity: vi.fn(), onEditActivity: vi.fn(), onReset: vi.fn(),
   }
   render(
     <ManageScreen

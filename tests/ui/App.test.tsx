@@ -1,15 +1,25 @@
 /**
- * App 통합 — 실제 시드 데이터로 리디자인 원칙을 잠근다.
- * 회귀 방지: 갭 배너(2곳) · 선행 UI 부재 · 온보딩 · 탭 구조.
+ * App 통합 — 리디자인 원칙을 잠근다.
+ * 앱은 빈 상태로 시작하고 사용자 입력(셋업·관리)으로 동작한다. 시나리오가 필요한
+ * 테스트는 스냅샷을 심는다(시드=테스트 픽스처). 회귀 방지: 안도 배너 · 빈 시작 · 온보딩·셋업 · 탭.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { App } from '../../src/boundary/ui/App'
+import { SEED_ACTIVITIES, SEED_ACADEMIES } from '../../src/boundary/seed'
+import { INITIAL_CARE } from '../../src/domain/pet'
+import { SNAPSHOT_VERSION } from '../../src/boundary/store/types'
 
 const ONBOARD_KEY = 'naite.onboarded'
 const SETUP_KEY = 'naite.setup'
 /** 온보딩·셋업을 건너뛴 정상 상태로 */
 const ready = () => { localStorage.setItem(ONBOARD_KEY, '1'); localStorage.setItem(SETUP_KEY, '1') }
+/** 앱은 이제 빈 상태로 시작한다 — 시나리오가 필요한 테스트는 스냅샷을 심는다(시드=테스트 픽스처). */
+const seedData = () => localStorage.setItem(`edu-manager:v${SNAPSHOT_VERSION}`, JSON.stringify({
+  version: SNAPSHOT_VERSION, completions: [], achieved: [], offsets: [],
+  activities: SEED_ACTIVITIES, academies: SEED_ACADEMIES, care: INITIAL_CARE,
+}))
+const readySeeded = () => { ready(); seedData() }
 
 beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true })
@@ -54,6 +64,30 @@ describe('⭐ 첫 실행 셋업 (§06-A · 온보딩 직후)', () => {
   })
 })
 
+describe('⭐ 빈 상태로 시작 + 셋업이 실제 데이터를 만든다 (제대로)', () => {
+  it('데이터가 없으면 배너가 "챙길 곳을 준비했어요"로 뜬다 (시드 없음)', async () => {
+    ready()
+    render(<App />)
+    await screen.findByTestId('view-today')
+    expect(screen.getByText(/챙길 곳을 준비했어요/)).toBeInTheDocument()
+    // 시드의 한글 학원 숙제 같은 하드코딩 활동이 없다
+    expect(screen.queryByText('한글 학원 숙제')).not.toBeInTheDocument()
+  })
+
+  it('⭐ 셋업에서 학원+겨냥 영역을 넣으면 그 영역이 챙김으로 채워진다', async () => {
+    localStorage.setItem(ONBOARD_KEY, '1') // 셋업 대기
+    render(<App />)
+    await screen.findByTestId('setup')
+    fireEvent.click(screen.getByRole('button', { name: '다음' }))
+    fireEvent.change(screen.getByPlaceholderText('예: 한글교실'), { target: { value: '유아체육' } })
+    fireEvent.click(screen.getByRole('button', { name: '예체능' }))
+    fireEvent.click(screen.getByRole('button', { name: /나이테 시작하기/ }))
+    await screen.findByTestId('view-today')
+    // 예체능이 등원 커버로 챙김 처리 → 안도 배너가 "벌써 1곳"
+    expect(screen.getByText(/벌써 1곳을 챙기고 있어요/)).toBeInTheDocument()
+  })
+})
+
 describe('⭐ 안도 공유 카드 (§07-A)', () => {
   beforeEach(ready)
 
@@ -67,7 +101,7 @@ describe('⭐ 안도 공유 카드 (§07-A)', () => {
 })
 
 describe('⭐ 현황 배너 — 안도 먼저 (원칙 6 · 회귀 방지)', () => {
-  beforeEach(ready)
+  beforeEach(readySeeded)
 
   it('시드로 안도 먼저: "벌써 5곳을 챙기고 있어요"로 문을 연다', async () => {
     render(<App />)
@@ -108,7 +142,7 @@ describe('일상 3탭 구조', () => {
 })
 
 describe('⭐ 기록 탭 — 지난 날 backfill (보강 B · 회귀 방지)', () => {
-  beforeEach(ready)
+  beforeEach(readySeeded)
 
   it('지난 날을 누르면 그 날 체크시트가 열리고, 토글하면 기록된다', async () => {
     render(<App />)

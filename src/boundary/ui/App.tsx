@@ -39,7 +39,6 @@ import type {
   PaceOffset,
   StandardId,
 } from '../../domain/types'
-import { SEED_ACADEMIES, SEED_ACTIVITIES } from '../seed'
 import { getStore } from '../store'
 import { SNAPSHOT_VERSION } from '../store/types'
 import type { AppSnapshot } from '../store/types'
@@ -174,8 +173,10 @@ export function App() {
   const [showShare, setShowShare] = useState(false)
 
   const [date] = useState<IsoDate>(todayIso)
-  const [activities, setActivities] = useState<readonly Activity[]>(SEED_ACTIVITIES)
-  const [academies, setAcademies] = useState<readonly Academy[]>(SEED_ACADEMIES)
+  // 빈 상태로 시작한다 — 데이터는 온보딩 셋업(§06-A)과 관리에서 사용자가 직접 입력한다.
+  // (누리과정·성취기준 '목표'는 지식 기반이라 남고, 학원·활동은 전부 사용자 것)
+  const [activities, setActivities] = useState<readonly Activity[]>([])
+  const [academies, setAcademies] = useState<readonly Academy[]>([])
   const [completions, setCompletions] = useState<readonly Completion[]>([])
   // 오프셋은 스냅샷 호환을 위해 유지하되, 목표 계산엔 쓰지 않는다 (선행 UI 제거 — 원칙 5).
   const [offsets, setOffsets] = useState<readonly PaceOffset[]>(INITIAL_OFFSETS)
@@ -500,9 +501,25 @@ export function App() {
     setChildName(r.name); writeLS(CHILD_NAME_KEY, r.name)
     setChildBirthYm(r.birthYm); writeLS(CHILD_BIRTH_KEY, r.birthYm)
     if (r.academy) {
-      setAcademies((prev) => [...prev, createAcademy({ name: r.academy!.name, weekdays: [...r.academy!.weekdays] }, newId)])
+      const ac = r.academy
+      setAcademies((prev) => [...prev, createAcademy({
+        name: ac.name,
+        weekdays: [...ac.weekdays],
+        ...(ac.coversDomains.length > 0 ? { coversDomains: [...ac.coversDomains] } : {}),
+      }, newId)])
     }
     setShowSetup(false); writeLS(SETUP_KEY, '1')
+  }
+
+  // 처음부터 다시: 로컬 데이터(스냅샷·아이 정보·플래그) 전부 지우고 새로고침 → 온보딩부터
+  const handleReset = () => {
+    if (typeof window !== 'undefined' && !window.confirm('입력한 데이터를 모두 지우고 처음(온보딩)부터 다시 시작할까요?')) return
+    try {
+      for (const k of Object.keys(localStorage)) {
+        if (k.startsWith('naite.') || k.startsWith('edu-manager:')) localStorage.removeItem(k)
+      }
+    } catch { /* private mode */ }
+    try { window.location.reload() } catch { /* noop */ }
   }
 
   // 안도 공유 카드 데이터(§07-A) — 영역별 챙김 정도로 좌표 실루엣 생성
@@ -577,6 +594,7 @@ export function App() {
             onEditAcademy={(id) => { const a = academies.find((x) => x.id === id); if (a) setManageSheet({ kind: 'academy', academy: a }) }}
             onAddActivity={() => setManageSheet({ kind: 'activity' })}
             onEditActivity={(id) => { const a = activities.find((x) => x.id === id); if (a) setManageSheet({ kind: 'activity', activity: a }) }}
+            onReset={handleReset}
           />
         )}
         {view === 'log' && (

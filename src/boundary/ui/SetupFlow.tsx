@@ -4,14 +4,15 @@
  * 짧게. 학원은 하나만 넣거나 스킵 가능. 폼은 §12 학원 폼과 같은 어휘.
  */
 import { useState } from 'react'
-import type { Weekday } from '../../domain/types'
+import type { Domain, Weekday } from '../../domain/types'
+import { DOMAINS } from '../../domain/types'
 import { IconCheck } from './icons'
 
 export interface SetupResult {
   readonly name: string
   readonly birthYm: string
-  /** 하나의 학원(선택). 없으면 null */
-  readonly academy: { readonly name: string; readonly weekdays: readonly Weekday[] } | null
+  /** 하나의 학원(선택). 없으면 null. coversDomains = 등원이 챙기는 영역 */
+  readonly academy: { readonly name: string; readonly weekdays: readonly Weekday[]; readonly coversDomains: readonly Domain[] } | null
 }
 
 export interface SetupFlowProps {
@@ -32,12 +33,16 @@ export function SetupFlow({ initialName, initialBirthYm, ageLabelOf, onComplete 
   const [birthYm, setBirthYm] = useState(initialBirthYm)
   const [acName, setAcName] = useState('')
   const [days, setDays] = useState<readonly Weekday[]>([])
+  const [covers, setCovers] = useState<readonly Domain[]>([])
 
   const toggleDay = (v: Weekday) => setDays((d) => (d.includes(v) ? d.filter((x) => x !== v) : [...d, v]))
+  const toggleCover = (d: Domain) => setCovers((c) => (c.includes(d) ? c.filter((x) => x !== d) : [...c, d]))
   const finish = (withAcademy: boolean) => onComplete({
     name: name.trim() || '첫째',
     birthYm,
-    academy: withAcademy && acName.trim() ? { name: acName.trim(), weekdays: [...days].sort() } : null,
+    academy: withAcademy && acName.trim()
+      ? { name: acName.trim(), weekdays: [...days].sort(), coversDomains: [...covers] }
+      : null,
   })
   const next = () => (step === 0 ? setStep(1) : finish(true))
 
@@ -80,6 +85,14 @@ export function SetupFlow({ initialName, initialBirthYm, ageLabelOf, onComplete 
               <div className="daychips">
                 {WD.map((w) => (
                   <button key={w.value} type="button" className={`daychip${days.includes(w.value) ? ' on' : ''}`} onClick={() => toggleDay(w.value)}>{w.label}</button>
+                ))}
+              </div>
+            </div>
+            <div className="field">
+              <label>무슨 영역을 챙기나요? <span className="opt">(고르면 그 영역이 첫 화면에 챙김으로)</span></label>
+              <div className="daypick wrap">
+                {DOMAINS.map((d) => (
+                  <button key={d} type="button" className={`daybtn wide${covers.includes(d) ? ' on' : ''}`} onClick={() => toggleCover(d)}>{d}</button>
                 ))}
               </div>
             </div>

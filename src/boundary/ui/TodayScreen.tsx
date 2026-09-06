@@ -59,13 +59,13 @@ export function TodayScreen({ dateLabel, banner, progress, schedule, groups, onT
             <>
               {/* 안도 먼저: 이미 챙기고 있는 것 */}
               <div className="gap-head">
-                {banner.onCount > 0 ? `벌써 ${banner.onCount}곳을 챙기고 있어요` : '이 시기 챙길 곳을 찾았어요'}
+                {banner.onCount > 0 ? `벌써 ${banner.onCount}곳을 챙기고 있어요` : '지금 나이에 챙길 곳을 준비했어요'}
               </div>
               {/* 갭은 넌지시 */}
               <p className="gap-sub">
                 {banner.onCount > 0
                   ? <>{banner.totalDomains}개 영역 중 {banner.onCount}곳 · <b>{banner.gapCount}곳만 더 보면</b> 이 시기는 다 채워요.</>
-                  : <><b>{banner.gapCount}곳부터</b> 살펴보면 돼요. 급하지 않아요.</>}
+                  : <>학원·활동을 더하면 <b>여기가 챙김으로</b> 채워져요. 급하지 않아요.</>}
               </p>
               <div className="coverbar" aria-hidden="true">
                 {banner.segs.map((s, i) => <span key={i} className={`seg ${s}`} />)}
