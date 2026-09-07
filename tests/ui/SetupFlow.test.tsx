@@ -1,6 +1,6 @@
 /**
- * SetupFlow (첫 실행 셋업) — UX 리디자인 §06-A.
- * S1 아이 정보. S2 "무엇으로 챙기나요?" — 학원·집 활동을 리스트로 더한다.
+ * SetupFlow (첫 실행 셋업) — UX 리디자인 §06-A (3스텝 · 칩 탭, 원칙 8).
+ * S1 아이 정보 · S2 다니는 학원(과목 칩) · S3 집에서 하는 것(활동 칩).
  */
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
@@ -12,9 +12,9 @@ const setup = () => {
   render(
     <SetupFlow initialName="첫째" initialBirthYm="2021-01" ageLabelOf={() => '만 5세 8개월'} onComplete={onComplete} />,
   )
-  const items = () => onComplete.mock.calls[0]![0].items
-  const toS2 = () => userEvent.click(screen.getByRole('button', { name: '다음' }))
-  return { onComplete, items, toS2 }
+  const result = () => onComplete.mock.calls[0]![0]
+  const next = () => userEvent.click(screen.getByRole('button', { name: '다음' }))
+  return { onComplete, result, next }
 }
 
 describe('S1 아이 정보', () => {
@@ -26,45 +26,52 @@ describe('S1 아이 정보', () => {
   })
 })
 
-describe('S2 무엇으로 챙기나요 — 학원·집 활동', () => {
-  it('⭐ 학원과 집 활동을 둘 다 더하고 완료하면 onComplete(items 둘 다)', async () => {
-    const { items, toS2 } = setup()
-    await toS2()
-    // 학원 하나 (더하기까지)
-    await userEvent.type(screen.getByPlaceholderText('예: 한글교실 / 엄마표 영어'), '한글교실')
-    await userEvent.click(screen.getByRole('button', { name: '학원 다녀요' }))
-    await userEvent.click(screen.getByRole('button', { name: '수' }))
-    await userEvent.click(screen.getByRole('button', { name: '국어' }))
-    await userEvent.click(screen.getByRole('button', { name: /더하기/ }))
-    expect(screen.getByTestId('setup-list').textContent).toContain('한글교실')
-    // 집 활동 하나 (더하기 없이 시작 시 함께 반영)
-    await userEvent.type(screen.getByPlaceholderText('예: 한글교실 / 엄마표 영어'), '엄마표 영어')
-    await userEvent.click(screen.getByRole('button', { name: '집에서 해요' }))
-    await userEvent.click(screen.getByRole('button', { name: '영어' }))
+describe('S2·S3 칩 탭', () => {
+  it('⭐ 과목 칩을 누르면 "다니는 학원" 목록에 쌓이고 영역 챙김을 예고한다', async () => {
+    const { next } = setup()
+    await next() // S1 → S2
+    await userEvent.click(screen.getByRole('button', { name: '한글·독서' }))
+    expect(screen.getByText(/다니는 학원 1개/)).toBeInTheDocument()
+    expect(screen.getByText(/국어 챙김/)).toBeInTheDocument()
+  })
+
+  it('⭐ 3스텝을 지나며 고른 학원·활동이 onComplete 로 온다', async () => {
+    const { result, next } = setup()
+    await next() // → S2
+    await userEvent.click(screen.getByRole('button', { name: '한글·독서' })) // 국어 학원
+    await userEvent.click(screen.getByRole('button', { name: '태권도' }))   // 건강·안전 학원
+    await next() // → S3
+    await userEvent.click(screen.getByRole('button', { name: '엄마표 영어' })) // 영어 집활동
     await userEvent.click(screen.getByRole('button', { name: /나이테 시작하기/ }))
 
-    expect(items()).toEqual([
-      { kind: '학원', name: '한글교실', domains: ['국어'], weekdays: [3] },
-      { kind: '집', name: '엄마표 영어', domains: ['영어'], weekdays: [] },
+    const r = result()
+    expect(r.academies).toEqual([
+      { name: '한글·독서', domain: '국어' },
+      { name: '태권도', domain: '건강·안전' },
     ])
+    expect(r.homeActivities).toEqual([{ name: '엄마표 영어', domain: '영어' }])
   })
 
-  it('이름·영역 없으면 "더하기"가 비활성', async () => {
-    const { toS2 } = setup()
-    await toS2()
-    expect(screen.getByRole('button', { name: /더하기/ })).toBeDisabled()
+  it('칩을 안 고르면 빈 배열로 완료된다', async () => {
+    const { result, next } = setup()
+    await next(); await next() // S2, S3 그냥 통과
+    await userEvent.click(screen.getByRole('button', { name: /나이테 시작하기/ }))
+    expect(result().academies).toEqual([])
+    expect(result().homeActivities).toEqual([])
   })
 
-  it('"아직 없어요"로 스킵하면 items 빈 배열', async () => {
-    const { items, toS2 } = setup()
-    await toS2()
-    await userEvent.click(screen.getByRole('button', { name: /아직 없어요/ }))
-    expect(items()).toEqual([])
-  })
-
-  it('"나중에"로 건너뛰면 items 빈 배열', async () => {
-    const { items } = setup()
+  it('"나중에"로 즉시 건너뛰면 빈 배열', async () => {
+    const { result } = setup()
     await userEvent.click(screen.getByRole('button', { name: '나중에' }))
-    expect(items()).toEqual([])
+    expect(result().academies).toEqual([])
+    expect(result().homeActivities).toEqual([])
+  })
+
+  it('학원/활동 선택은 칩 탭만 — 자유 입력 칸이 없다 (원칙 8)', async () => {
+    const { next } = setup()
+    await next() // S2 (현재 활성 스텝)
+    const activeStep = document.querySelector('.setup-step.active')!
+    expect(activeStep.querySelectorAll('input')).toHaveLength(0) // S2엔 입력칸 없음
+    expect(screen.getByRole('button', { name: '한글·독서' })).toBeInTheDocument()
   })
 })

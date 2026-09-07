@@ -500,23 +500,16 @@ export function App() {
   const completeSetup = (r: SetupResult) => {
     setChildName(r.name); writeLS(CHILD_NAME_KEY, r.name)
     setChildBirthYm(r.birthYm); writeLS(CHILD_BIRTH_KEY, r.birthYm)
-    // 학원 = 등원(coversDomains 로 그 영역의 지금 목표를 챙김 처리)
-    const newAcademies = r.items
-      .filter((it) => it.kind === '학원')
-      .map((it) => createAcademy({
-        name: it.name,
-        weekdays: [...it.weekdays],
-        ...(it.domains.length > 0 ? { coversDomains: [...it.domains] } : {}),
-      }, newId))
-    // 집 활동 = 실제 체크하는 활동. 영역마다 그 영역의 지금 목표를 겨냥(주3회 기본)
-    const newActivities = r.items
-      .filter((it) => it.kind === '집')
-      .flatMap((it) => it.domains.map((dom) => createActivity({
-        name: it.domains.length > 1 ? `${it.name} (${dom})` : it.name,
-        domain: dom, track: '집',
-        targetIds: targets.filter((t) => t.domain === dom).map((t) => t.id),
+    // S2 학원 = 등원(coversDomains 로 그 영역의 지금 목표를 챙김 처리)
+    const newAcademies = r.academies.map((a) =>
+      createAcademy({ name: a.name, weekdays: [], coversDomains: [a.domain] }, newId))
+    // S3 집 활동 = 실제 체크하는 활동. 그 영역의 지금 목표를 겨냥(주3회 기본)
+    const newActivities = r.homeActivities.map((h) =>
+      createActivity({
+        name: h.name, domain: h.domain, track: '집',
+        targetIds: targets.filter((t) => t.domain === h.domain).map((t) => t.id),
         cadence: { kind: '주N회', times: 3 }, owner: '엄마',
-      }, STANDARDS_2021, newId)))
+      }, STANDARDS_2021, newId))
     if (newAcademies.length > 0) setAcademies((prev) => [...prev, ...newAcademies])
     if (newActivities.length > 0) setActivities((prev) => [...prev, ...newActivities])
     setShowSetup(false); writeLS(SETUP_KEY, '1')

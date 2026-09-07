@@ -361,6 +361,20 @@
   .setup-p{font-size:14px; color:var(--ink-soft); margin:0 0 20px}
   .setup-reward{display:flex; align-items:center; gap:9px; background:var(--pine-soft); border:1px solid color-mix(in srgb,var(--pine) 22%,var(--line)); border-radius:12px; padding:12px 14px; font-size:13px; color:var(--pine); font-weight:700; margin-top:4px}
   .setup-reward svg{flex:0 0 auto}
+  .preset-grid{display:flex; flex-wrap:wrap; gap:8px; margin:2px 0 4px}
+  .pchip{font-family:var(--sans); font-size:13px; font-weight:700; padding:9px 14px; border-radius:12px; border:1px solid var(--line-strong); background:var(--surface); color:var(--ink-soft); cursor:pointer; display:inline-flex; align-items:center; gap:6px}
+  .pchip:hover{border-color:var(--pine)}
+  .pchip.on{background:var(--pine-soft); border-color:var(--pine); color:var(--pine)}
+  .pchip:disabled{cursor:default; opacity:1}
+  .pchip .pk{width:15px; height:15px; opacity:0; transition:opacity .12s}
+  .pchip.on .pk{opacity:1}
+  .preset-sum{font-size:13px; color:var(--sage); font-weight:700; margin-top:14px; min-height:19px; line-height:1.4}
+  .su-added{margin-top:16px; display:flex; flex-direction:column; gap:7px}
+  .su-added-h{font-size:12px; font-weight:700; color:var(--muted)}
+  .su-arow{display:flex; align-items:center; gap:9px; background:var(--pine-soft); border:1px solid color-mix(in srgb,var(--pine) 22%,var(--line)); border-radius:11px; padding:10px 12px}
+  .su-arow .lf{flex:0 0 auto; color:var(--sage)}
+  .su-arow .nm{font-size:14px; font-weight:700; color:var(--pine)}
+  .su-arow .dm{margin-left:auto; font-size:11.5px; color:var(--pine); opacity:.85}
 
   /* ---------- 공유(안도) 카드 ---------- */
   .sharecard{
@@ -695,36 +709,55 @@
             </div>
           </div>
 
-          <!-- S2. 내 학원 -->
+          <!-- S2. 다니는 학원 (과목만 탭) -->
           <div class="setup-step">
             <div class="setup-top">
-              <div class="eyebrow">2 / 2 · 어디 다녀요?</div>
-              <h2 class="setup-h">다니는 곳을<br>하나만 알려주세요</h2>
-              <p class="setup-p">넣는 순간, 그 활동이 챙기는 목표가 <b>첫 화면에 바로</b> 채워져요. 여러 개여도 하나면 충분해요.</p>
-              <div class="field">
-                <label for="suAcademy">학원 / 활동 이름</label>
-                <input class="inp" id="suAcademy" placeholder="예: 한글교실">
+              <div class="eyebrow">2 / 3 · 다니는 학원</div>
+              <h2 class="setup-h">어떤 학원에<br>다녀요?</h2>
+              <p class="setup-p">이름은 나중에요. <b>과목만 눌러</b> 추가하면 등원 알림·숙제 챙김이 자동으로 붙어요.</p>
+              <div class="preset-grid" id="suAcademyGrid" data-list="suAcademyList" data-head="다니는 학원">
+                <button class="pchip" data-dom="국어" onclick="pickChip(this)"><svg class="pk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>한글·독서</button>
+                <button class="pchip" data-dom="수학" onclick="pickChip(this)"><svg class="pk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>수학·연산</button>
+                <button class="pchip" data-dom="영어" onclick="pickChip(this)"><svg class="pk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>영어</button>
+                <button class="pchip" data-dom="예체능" onclick="pickChip(this)"><svg class="pk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>미술</button>
+                <button class="pchip" data-dom="예체능" onclick="pickChip(this)"><svg class="pk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>피아노</button>
+                <button class="pchip" data-dom="예체능" onclick="pickChip(this)"><svg class="pk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>발레·무용</button>
+                <button class="pchip" data-dom="건강·안전" onclick="pickChip(this)"><svg class="pk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>태권도</button>
+                <button class="pchip" data-dom="건강·안전" onclick="pickChip(this)"><svg class="pk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>축구·체육</button>
+                <button class="pchip" data-dom="과학·탐구" onclick="pickChip(this)"><svg class="pk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>과학·실험</button>
+                <button class="pchip" data-dom="국어" onclick="pickChip(this)"><svg class="pk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>학습지(방문)</button>
               </div>
-              <div class="field">
-                <label>가는 요일</label>
-                <div class="daychips">
-                  <button class="daychip" onclick="toggleClass(this)">월</button>
-                  <button class="daychip" onclick="toggleClass(this)">화</button>
-                  <button class="daychip" onclick="toggleClass(this)">수</button>
-                  <button class="daychip" onclick="toggleClass(this)">목</button>
-                  <button class="daychip" onclick="toggleClass(this)">금</button>
-                  <button class="daychip" onclick="toggleClass(this)">토</button>
-                  <button class="daychip" onclick="toggleClass(this)">일</button>
-                </div>
+              <div class="su-added" id="suAcademyList"></div>
+              <button class="share-link" style="justify-content:flex-start" onclick="nextSetup()">다니는 학원 없어요 · 건너뛰기</button>
+            </div>
+          </div>
+
+          <!-- S3. 집에서 하는 활동 -->
+          <div class="setup-step">
+            <div class="setup-top">
+              <div class="eyebrow">3 / 3 · 집에서 하는 것</div>
+              <h2 class="setup-h">집에서 챙기는<br>활동도 있나요?</h2>
+              <p class="setup-p">엄마표·놀이처럼 <b>집에서 하는 것</b>을 눌러 추가해요. 없으면 건너뛰어도 괜찮아요.</p>
+              <div class="preset-grid" id="suActGrid" data-list="suActList" data-head="집에서 하는 활동">
+                <button class="pchip" data-dom="국어" onclick="pickChip(this)"><svg class="pk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>그림책 읽기</button>
+                <button class="pchip" data-dom="국어" onclick="pickChip(this)"><svg class="pk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>한글 놀이</button>
+                <button class="pchip" data-dom="국어" onclick="pickChip(this)"><svg class="pk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>받아쓰기</button>
+                <button class="pchip" data-dom="수학" onclick="pickChip(this)"><svg class="pk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>숫자·연산 놀이</button>
+                <button class="pchip" data-dom="수학" onclick="pickChip(this)"><svg class="pk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>보드게임</button>
+                <button class="pchip" data-dom="영어" onclick="pickChip(this)"><svg class="pk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>엄마표 영어</button>
+                <button class="pchip" data-dom="영어" onclick="pickChip(this)"><svg class="pk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>영어 영상</button>
+                <button class="pchip" data-dom="예체능" onclick="pickChip(this)"><svg class="pk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>미술·만들기</button>
+                <button class="pchip" data-dom="건강·안전" onclick="pickChip(this)"><svg class="pk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>바깥 놀이</button>
               </div>
-              <button class="share-link" style="justify-content:flex-start" onclick="closeSetup()">아직 없어요 · 나중에 추가할게요</button>
+              <div class="su-added" id="suActList"></div>
+              <button class="share-link" style="justify-content:flex-start" onclick="closeSetup()">집에서 따로 없어요 · 건너뛰기</button>
             </div>
           </div>
 
         </div>
         <div class="ob-foot">
           <div class="dots" aria-hidden="true">
-            <span class="dot-i on" id="suDot0"></span><span class="dot-i" id="suDot1"></span>
+            <span class="dot-i on"></span><span class="dot-i"></span><span class="dot-i"></span>
           </div>
           <button class="btn-primary" id="suNext" onclick="nextSetup()">다음</button>
         </div>
@@ -1313,6 +1346,19 @@
           </div>
           <div class="sheet-body">
             <div class="field">
+              <label>유형에서 시작 <span class="opt" style="color:var(--muted);font-weight:400">(고르면 목표가 자동 추천돼요)</span></label>
+              <div class="preset-grid" id="actPresets">
+                <button class="pchip" data-t="한글·독서" onclick="pickActPreset(this)">한글·독서</button>
+                <button class="pchip" data-t="수학·연산" onclick="pickActPreset(this)">수학·연산</button>
+                <button class="pchip" data-t="영어" onclick="pickActPreset(this)">영어</button>
+                <button class="pchip" data-t="미술" onclick="pickActPreset(this)">미술</button>
+                <button class="pchip" data-t="피아노" onclick="pickActPreset(this)">피아노</button>
+                <button class="pchip" data-t="태권도" onclick="pickActPreset(this)">태권도</button>
+                <button class="pchip" data-t="과학·실험" onclick="pickActPreset(this)">과학·실험</button>
+                <button class="pchip" data-t="학습지" onclick="pickActPreset(this)">학습지</button>
+              </div>
+            </div>
+            <div class="field">
               <label for="actName">활동 이름</label>
               <input class="inp" id="actName" placeholder="예: 한글 학원 숙제">
             </div>
@@ -1340,7 +1386,7 @@
               <p class="free-note" id="actFreeNote" hidden>자유 활동은 목표 없이 한 것만 기록해요.</p>
             </div>
             <div class="field">
-              <label>겨냥 목표 <span class="opt">(이 활동으로 챙길 것)</span></label>
+              <label>겨냥 목표 <span class="opt">(유형 선택 시 자동 추천 · 손봐도 돼요)</span></label>
               <div id="actAims"></div>
             </div>
           </div>
@@ -1489,9 +1535,9 @@
     <div class="change">
       <div class="n">13</div>
       <div class="c-body">
-        <h3>첫 실행 셋업 — 아이 정보 + 내 학원 (1.1 ③)</h3>
-        <p>온보딩 직후 2스텝. 생년월(좌표 기준)과 <b>다니는 학원 하나</b>를 첫 흐름에서 받아요. 학부모가 넣은 학원 = 향후 학원 확보(B2B2C)의 쐐기라, 관리에 묻지 않고 승격.</p>
-        <p class="was">온보딩 마지막 ‘시작하기’ 다음에 이어져요 (온보딩 다시 보기로 확인)</p>
+        <h3>첫 실행 셋업 — 3스텝, 입력은 탭만 (1.1 ③ · 원칙8)</h3>
+        <p>①아이(생년월) ②<b>다니는 학원</b>(과목만 탭, 이름 없이) ③<b>집에서 하는 활동</b>(엄마표·놀이 칩). 학원과 활동을 단계로 나눠 뭘 넣는지 명확. 빈칸 타이핑 없이 고르면 <b>겨냥 목표·영역 자동 매핑</b> → 첫 화면에 안도가 채워집니다.</p>
+        <p class="was">온보딩 마지막 ‘시작하기’ 다음 · 회상보다 인식으로 입력 부담 제거</p>
       </div>
     </div>
 
@@ -1572,17 +1618,31 @@
   renderOb();
 
   /* ---- 첫 실행 셋업 (온보딩 직후) ---- */
-  var su = 0, SUN = 2;
+  var su = 0, SUN = 3;
   function renderSetup(){
     var steps = document.querySelectorAll('#setup .setup-step');
     steps.forEach(function(s,i){ s.classList.toggle('active', i===su); });
-    document.getElementById('suDot0').classList.toggle('on', su===0);
-    document.getElementById('suDot1').classList.toggle('on', su===1);
+    document.querySelectorAll('#setup .dot-i').forEach(function(d,i){ d.classList.toggle('on', i===su); });
     document.getElementById('suNext').textContent = (su===SUN-1) ? '나이테 시작하기' : '다음';
   }
   function nextSetup(){ if(su<SUN-1){ su++; renderSetup(); } else { closeSetup(); } }
   function openSetup(){ su=0; renderSetup(); document.getElementById('setup').hidden = false; }
   function closeSetup(){ document.getElementById('setup').hidden = true; }
+  function pickChip(el){
+    el.classList.toggle('on');
+    var grid = el.closest('.preset-grid');
+    var chips = grid.querySelectorAll('.pchip.on');
+    var wrap = document.getElementById(grid.dataset.list);
+    if(!chips.length){ wrap.innerHTML = ''; return; }
+    var html = '<div class="su-added-h">' + grid.dataset.head + ' ' + chips.length + '개 · 관련 목표가 바로 챙김돼요</div>';
+    chips.forEach(function(c){
+      var nm = c.textContent.trim(), dom = c.dataset.dom;
+      html += '<div class="su-arow">'
+        + '<svg class="lf" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M5 12l5 5L20 6"/></svg>'
+        + '<span class="nm">' + nm + '</span><span class="dm">' + dom + ' 챙김</span></div>';
+    });
+    wrap.innerHTML = html;
+  }
 
   /* ---- 안도 공유 카드 · 나이테 좌표 (데이터-아트) ---- */
   // 영역별 챙김 정도(0~1)와 상태 → 아이마다 고유한 실루엣
@@ -1723,7 +1783,44 @@
     document.getElementById('actTargetVal').textContent = '주 ' + actTarget + '회';
     renderAims(d.aims);
     setActKind(d.kind);
+    document.querySelectorAll('#actPresets .pchip').forEach(function(c){ c.classList.remove('on'); });
     document.getElementById('activitySheet').hidden = false;
+  }
+  var ACT_PRESETS = {
+    '한글·독서':{name:'한글 학원 숙제', kind:'학원', target:3, aims:[0,1]},
+    '수학·연산':{name:'수학 학습', kind:'학원', target:2, aims:[2,3]},
+    '영어':{name:'영어', kind:'자체', target:3, aims:[]},
+    '미술':{name:'미술', kind:'학원', target:1, aims:[]},
+    '피아노':{name:'피아노', kind:'학원', target:2, aims:[]},
+    '태권도':{name:'태권도', kind:'학원', target:2, aims:[]},
+    '과학·실험':{name:'과학 실험', kind:'학원', target:1, aims:[4]},
+    '학습지':{name:'학습지', kind:'자체', target:3, aims:[0,2]}
+  };
+  function pickActPreset(el){
+    var on = el.classList.contains('on');
+    document.querySelectorAll('#actPresets .pchip').forEach(function(c){ c.classList.remove('on'); });
+    if(on) return; // 다시 누르면 해제
+    el.classList.add('on');
+    var p = ACT_PRESETS[el.dataset.t]; if(!p) return;
+    document.getElementById('actName').value = p.name;
+    actTarget = p.target;
+    document.getElementById('actTargetVal').textContent = '주 ' + actTarget + '회';
+    renderAims(p.aims);
+    setActKind(p.kind);
+  }
+  // 관리 · 프리셋 원탭 추가
+  function quickAddActivity(el){
+    if(el.classList.contains('on')) return;
+    var p = ACT_PRESETS[el.dataset.t]; if(!p) return;
+    el.classList.add('on'); el.disabled = true;
+    var academy = (p.kind==='학원') ? '한글교실' : null;
+    ACT_DATA[p.name] = {kind:p.kind, academy:academy, target:p.target, aims:p.aims};
+    var domTxt = (p.aims && p.aims.length) ? MILES[p.aims[0]].d : el.dataset.t;
+    var kindTxt = (p.kind==='학원') ? '학원' : (p.kind==='자체' ? '자체' : '자유');
+    var sub = kindTxt + ' · 주 ' + p.target + '회 · ' + domTxt;
+    var row = '<div class="mrow"><div class="mmain"><div class="mn">' + p.name + '</div><div class="ms2">' + sub + '</div></div>'
+      + '<button class="btn-edit" onclick="openActivityForm(\'edit\',\'' + p.name + '\')">편집</button></div>';
+    document.getElementById('mngActAnchor').insertAdjacentHTML('beforebegin', row);
   }
 
   /* ---- 기록: 주간 현황 + 지난 날 채우기 ---- */

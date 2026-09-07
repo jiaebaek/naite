@@ -84,6 +84,21 @@ describe('활동 추가 폼', () => {
     setup({ kind: 'activity' })
     expect(screen.queryByText(/삭제/)).not.toBeInTheDocument()
   })
+
+  it('⭐ 유형 프리셋을 누르면 이름·영역·겨냥 목표가 자동 채워진다 (원칙 8)', async () => {
+    const h = setup({ kind: 'activity' })
+    await userEvent.click(screen.getByRole('button', { name: '한글·독서' }))
+    expect(screen.getByDisplayValue('한글 학원 숙제')).toBeInTheDocument() // 이름 자동
+    await userEvent.click(screen.getByRole('button', { name: '추가' }))
+    const input = h.onSaveActivity.mock.calls[0]![0]
+    expect(input).toMatchObject({ name: '한글 학원 숙제', domain: '국어', track: '학원' })
+    expect(input.targetIds).toEqual(['int-ko-a', 'int-ko-b']) // 국어 목표 자동 겨냥
+  })
+
+  it('편집 폼엔 유형 프리셋이 없다', () => {
+    setup({ kind: 'activity', activity: { id: 'a1', name: 'x', domain: '국어', track: '집', targetIds: [], cadence: { kind: '주N회', times: 1 }, owner: '엄마', active: true } })
+    expect(screen.queryByRole('button', { name: '한글·독서' })).not.toBeInTheDocument()
+  })
 })
 
 describe('활동 편집 폼', () => {

@@ -1,26 +1,38 @@
 /**
- * 첫 실행 셋업 — UX 리디자인 §06-A ③. 온보딩 직후 2스텝.
- * S1 아이 정보(이름·생년월). S2 "무엇으로 챙기나요?" — 학원(등원)·집 활동을 자유롭게 더한다.
- * 넣는 순간 그 영역이 첫 화면에 챙김으로. 하나도 없으면 스킵 가능(관리에서 나중에).
+ * 첫 실행 셋업 — UX 리디자인 §06-A ③ (3스텝 · 원칙 8 회상보다 인식).
+ * S1 아이 정보 · S2 다니는 학원(과목 칩) · S3 집에서 하는 것(활동 칩).
+ * 빈칸 타이핑 없이 프리셋 칩만 탭 — 각 칩이 겨냥 영역을 자동 매핑. 세부(요일 등)는 관리에서.
  */
 import { useState } from 'react'
-import type { Domain, Weekday } from '../../domain/types'
-import { DOMAINS } from '../../domain/types'
-import { IconCheck, IconPlus, IconX } from './icons'
+import type { Dispatch, SetStateAction } from 'react'
+import type { Domain } from '../../domain/types'
+import { IconCheck } from './icons'
 
-/** 셋업에서 더한 '챙기는 것' 하나. 학원=등원 커버, 집=집 활동. */
-export interface SetupItem {
-  readonly kind: '학원' | '집'
-  readonly name: string
-  readonly domains: readonly Domain[]
-  /** 학원만 의미 있음(등원 요일) */
-  readonly weekdays: readonly Weekday[]
-}
+/** 프리셋 칩: 라벨 + 겨냥 영역(단일). */
+interface Preset { readonly label: string; readonly domain: Domain }
 
+const SUBJECTS: readonly Preset[] = [ // S2 · 다니는 학원(등원 커버)
+  { label: '한글·독서', domain: '국어' }, { label: '수학·연산', domain: '수학' },
+  { label: '영어', domain: '영어' }, { label: '미술', domain: '예체능' },
+  { label: '피아노', domain: '예체능' }, { label: '발레·무용', domain: '예체능' },
+  { label: '태권도', domain: '건강·안전' }, { label: '축구·체육', domain: '건강·안전' },
+  { label: '과학·실험', domain: '과학·탐구' }, { label: '학습지(방문)', domain: '국어' },
+]
+const HOME: readonly Preset[] = [ // S3 · 집에서 하는 활동
+  { label: '그림책 읽기', domain: '국어' }, { label: '한글 놀이', domain: '국어' },
+  { label: '받아쓰기', domain: '국어' }, { label: '숫자·연산 놀이', domain: '수학' },
+  { label: '보드게임', domain: '수학' }, { label: '엄마표 영어', domain: '영어' },
+  { label: '영어 영상', domain: '영어' }, { label: '미술·만들기', domain: '예체능' },
+  { label: '바깥 놀이', domain: '건강·안전' },
+]
+
+/** 셋업에서 고른 항목(칩) — 라벨=이름, domain=겨냥 영역 */
+export interface SetupPick { readonly name: string; readonly domain: Domain }
 export interface SetupResult {
   readonly name: string
   readonly birthYm: string
-  readonly items: readonly SetupItem[]
+  readonly academies: readonly SetupPick[]
+  readonly homeActivities: readonly SetupPick[]
 }
 
 export interface SetupFlowProps {
@@ -30,125 +42,112 @@ export interface SetupFlowProps {
   readonly onComplete: (r: SetupResult) => void
 }
 
-const WD: readonly { label: string; value: Weekday }[] = [
-  { label: '월', value: 1 }, { label: '화', value: 2 }, { label: '수', value: 3 },
-  { label: '목', value: 4 }, { label: '금', value: 5 }, { label: '토', value: 6 }, { label: '일', value: 0 },
-]
+function PresetGrid({ presets, picked, onToggle }: {
+  presets: readonly Preset[]; picked: ReadonlySet<string>; onToggle: (label: string) => void
+}) {
+  return (
+    <div className="preset-grid">
+      {presets.map((p) => (
+        <button key={p.label} type="button" className={`pchip${picked.has(p.label) ? ' on' : ''}`} aria-pressed={picked.has(p.label)} onClick={() => onToggle(p.label)}>
+          <svg className="pk" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}><path d="M4 12l5 5L20 6" /></svg>{p.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function Added({ head, presets, picked }: { head: string; presets: readonly Preset[]; picked: ReadonlySet<string> }) {
+  const chosen = presets.filter((p) => picked.has(p.label))
+  if (chosen.length === 0) return null
+  return (
+    <div className="su-added">
+      <div className="su-added-h">{head} {chosen.length}개 · 관련 목표가 바로 챙김돼요</div>
+      {chosen.map((p) => (
+        <div key={p.label} className="su-arow">
+          <svg className="lf" width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6}><path d="M5 12l5 5L20 6" /></svg>
+          <span className="nm">{p.label}</span><span className="dm">{p.domain} 챙김</span>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export function SetupFlow({ initialName, initialBirthYm, ageLabelOf, onComplete }: SetupFlowProps) {
   const [step, setStep] = useState(0)
   const [name, setName] = useState(initialName)
   const [birthYm, setBirthYm] = useState(initialBirthYm)
+  const [aca, setAca] = useState<ReadonlySet<string>>(new Set())
+  const [home, setHome] = useState<ReadonlySet<string>>(new Set())
 
-  const [items, setItems] = useState<readonly SetupItem[]>([])
-  // 추가 폼
-  const [fName, setFName] = useState('')
-  const [fKind, setFKind] = useState<'학원' | '집'>('학원')
-  const [fDomains, setFDomains] = useState<readonly Domain[]>([])
-  const [fDays, setFDays] = useState<readonly Weekday[]>([])
+  // 함수형 업데이트 — 빠른 연속 탭에도 이전 선택이 유지된다(스테일 클로저 방지)
+  const makeToggle = (setSet: Dispatch<SetStateAction<ReadonlySet<string>>>) => (label: string) =>
+    setSet((prev) => {
+      const next = new Set(prev)
+      if (next.has(label)) next.delete(label); else next.add(label)
+      return next
+    })
+  const toggleAca = makeToggle(setAca)
+  const toggleHome = makeToggle(setHome)
 
-  const toggleDay = (v: Weekday) => setFDays((d) => (d.includes(v) ? d.filter((x) => x !== v) : [...d, v]))
-  const toggleDomain = (d: Domain) => setFDomains((c) => (c.includes(d) ? c.filter((x) => x !== d) : [...c, d]))
-
-  const draft = (): SetupItem | null =>
-    fName.trim() && fDomains.length > 0
-      ? { kind: fKind, name: fName.trim(), domains: [...fDomains], weekdays: [...fDays].sort() }
-      : null
-
-  const addItem = () => {
-    const d = draft()
-    if (!d) return
-    setItems((prev) => [...prev, d])
-    setFName(''); setFDomains([]); setFDays([]) // 다음 항목 위해 초기화 (종류는 유지)
-  }
-  const removeItem = (i: number) => setItems((prev) => prev.filter((_, idx) => idx !== i))
-
-  // 시작: 아직 추가 안 한 폼이 유효하면 함께 넣는다(마지막 항목에 '추가' 안 눌러도 됨)
-  const start = () => {
-    const d = draft()
-    onComplete({ name: name.trim() || '첫째', birthYm, items: d ? [...items, d] : items })
-  }
-  const skip = () => onComplete({ name: name.trim() || '첫째', birthYm, items: [] })
-  const next = () => (step === 0 ? setStep(1) : start())
+  const finish = () => onComplete({
+    name: name.trim() || '첫째',
+    birthYm,
+    academies: SUBJECTS.filter((s) => aca.has(s.label)).map((s) => ({ name: s.label, domain: s.domain })),
+    homeActivities: HOME.filter((h) => home.has(h.label)).map((h) => ({ name: h.label, domain: h.domain })),
+  })
+  const next = () => (step < 2 ? setStep(step + 1) : finish())
 
   return (
     <div className="onboard" data-testid="setup">
-      <button className="ob-skip" onClick={skip}>나중에</button>
+      <button className="ob-skip" onClick={finish}>나중에</button>
       <div className="ob-stage">
-        {/* S1. 아이 정보 */}
+        {/* S1 아이 */}
         <div className={`setup-step${step === 0 ? ' active' : ''}`}>
           <div className="setup-top">
-            <div className="eyebrow">1 / 2 · 아이 정보</div>
+            <div className="eyebrow">1 / 3 · 아이 정보</div>
             <h2 className="setup-h">누구의 나이테를<br />쌓을까요?</h2>
             <p className="setup-p">생년월만 있으면 지금 시기의 좌표를 준비해요.</p>
             <div className="field">
-              <label htmlFor="suName">아이 이름 <span className="opt">(애칭도 좋아요)</span></label>
+              <label htmlFor="suName">아이 이름 <span className="opt">(선택 · 애칭도 좋아요)</span></label>
               <input className="inp" id="suName" placeholder="예: 첫째" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="field">
               <label htmlFor="suBirth">생년월</label>
               <input className="inp" id="suBirth" type="month" value={birthYm} onChange={(e) => setBirthYm(e.target.value)} />
             </div>
-            <div className="setup-reward">
-              <IconCheck w={16} />{ageLabelOf(birthYm)} 좌표를 준비했어요
-            </div>
+            <div className="setup-reward"><IconCheck w={16} />{ageLabelOf(birthYm)} 좌표를 준비했어요</div>
           </div>
         </div>
 
-        {/* S2. 무엇으로 챙기나요 — 학원·집 활동 리스트 */}
+        {/* S2 다니는 학원 */}
         <div className={`setup-step${step === 1 ? ' active' : ''}`}>
           <div className="setup-top">
-            <div className="eyebrow">2 / 2 · 무엇으로 챙기나요?</div>
-            <h2 className="setup-h">챙기는 것을 더해요</h2>
-            <p className="setup-p">학원이든 집에서 하는 거든, 넣으면 그 영역이 <b>첫 화면에 챙김으로</b> 채워져요.</p>
+            <div className="eyebrow">2 / 3 · 다니는 학원</div>
+            <h2 className="setup-h">어떤 학원에<br />다녀요?</h2>
+            <p className="setup-p">이름은 나중에요. <b>과목만 눌러</b> 추가하면 등원 알림·숙제 챙김이 자동으로 붙어요.</p>
+            <PresetGrid presets={SUBJECTS} picked={aca} onToggle={toggleAca} />
+            <Added head="다니는 학원" presets={SUBJECTS} picked={aca} />
+            <button className="share-link" style={{ justifyContent: 'flex-start' }} onClick={() => setStep(2)}>다니는 학원 없어요 · 건너뛰기</button>
+          </div>
+        </div>
 
-            {items.length > 0 && (
-              <div className="setup-list" data-testid="setup-list">
-                {items.map((it, i) => (
-                  <div key={i} className="setup-item">
-                    <span className={`si-tag ${it.kind === '학원' ? 'ac' : 'home'}`}>{it.kind}</span>
-                    <span className="si-main"><b>{it.name}</b><small>{it.domains.join(' · ')}</small></span>
-                    <button className="si-x" onClick={() => removeItem(i)} aria-label="빼기"><IconX /></button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="setup-add">
-              <input className="inp" placeholder="예: 한글교실 / 엄마표 영어" value={fName} onChange={(e) => setFName(e.target.value)} />
-              <div className="daypick">
-                {(['학원', '집'] as const).map((k) => (
-                  <button key={k} type="button" className={`daybtn wide${fKind === k ? ' on' : ''}`} onClick={() => setFKind(k)}>{k === '학원' ? '학원 다녀요' : '집에서 해요'}</button>
-                ))}
-              </div>
-              {fKind === '학원' && (
-                <div className="daychips" style={{ marginBottom: 12 }}>
-                  {WD.map((w) => (
-                    <button key={w.value} type="button" className={`daychip${fDays.includes(w.value) ? ' on' : ''}`} onClick={() => toggleDay(w.value)}>{w.label}</button>
-                  ))}
-                </div>
-              )}
-              <div className="fld-label">챙기는 영역</div>
-              <div className="daypick wrap">
-                {DOMAINS.map((d) => (
-                  <button key={d} type="button" className={`daybtn wide${fDomains.includes(d) ? ' on' : ''}`} onClick={() => toggleDomain(d)}>{d}</button>
-                ))}
-              </div>
-              <button className="btn-soft" onClick={addItem} disabled={!draft()} style={{ marginTop: 4 }}>
-                <IconPlus w={16} /> 더하기
-              </button>
-            </div>
-
-            <button className="share-link" style={{ justifyContent: 'flex-start' }} onClick={skip}>아직 없어요 · 나중에 추가할게요</button>
+        {/* S3 집에서 하는 것 */}
+        <div className={`setup-step${step === 2 ? ' active' : ''}`}>
+          <div className="setup-top">
+            <div className="eyebrow">3 / 3 · 집에서 하는 것</div>
+            <h2 className="setup-h">집에서 챙기는<br />활동도 있나요?</h2>
+            <p className="setup-p">엄마표·놀이처럼 <b>집에서 하는 것</b>을 눌러 추가해요. 없으면 건너뛰어도 괜찮아요.</p>
+            <PresetGrid presets={HOME} picked={home} onToggle={toggleHome} />
+            <Added head="집에서 하는 활동" presets={HOME} picked={home} />
+            <button className="share-link" style={{ justifyContent: 'flex-start' }} onClick={finish}>집에서 따로 없어요 · 건너뛰기</button>
           </div>
         </div>
       </div>
       <div className="ob-foot">
         <div className="dots" aria-hidden="true">
-          <span className={`dot-i${step === 0 ? ' on' : ''}`} />
-          <span className={`dot-i${step === 1 ? ' on' : ''}`} />
+          {[0, 1, 2].map((n) => <span key={n} className={`dot-i${n === step ? ' on' : ''}`} />)}
         </div>
-        <button className="btn-primary ob-next" onClick={next}>{step === 1 ? '나이테 시작하기' : '다음'}</button>
+        <button className="btn-primary ob-next" onClick={next}>{step === 2 ? '나이테 시작하기' : '다음'}</button>
       </div>
     </div>
   )

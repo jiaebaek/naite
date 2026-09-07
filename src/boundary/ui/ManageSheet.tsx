@@ -41,6 +41,18 @@ const WD: readonly { label: string; value: Weekday }[] = [
   { label: '목', value: 4 }, { label: '금', value: 5 }, { label: '토', value: 6 }, { label: '일', value: 0 },
 ]
 
+/** 활동 폼 유형 프리셋(원칙 8) — 누르면 이름·소속·주간목표·겨냥 목표를 자동 추천. */
+const ACT_PRESETS: readonly { label: string; name: string; where: '학원' | '자체'; domain: Domain; times: number }[] = [
+  { label: '한글·독서', name: '한글 학원 숙제', where: '학원', domain: '국어', times: 3 },
+  { label: '수학·연산', name: '수학 학습', where: '학원', domain: '수학', times: 2 },
+  { label: '영어', name: '엄마표 영어', where: '자체', domain: '영어', times: 3 },
+  { label: '미술', name: '미술', where: '학원', domain: '예체능', times: 1 },
+  { label: '피아노', name: '피아노', where: '학원', domain: '예체능', times: 2 },
+  { label: '태권도', name: '태권도', where: '학원', domain: '건강·안전', times: 2 },
+  { label: '과학·실험', name: '과학 실험', where: '학원', domain: '과학·탐구', times: 1 },
+  { label: '학습지', name: '학습지', where: '자체', domain: '국어', times: 3 },
+]
+
 function Frame({ title, onClose, children, foot }: {
   title: string; onClose: () => void; children: React.ReactNode; foot: React.ReactNode
 }) {
@@ -125,6 +137,12 @@ function ActivityBody({ editing, academies, targets, onSaveActivity, onDelete, o
   const domainTargets = targets.filter((t) => t.domain === domain)
   const togglePick = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]))
   const changeDomain = (d: Domain) => { setDomain(d); setPicked([]) } // 영역 바꾸면 겨냥 목표 초기화(계약: 같은 영역만)
+  // 원칙 8 — 유형 프리셋: 이름·소속·주간목표·겨냥 목표(그 영역 지금 목표)를 자동 추천 → 손질만
+  const applyPreset = (p: typeof ACT_PRESETS[number]) => {
+    setName(p.name); setWhere(p.where); setDomain(p.domain); setTimes(p.times)
+    setPicked(targets.filter((t) => t.domain === p.domain).map((t) => t.id))
+    setErr(null)
+  }
 
   const submit = () => {
     if (!name.trim()) { setErr('이름을 입력해 주세요'); return }
@@ -146,6 +164,16 @@ function ActivityBody({ editing, academies, targets, onSaveActivity, onDelete, o
         <button className="btn-primary" onClick={submit}>{editing ? '저장' : '추가'}</button>
         {editing && <button className="sheet-del" onClick={onDelete}>이 활동 삭제</button>}
       </>}>
+      {!editing && (
+        <>
+          <div className="fld-label">유형에서 시작 <span className="fld-hint">누르면 자동으로 채워요</span></div>
+          <div className="preset-grid" style={{ marginBottom: 14 }}>
+            {ACT_PRESETS.map((p) => (
+              <button key={p.label} type="button" className="pchip" onClick={() => applyPreset(p)}>{p.label}</button>
+            ))}
+          </div>
+        </>
+      )}
       <label className="fld-label">이름</label>
       <input className="fld" placeholder="활동 이름" value={name} onChange={(e) => { setName(e.target.value); setErr(null) }} />
 
