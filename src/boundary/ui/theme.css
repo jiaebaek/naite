@@ -321,6 +321,20 @@ body {
 .suggest b { color: var(--pine); font-weight: 700; }
 .suggest .lb { color: var(--muted); flex: 0 0 auto; }
 
+/* ---------- B′ 내용범주 아코디언 (상세 화면) ---------- */
+.catbox { border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); margin-top: 12px; overflow: hidden; }
+.catbox.good { background: var(--surface-2); }
+.cat-head { width: 100%; display: flex; align-items: center; gap: 9px; padding: 13px 14px; background: none; border: 0; cursor: pointer; text-align: left; font: inherit; color: inherit; }
+.cat-name { font-family: var(--serif); font-size: 14.5px; font-weight: 700; flex: 0 1 auto; }
+.cat-sum { margin-left: auto; font-size: 11.5px; font-weight: 600; color: var(--muted); flex: 0 0 auto; }
+.catbox.good .cat-sum { color: var(--pine); }
+.ring-row.sm { margin: 0; gap: 3px; flex: 0 0 auto; }
+.ring-row.sm .pip { width: 6px; height: 6px; }
+.chev { color: var(--muted); flex: 0 0 auto; transition: transform .15s ease; }
+.chev.open { transform: rotate(180deg); }
+.cat-body { padding: 2px 12px 12px; }
+.cat-body .ms:last-child { margin-bottom: 0; }
+
 /* ---------- 관리 ---------- */
 .mng-sec { margin-top: 26px; }
 .mng-sec:first-of-type { margin-top: 4px; }

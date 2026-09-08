@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { evaluateCoverage, evaluateAllCoverage, goalStatusOf } from '../../src/domain/coverage'
+import { evaluateCoverage, evaluateAllCoverage, goalStatusOf, coveringActivities, publicGoalStatusOf } from '../../src/domain/coverage'
 import { currentTargets } from '../../src/domain/pace'
 import { isDomainError } from '../../src/domain/errors'
 import { STANDARDS_2021, INITIAL_OFFSETS } from '../../src/domain/standards/child2021'
@@ -310,5 +310,33 @@ describe('⭐ goalStatusOf — 목표별 상태 (됨/챙기는중/아직). 현�
   it('다른 목표를 겨냥하는 활동은 이 목표를 챙기지 않는다', () => {
     const 딴목표활동 = act({ id: 'a3', domain: '국어', targetIds: ['other'] })
     expect(goalStatusOf('target-a', [], [딴목표활동])).toBe('활동필요')
+  })
+})
+
+describe('⭐ B′ coveringActivities / publicGoalStatusOf — 원문 목표는 refines 해석으로 챙겨진다', () => {
+  // nuri-com-10 "책에 관심을 가지고..." 을 해석 int-ko-listen 이 refines 한다.
+  it('해석을 겨냥하는 활동이 있으면 그 해석이 refines 하는 원문 목표가 챙기는중', () => {
+    const 그림책 = act({ id: 'h1', domain: '국어', targetIds: ['int-ko-listen'] })
+    expect(coveringActivities('nuri-com-10', [그림책], STANDARDS_2021).map((a) => a.id)).toEqual(['h1'])
+    expect(publicGoalStatusOf('nuri-com-10', [], [그림책], STANDARDS_2021)).toBe('챙기는중')
+  })
+
+  it('원문 목표를 직접 겨냥하는 활동(해석 없는 목표를 연결)도 챙기는중', () => {
+    const 직접 = act({ id: 'd1', domain: '국어', targetIds: ['nuri-com-1'] })
+    expect(publicGoalStatusOf('nuri-com-1', [], [직접], STANDARDS_2021)).toBe('챙기는중')
+  })
+
+  it('겨냥 활동도 없고 됨 표시도 없으면 활동필요(갭)', () => {
+    expect(publicGoalStatusOf('nuri-com-1', [], [], STANDARDS_2021)).toBe('활동필요')
+  })
+
+  it('부모가 됨으로 표시하면 활동과 무관하게 됨', () => {
+    expect(publicGoalStatusOf('nuri-com-1', ['nuri-com-1'], [], STANDARDS_2021)).toBe('됨')
+  })
+
+  it('비활성 활동은 원문 목표를 챙기지 않는다', () => {
+    const 꺼진활동 = act({ id: 'x1', domain: '국어', targetIds: ['int-ko-listen'], active: false })
+    expect(coveringActivities('nuri-com-10', [꺼진활동], STANDARDS_2021)).toEqual([])
+    expect(publicGoalStatusOf('nuri-com-10', [], [꺼진활동], STANDARDS_2021)).toBe('활동필요')
   })
 })

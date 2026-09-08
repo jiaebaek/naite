@@ -134,3 +134,29 @@ export function currentTargets(
     return s.baselinePeriod.start <= horizon && s.baselinePeriod.end >= now
   })
 }
+
+/**
+ * B′ — 지금 화면에 **목표로 보여줄 공교육 원문(+자체)**. `currentTargets` 의 표시용 짝이다.
+ *
+ *   공교육 — baselinePeriod(누리/학년군 구간)가 지금을 포함하면 노출한다. 선행 오프셋으로
+ *            다음 구간을 앞당길 수 있다(누적 · currentTargets 와 같은 지평 규칙).
+ *   자체   — 오프셋 미적용, 자기 구간 그대로 (INV-PACE-02).
+ *   해석   — **제외**. 해석은 활동이 겨냥하는 엔진일 뿐 화면 목표가 아니다.
+ *
+ * currentTargets 가 '해석'을 겨냥 대상으로 고르는 것과 정확히 대칭이다(origin 필터만 뒤집힘).
+ * INV-STD-06 은 여전히 유효하다 — 원문은 겨냥(활동 target) 대상이 아니라 **표시** 대상이다.
+ */
+export function currentPublicGoals(
+  standards: readonly Standard[],
+  offsets: readonly PaceOffset[],
+  now: YearMonth,
+): readonly Standard[] {
+  return standards.filter((s) => {
+    if (s.origin === '해석') return false
+
+    const offset = s.origin === '자체' ? 0 : effectiveOffset(s.domain, offsets)
+    const horizon = shiftYearMonth(now, -offset)
+
+    return s.baselinePeriod.start <= horizon && s.baselinePeriod.end >= now
+  })
+}

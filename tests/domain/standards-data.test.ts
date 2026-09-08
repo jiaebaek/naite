@@ -9,7 +9,7 @@
 import { describe, it, expect } from 'vitest'
 import { STANDARDS_2021, INITIAL_OFFSETS } from '../../src/domain/standards/child2021'
 import { requireValidStandard } from '../../src/domain/guards'
-import { currentTargets, resolveTargetPeriod, effectiveOffset } from '../../src/domain/pace'
+import { currentTargets, currentPublicGoals, resolveTargetPeriod, effectiveOffset } from '../../src/domain/pace'
 import { DOMAINS } from '../../src/domain/types'
 
 describe('데이터가 Standard 계약을 만족한다', () => {
@@ -132,6 +132,38 @@ describe('INV-STD-06 — 공교육 원문은 목표 판정에서 제외된다', 
     const targets = currentTargets(STANDARDS_2021, INITIAL_OFFSETS, '2026-11')
     const withBasis = targets.filter((t) => t.refines)
     expect(withBasis.length).toBeGreaterThan(0)
+  })
+})
+
+describe('⭐ B′ currentPublicGoals — 화면 목표는 공교육 원문(+자체), 해석은 제외', () => {
+  const NOW = '2026-11' // 만 5세 (취학 전) → 누리과정 구간
+
+  it('해석은 화면 목표에서 빠진다 (해석은 활동 엔진일 뿐)', () => {
+    const goals = currentPublicGoals(STANDARDS_2021, [], NOW)
+    expect(goals.every((g) => g.origin !== '해석')).toBe(true)
+  })
+
+  it('취학 전이면 누리과정 원문 59개가 모두 지금 목표다 (band 가 지금을 포함)', () => {
+    const goals = currentPublicGoals(STANDARDS_2021, [], NOW)
+    const nuri = goals.filter((g) => g.id.startsWith('nuri-'))
+    expect(nuri.length).toBe(59)
+    expect(goals.map((g) => g.id)).toContain('nuri-com-1') // 의사소통 · 듣기와 말하기
+  })
+
+  it('초1~2 성취기준은 아직 목표가 아니다 (band 가 미래 2028-03~)', () => {
+    const ids = currentPublicGoals(STANDARDS_2021, [], NOW).map((g) => g.id)
+    expect(ids).not.toContain('std-2국01-01')
+  })
+
+  it('자체(영어)는 오프셋 없이 지금 목표로 함께 뜬다', () => {
+    const ids = currentPublicGoals(STANDARDS_2021, [], NOW).map((g) => g.id)
+    expect(ids).toContain('own-en-listen-picturebook')
+  })
+
+  it('입학 후(2028-06)엔 초1~2 성취기준 원문이 지금 목표가 된다', () => {
+    const ids = currentPublicGoals(STANDARDS_2021, [], '2028-06').map((g) => g.id)
+    expect(ids).toContain('std-2국04-01') // 한글 자모 소릿값
+    expect(ids).not.toContain('nuri-com-1') // 누리 band(~2028-02)는 끝났다
   })
 })
 

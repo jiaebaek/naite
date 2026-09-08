@@ -30,6 +30,36 @@ export function goalStatusOf(
 }
 
 /**
+ * B′ — 이 **공교육/자체 목표**를 챙기는 활성 활동들.
+ *   활동은 '해석'을 겨냥한다(활동 엔진). 화면의 공교육 목표는 두 경로로 챙겨진다:
+ *     ① 이 목표를 refines 하는 해석을 겨냥하는 활동, 또는
+ *     ② 이 목표 자체를 직접 겨냥하는 활동(해석이 없는 목표를 '활동 연결'한 경우).
+ */
+export function coveringActivities(
+  goalId: StandardId,
+  activities: readonly Activity[],
+  standards: readonly Standard[],
+): readonly Activity[] {
+  const aim = new Set<StandardId>([goalId])
+  for (const s of standards) if (s.refines === goalId) aim.add(s.id)
+  return activities.filter((a) => a.active && a.targetIds.some((id) => aim.has(id)))
+}
+
+/**
+ * B′ — 공교육/자체 목표 하나의 상태. `goalStatusOf` 의 원문판이다(refines 경유 커버를 인식).
+ * 같은 3값·같은 원칙(INV-COV-05: 수행 이력이 아니라 '됐다 표시/겨냥 활동'으로 본다).
+ */
+export function publicGoalStatusOf(
+  goalId: StandardId,
+  achieved: readonly StandardId[],
+  activities: readonly Activity[],
+  standards: readonly Standard[],
+): GoalStatus {
+  if (achieved.includes(goalId)) return '됨'
+  return coveringActivities(goalId, activities, standards).length > 0 ? '챙기는중' : '활동필요'
+}
+
+/**
  * INV-COV-01 결과는 항상 4값 중 하나
  * INV-COV-02 활성 활동 0개 → 반드시 '비어있음'
  * INV-COV-03 활성 활동 1개 이상 → 절대 '비어있음' 아님

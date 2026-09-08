@@ -102,3 +102,39 @@ describe('⭐ 원칙 5 — 상세에도 선행 UI 가 없다', () => {
     expect(document.body.textContent ?? '').not.toContain('선행')
   })
 })
+
+describe('⭐ B′ — 원문 목표를 내용범주 아코디언으로 묶는다', () => {
+  const g = (id: string, statement: string, status: MilestoneVM['status'], category: string): MilestoneVM => ({
+    standardId: id, statement, badgeCls: 'gov', badgeLabel: '공교육·누리과정', status,
+    coveredBy: status === '챙기는중' ? '그림책 읽기' : null, done: status === '됨', category,
+  })
+  const 듣말 = '의사소통 · 듣기와 말하기'
+  const 읽쓰 = '의사소통 · 읽기와 쓰기에 관심 가지기'
+  const catVM: DomainVM = {
+    domain: '국어',
+    milestones: [
+      g('nuri-com-1', '말이나 이야기를 관심 있게 듣는다', '챙기는중', 듣말),
+      g('nuri-com-7', '말과 글의 관계에 관심을 가진다', '활동필요', 읽쓰),
+      g('nuri-com-8', '주변의 상징, 글자 등의 읽기에 관심을 가진다', '활동필요', 읽쓰),
+    ],
+    total: 3, on: 1, done: 0, prog: 1, gap: 2, group: 'partial', noPublic: false, priority: false,
+  }
+
+  it('내용범주 헤더가 원문 그대로 보인다', () => {
+    setup(catVM)
+    expect(screen.getByText(듣말)).toBeInTheDocument()
+    expect(screen.getByText(읽쓰)).toBeInTheDocument()
+  })
+
+  it('챙김이 있는 범주는 펼쳐지고, 다 비어있는 범주는 접혀 요약만 보인다 (안도-우선)', () => {
+    setup(catVM)
+    expect(screen.getByTestId('ms-nuri-com-1')).toBeInTheDocument() // 듣말: 펼침
+    expect(screen.queryByTestId('ms-nuri-com-7')).not.toBeInTheDocument() // 읽쓰: 접힘
+  })
+
+  it('접힌 범주 헤더를 누르면 그 안의 원문 목표가 펼쳐진다', async () => {
+    setup(catVM)
+    await userEvent.click(screen.getByRole('button', { name: /읽기와 쓰기/ }))
+    expect(screen.getByTestId('ms-nuri-com-7')).toBeInTheDocument()
+  })
+})

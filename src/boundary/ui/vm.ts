@@ -2,7 +2,7 @@
  * 화면용 뷰모델 타입 + 라벨 헬퍼. App 이 도메인에서 계산해 화면에 넘긴다.
  * UX 리디자인 명세(§04) 상태 모델을 그대로 따른다.
  */
-import type { Domain, Provenance } from '../../domain/types'
+import type { Domain, Provenance, Standard } from '../../domain/types'
 import type { GoalStatus } from '../../domain/coverage'
 
 /**
@@ -35,6 +35,17 @@ export function recommendFor(standardId: string, domain: Domain): string {
   return RECOMMEND[standardId] ?? `${domain} 놀이 활동`
 }
 
+/**
+ * B′ — 화면 목표(공교육 원문)의 추천 활동.
+ * 원문 자체엔 추천 문구가 없으므로, 이 목표를 refines 하는 **해석**의 추천을 빌려온다.
+ * (해석 = 활동 엔진). 없으면 영역 기반 기본값.
+ */
+export function recommendForGoal(goalId: string, domain: Domain, standards: readonly Standard[]): string {
+  if (RECOMMEND[goalId]) return RECOMMEND[goalId]
+  const refiner = standards.find((s) => s.refines === goalId && RECOMMEND[s.id] !== undefined)
+  return refiner ? RECOMMEND[refiner.id]! : `${domain} 놀이 활동`
+}
+
 /** 출처 → 배지 (gov=공교육 강조 · own=자체 · free=겨냥없음) */
 export function badgeOf(p: Provenance | null): { cls: 'gov' | 'own' | 'free'; label: string } {
   if (p === null) return { cls: 'free', label: '자유' }
@@ -61,6 +72,8 @@ export interface MilestoneVM {
   readonly badgeCls: 'gov' | 'own' | 'free'
   readonly badgeLabel: string
   readonly status: GoalStatus // 됨 · 챙기는중 · 활동필요
+  /** B′ 내용범주(교육과정 구조) — 상세 화면 아코디언 묶음 라벨 */
+  readonly category?: string
   /** 챙기는 중이면 그 활동 이름(또는 '이미 하고 있어요') */
   readonly coveredBy: string | null
   /** 됨(직접 처리)인가 — 관리 토글 상태 */

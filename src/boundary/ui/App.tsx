@@ -11,8 +11,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { deriveTodayTasks, weekRangeOf } from '../../domain/today'
 import { weeklyReport } from '../../domain/report'
 import { findCompletion, toggleCompletion } from '../../domain/completion'
-import { currentTargets } from '../../domain/pace'
-import { goalStatusOf } from '../../domain/coverage'
+import { currentTargets, currentPublicGoals } from '../../domain/pace'
+import { publicGoalStatusOf, coveringActivities } from '../../domain/coverage'
+import { categoryOf } from '../../domain/category'
 import { provenanceOf } from '../../domain/provenance'
 import { createActivity, deactivate, editActivity, retarget } from '../../domain/activity'
 import {
@@ -60,7 +61,7 @@ import { ManageSheet } from './ManageSheet'
 import type { ManageSheetTarget } from './ManageSheet'
 import { LinkSheet } from './LinkSheet'
 import type { LinkChoice } from './LinkSheet'
-import { badgeOf, recommendFor } from './vm'
+import { badgeOf, recommendForGoal } from './vm'
 import type { DomainVM, MilestoneVM, TaskVM } from './vm'
 import { BrandMark, IconGear, TabIconArea, TabIconLog, TabIconToday } from './icons'
 
@@ -248,29 +249,34 @@ export function App() {
   const activeActivities = useMemo(() => activities.filter((a) => a.active), [activities])
 
   // ── 지금 시기 목표 + 커버리지 (선행 제거: 오프셋 [] = 적기 그대로) ──
-  const targets = useMemo(() => currentTargets(STANDARDS_2021, [], date.slice(0, 7)), [date])
+  // B′: 화면 목표 = 공교육 원문(publicGoals). 활동/등원이 겨냥하는 엔진 = 해석(interpTargets).
+  const month = date.slice(0, 7)
+  const interpTargets = useMemo(() => currentTargets(STANDARDS_2021, [], month), [month])
+  const publicGoals = useMemo(() => currentPublicGoals(STANDARDS_2021, [], month), [month])
   const coverageActivities = useMemo(
-    () => [...activeActivities, ...attendanceActivities(academies, targets)],
-    [activeActivities, academies, targets],
+    () => [...activeActivities, ...attendanceActivities(academies, interpTargets)],
+    [activeActivities, academies, interpTargets],
   )
 
   const domainVMs: readonly DomainVM[] = useMemo(() => {
     return DOMAINS.map((domain) => {
-      const dts = targets.filter((t) => t.domain === domain)
+      const dts = publicGoals.filter((t) => t.domain === domain)
       const milestones: MilestoneVM[] = dts.map((std) => {
-        const status = goalStatusOf(std.id, achieved, coverageActivities)
+        // 원문 목표는 refines 해석(또는 직접 겨냥)을 통해 챙겨진다
+        const covering = coveringActivities(std.id, coverageActivities, STANDARDS_2021)
+        const status = publicGoalStatusOf(std.id, achieved, coverageActivities, STANDARDS_2021)
         const badge = badgeOf(provenanceOf(std, STANDARDS_2021))
-        const covering = coverageActivities.filter((a) => a.active && a.targetIds.includes(std.id))
         return {
           standardId: std.id,
           statement: std.statement,
+          category: categoryOf(std),
           badgeCls: badge.cls,
           badgeLabel: badge.label,
           status,
           // 활동이 이 목표를 겨냥하는지 — 됨이어도 유지('활동으로 이룸' 부제·관리 tending 용)
           coveredBy: covering[0]?.name ?? null,
           done: status === '됨',
-          ...(status === '활동필요' ? { recommend: recommendFor(std.id, domain) } : {}),
+          ...(status === '활동필요' ? { recommend: recommendForGoal(std.id, domain, STANDARDS_2021) } : {}),
         }
       })
       const total = milestones.length
@@ -286,7 +292,7 @@ export function App() {
         priority: priorityDomains.includes(domain),
       }
     })
-  }, [targets, achieved, coverageActivities, priorityDomains])
+  }, [publicGoals, achieved, coverageActivities, priorityDomains])
 
   // ── 갭 배너 ──
   const banner: GapBanner = useMemo(() => {
@@ -395,10 +401,10 @@ export function App() {
     }),
     [activeActivities, academyName],
   )
-  // 활동 폼의 '겨냥 목표' 옵션 — 이 시기 목표(영역·문장)
+  // 활동 폼의 '겨냥 목표' 옵션 — 이 시기 화면 목표(공교육 원문·영역·문장)
   const targetOptions = useMemo(
-    () => targets.map((t) => ({ id: t.id, statement: t.statement, domain: t.domain })),
-    [targets],
+    () => publicGoals.map((t) => ({ id: t.id, statement: t.statement, domain: t.domain })),
+    [publicGoals],
   )
 
   const achievement: readonly AchGroupVM[] = useMemo(
@@ -515,11 +521,12 @@ export function App() {
     // S2 학원 = 등원(coversDomains 로 그 영역의 지금 목표를 챙김 처리)
     const newAcademies = r.academies.map((a) =>
       createAcademy({ name: a.name, weekdays: [], coversDomains: [a.domain] }, newId))
-    // S3 집 활동 = 실제 체크하는 활동. 그 영역의 지금 목표를 겨냥(주3회 기본)
+    // S3 집 활동 = 실제 체크하는 활동. 그 영역의 해석(활동 엔진)을 겨냥(주3회 기본)
+    // → 해석이 refines 하는 공교육 원문 목표가 '챙기는 중'으로 뜬다.
     const newActivities = r.homeActivities.map((h) =>
       createActivity({
         name: h.name, domain: h.domain, track: '집',
-        targetIds: targets.filter((t) => t.domain === h.domain).map((t) => t.id),
+        targetIds: interpTargets.filter((t) => t.domain === h.domain).map((t) => t.id),
         cadence: { kind: '주N회', times: 3 }, owner: '엄마',
       }, STANDARDS_2021, newId))
     if (newAcademies.length > 0) setAcademies((prev) => [...prev, ...newAcademies])
@@ -641,7 +648,7 @@ export function App() {
           domain={linkStd.domain}
           statement={linkTarget.statement}
           standardId={linkTarget.standardId}
-          recommend={linkTarget.recommend ?? recommendFor(linkTarget.standardId, linkStd.domain)}
+          recommend={linkTarget.recommend ?? recommendForGoal(linkTarget.standardId, linkStd.domain, STANDARDS_2021)}
           existing={linkExisting}
           onConfirm={handleLinkConfirm}
           onClose={() => setLinkTarget(null)}
