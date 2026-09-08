@@ -4,6 +4,7 @@
  */
 import { useState } from 'react'
 import { IconPlus, IconX } from './icons'
+import type { RecommendVM } from './vm'
 
 export type LinkChoice =
   | { readonly kind: 'recommend'; readonly name: string }
@@ -14,14 +15,15 @@ export interface LinkSheetProps {
   readonly domain: string
   readonly statement: string
   readonly standardId: string
-  readonly recommend: string
+  /** 근거 있는 추천 활동 (없으면 추천 옵션을 띄우지 않는다 · §10-A 원칙3) */
+  readonly recommend?: RecommendVM | undefined
   readonly existing: readonly { readonly id: string; readonly name: string; readonly sub: string }[]
   readonly onConfirm: (choice: LinkChoice) => void
   readonly onClose: () => void
 }
 
 export function LinkSheet({ domain, statement, recommend, existing, onConfirm, onClose }: LinkSheetProps) {
-  const [sel, setSel] = useState<LinkChoice>({ kind: 'recommend', name: recommend })
+  const [sel, setSel] = useState<LinkChoice>(recommend ? { kind: 'recommend', name: recommend.title } : { kind: 'new' })
 
   const isSel = (k: LinkChoice['kind'], id?: string) =>
     sel.kind === k && (k !== 'existing' || (sel as { activityId: string }).activityId === id)
@@ -40,12 +42,16 @@ export function LinkSheet({ domain, statement, recommend, existing, onConfirm, o
           <span className="tg-name">{statement}</span>
         </div>
         <div className="sheet-body">
-          <div className="opt-label">추천 활동</div>
-          <button type="button" className={`opt${isSel('recommend') ? ' sel' : ''}`} onClick={() => setSel({ kind: 'recommend', name: recommend })}>
-            <span className="opt-radio" />
-            <span className="opt-main"><b>{recommend}</b><small>새 활동 · 자체 · 이 목표를 겨냥</small></span>
-            <span className="opt-tag">추천</span>
-          </button>
+          {recommend && (
+            <>
+              <div className="opt-label">추천 활동</div>
+              <button type="button" className={`opt${isSel('recommend') ? ' sel' : ''}`} onClick={() => setSel({ kind: 'recommend', name: recommend.title })}>
+                <span className="opt-radio" />
+                <span className="opt-main"><b>{recommend.title}</b><small>{recommend.sourceLabel} · {recommend.effortMin}분 · {recommend.placeLabel}</small></span>
+                <span className="opt-tag">추천</span>
+              </button>
+            </>
+          )}
 
           {existing.length > 0 && <div className="opt-label">기존 활동에 연결</div>}
           {existing.map((a) => (

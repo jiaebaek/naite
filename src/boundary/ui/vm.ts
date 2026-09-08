@@ -2,46 +2,44 @@
  * 화면용 뷰모델 타입 + 라벨 헬퍼. App 이 도메인에서 계산해 화면에 넘긴다.
  * UX 리디자인 명세(§04) 상태 모델을 그대로 따른다.
  */
-import type { Domain, Provenance, Standard } from '../../domain/types'
+import type { Domain, Provenance } from '../../domain/types'
 import type { GoalStatus } from '../../domain/coverage'
+import type { RecommendedActivity } from '../../domain/recommend'
 
 /**
- * 목표별 추천 활동 문구 (표현 전용 — 도메인엔 없다).
- * 갭인 목표에 "이렇게 챙겨보세요"를 제시한다. 없으면 영역 기반 기본값.
+ * 추천 활동 표시 정보 (§10-A). 도메인의 RecommendedActivity 를 화면 라벨로만 바꾼다.
+ * ⚠️ 여기서 활동을 만들지 않는다 — 근거 있는 라이브러리 항목이 있을 때만 채워진다.
  */
-const RECOMMEND: Readonly<Record<string, string>> = {
-  'int-ko-listen': '자기 전 그림책 읽어주기',
-  'int-ko-find-letters': '마트에서 글자 찾기 놀이',
-  'int-ko-letter-sounds': '자음·모음 소리내기 놀이',
-  'int-ko-write-name': '이름 따라쓰기 놀이',
-  'int-ma-count-10': '계단 오르며 수 세기',
-  'int-ma-compare': '장난감 크기·길이 비교하기',
-  'int-ma-pattern': '색깔 블록으로 규칙 잇기',
-  'int-sci-curious': '“왜?”에 같이 답 찾아보기',
-  'int-sci-living': '산책하며 동식물 관찰하기',
-  'int-sci-season': '오늘 날씨·계절 이야기 나누기',
-  'int-soc-self-do': '스스로 옷 입고 정리하기',
-  'int-soc-emotion': '감정 그림카드로 말해보기',
-  'int-hs-clean': '식사 전 손 씻기 습관',
-  'int-hs-traffic': '횡단보도에서 멈춰 좌우 보기',
-  'int-hs-screen': '타이머 정해 영상 보기',
-  'int-pe-art-express': '자유롭게 그림 그리기',
-  'int-pe-body-activity': '공원에서 뛰어놀기',
+export interface RecommendVM {
+  readonly title: string
+  /** gov=공교육 근거(누리/성취기준) · own=자체(근거 표기) */
+  readonly badgeCls: 'gov' | 'own'
+  readonly sourceLabel: string
+  readonly effortMin: number
+  readonly placeLabel: string
+  readonly cost: 'free' | 'paid'
 }
 
-export function recommendFor(standardId: string, domain: Domain): string {
-  return RECOMMEND[standardId] ?? `${domain} 놀이 활동`
+const PLACE_LABEL: Readonly<Record<RecommendedActivity['place'], string>> = {
+  home: '집', outdoor: '바깥', academy: '학원',
 }
 
-/**
- * B′ — 화면 목표(공교육 원문)의 추천 활동.
- * 원문 자체엔 추천 문구가 없으므로, 이 목표를 refines 하는 **해석**의 추천을 빌려온다.
- * (해석 = 활동 엔진). 없으면 영역 기반 기본값.
- */
-export function recommendForGoal(goalId: string, domain: Domain, standards: readonly Standard[]): string {
-  if (RECOMMEND[goalId]) return RECOMMEND[goalId]
-  const refiner = standards.find((s) => s.refines === goalId && RECOMMEND[s.id] !== undefined)
-  return refiner ? RECOMMEND[refiner.id]! : `${domain} 놀이 활동`
+/** 근거 있는 추천 활동 → 화면 표시. 출처 배지는 §04 규칙을 따른다. */
+export function recommendVM(a: RecommendedActivity): RecommendVM {
+  const gov = a.source === 'nuri' || a.source === 'achievement'
+  const sourceLabel = a.source === 'nuri'
+    ? '공교육·누리과정'
+    : a.source === 'achievement'
+      ? '공교육·성취기준'
+      : a.sourceRef ? `자체 · ${a.sourceRef}` : '자체'
+  return {
+    title: a.title,
+    badgeCls: gov ? 'gov' : 'own',
+    sourceLabel,
+    effortMin: a.effortMin,
+    placeLabel: PLACE_LABEL[a.place],
+    cost: a.cost,
+  }
 }
 
 /** 출처 → 배지 (gov=공교육 강조 · own=자체 · free=겨냥없음) */
@@ -76,8 +74,8 @@ export interface MilestoneVM {
   readonly coveredBy: string | null
   /** 됨(직접 처리)인가 — 관리 토글 상태 */
   readonly done: boolean
-  /** 추천 활동 텍스트 (있으면) */
-  readonly recommend?: string
+  /** 추천 활동 (근거 있는 라이브러리 항목이 있을 때만) */
+  readonly recommend?: RecommendVM
   /** 부모가 직접 만든 자체 목표 — 삭제할 수 있다 (공교육 원문은 삭제 불가) */
   readonly removable?: boolean
 }

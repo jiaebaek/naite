@@ -14,6 +14,8 @@ import { findCompletion, toggleCompletion } from '../../domain/completion'
 import { currentTargets, currentPublicGoals } from '../../domain/pace'
 import { publicGoalStatusOf, coveringActivities } from '../../domain/coverage'
 import { categoryOf } from '../../domain/category'
+import { recommendForGap } from '../../domain/recommend'
+import { ACTIVITY_LIBRARY } from '../../domain/standards/activityLibrary'
 import { provenanceOf } from '../../domain/provenance'
 import { createActivity, deactivate, editActivity, retarget } from '../../domain/activity'
 import {
@@ -63,7 +65,7 @@ import type { ManageSheetTarget } from './ManageSheet'
 import { LinkSheet } from './LinkSheet'
 import type { LinkChoice } from './LinkSheet'
 import { GoalSheet } from './GoalSheet'
-import { badgeOf, recommendForGoal } from './vm'
+import { badgeOf, recommendVM } from './vm'
 import type { DomainVM, MilestoneVM, TaskVM } from './vm'
 import { BrandMark, IconGear, TabIconArea, TabIconLog, TabIconToday } from './icons'
 
@@ -272,6 +274,8 @@ export function App() {
   )
 
   const domainVMs: readonly DomainVM[] = useMemo(() => {
+    // 가족이 이미 하는 장소(§10-A 원칙: 가족 패턴에 맞는 추천을 앞세운다)
+    const familyPlaces = [...new Set(coverageActivities.map((a) => (a.track === '학원' ? 'academy' as const : 'home' as const)))]
     return DOMAINS.map((domain) => {
       const dts = publicGoals.filter((t) => t.domain === domain)
       const milestones: MilestoneVM[] = dts.map((std) => {
@@ -279,6 +283,8 @@ export function App() {
         const covering = coveringActivities(std.id, coverageActivities, standards)
         const status = publicGoalStatusOf(std.id, achieved, coverageActivities, standards)
         const badge = badgeOf(provenanceOf(std, standards))
+        // 갭일 때만, 근거 있는 라이브러리에서 결정적으로 하나 뽑는다(없으면 추천 없음 · 원칙3)
+        const rec = status === '활동필요' ? recommendForGap(std.id, ACTIVITY_LIBRARY, { familyPlaces }) : null
         return {
           standardId: std.id,
           statement: std.statement,
@@ -290,7 +296,7 @@ export function App() {
           coveredBy: covering[0]?.name ?? null,
           done: status === '됨',
           removable: std.origin === '자체',
-          ...(status === '활동필요' ? { recommend: recommendForGoal(std.id, domain, standards) } : {}),
+          ...(rec ? { recommend: recommendVM(rec) } : {}),
         }
       })
       const total = milestones.length
@@ -695,7 +701,7 @@ export function App() {
           domain={linkStd.domain}
           statement={linkTarget.statement}
           standardId={linkTarget.standardId}
-          recommend={linkTarget.recommend ?? recommendForGoal(linkTarget.standardId, linkStd.domain, standards)}
+          recommend={linkTarget.recommend}
           existing={linkExisting}
           onConfirm={handleLinkConfirm}
           onClose={() => setLinkTarget(null)}

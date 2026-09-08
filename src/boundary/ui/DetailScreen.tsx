@@ -69,7 +69,13 @@ function GoalCard({ m, onOpenLink, onToggleAchieved, onRemoveGoal }: {
       <div className="ms empty" data-testid={`ms-${m.standardId}`}>
         <div className="ms-top"><span className="ms-name">{m.statement}</span><span className={`badge ${m.badgeCls}`}>{m.badgeLabel}</span></div>
         <div className="ms-meta"><InfoDot />아직 챙기는 활동이 없어요</div>
-        {m.recommend && <div className="suggest"><span className="lb">추천 활동</span> <b>{m.recommend}</b></div>}
+        {m.recommend && (
+          <div className="suggest">
+            <span className="lb">추천 활동</span> <b>{m.recommend.title}</b>
+            <span className={`badge ${m.recommend.badgeCls}`}>{m.recommend.sourceLabel}</span>
+            <span className="sg-meta">{m.recommend.effortMin}분 · {m.recommend.placeLabel}</span>
+          </div>
+        )}
         <div className="ms-act">
           <button className="btn-sm fill" onClick={() => onOpenLink(m)}>활동 연결</button>
           <button className="btn-sm" onClick={() => onToggleAchieved(m.standardId)}>이뤘어요</button>

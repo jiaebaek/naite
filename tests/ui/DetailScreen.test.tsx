@@ -11,7 +11,8 @@ import type { DomainVM, MilestoneVM } from '../../src/boundary/ui/vm'
 const EMPTY: MilestoneVM = {
   standardId: 'int-ko-find-letters', statement: '간판·과자봉지에서 아는 글자를 찾아낸다',
   badgeCls: 'gov', badgeLabel: '공교육·누리과정', status: '활동필요', coveredBy: null, done: false,
-  recommend: '마트에서 글자 찾기 놀이',
+  // 추천은 근거 있는 라이브러리 항목이 있을 때만 채워진다(§10-A) — 화면 렌더 확인용 픽스처
+  recommend: { title: '그림책 속 글자 손가락으로 짚기', badgeCls: 'gov', sourceLabel: '공교육·누리과정', effortMin: 5, placeLabel: '집', cost: 'free' },
 }
 const PROG: MilestoneVM = {
   standardId: 'int-ko-sounds', statement: '자음·모음의 소릿값을 안다',
@@ -50,7 +51,7 @@ describe('세 그룹 · 상태별 액션', () => {
   it('비어있음: 추천 활동 + [활동 연결] [이뤘어요]', () => {
     setup()
     const card = screen.getByTestId('ms-int-ko-find-letters')
-    expect(within(card).getByText(/마트에서 글자 찾기 놀이/)).toBeInTheDocument()
+    expect(within(card).getByText(/그림책 속 글자 손가락으로 짚기/)).toBeInTheDocument()
     expect(within(card).getByRole('button', { name: '활동 연결' })).toBeInTheDocument()
     expect(within(card).getByRole('button', { name: '이뤘어요' })).toBeInTheDocument()
   })
