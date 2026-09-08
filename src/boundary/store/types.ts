@@ -10,6 +10,7 @@ import type {
   Activity,
   Completion,
   PaceOffset,
+  Standard,
   StandardId,
 } from '../../domain/types'
 import type { CareState } from '../../domain/pet'
@@ -29,6 +30,8 @@ export interface AppSnapshot {
   readonly academies?: readonly Academy[]
   /** 펫·돌봄 상태. 없으면 undefined (구버전 데이터) */
   readonly care?: CareState
+  /** 공교육 기준이 없는 영역(영어 등)에 부모가 직접 입력한 자체 목표. 없으면 빈 것으로 시작 */
+  readonly customGoals?: readonly Standard[]
 }
 
 export interface AppStore {

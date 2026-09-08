@@ -17,6 +17,10 @@ export interface DetailScreenProps {
   readonly onOpenLink: (m: MilestoneVM) => void
   /** 이뤘어요/이룸 해제 — MilestoneMark 토글 (활동과 독립) */
   readonly onToggleAchieved: (standardId: string) => void
+  /** 공교육 기준 없는 영역(영어 등)에 부모가 목표를 직접 추가 — noPublic 영역에서만 제공 */
+  readonly onAddGoal?: (() => void) | undefined
+  /** 부모가 만든 자체 목표 삭제 */
+  readonly onRemoveGoal?: ((standardId: string) => void) | undefined
 }
 
 function InfoDot() {
@@ -53,9 +57,13 @@ const rank = (m: MilestoneVM) => (m.status === '챙기는중' ? 0 : m.status ===
 const pipClass = (m: MilestoneVM) => (m.status === '됨' ? 'on' : m.status === '챙기는중' ? 'prog' : 'gap')
 
 /** 원문 목표 한 장 — 상태별 액션. */
-function GoalCard({ m, onOpenLink, onToggleAchieved }: {
+function GoalCard({ m, onOpenLink, onToggleAchieved, onRemoveGoal }: {
   m: MilestoneVM; onOpenLink: (m: MilestoneVM) => void; onToggleAchieved: (id: string) => void
+  onRemoveGoal?: ((id: string) => void) | undefined
 }) {
+  const removeBtn = m.removable && onRemoveGoal
+    ? <button className="btn-sm ghost" onClick={() => onRemoveGoal(m.standardId)}>삭제</button>
+    : null
   if (m.status === '활동필요') {
     return (
       <div className="ms empty" data-testid={`ms-${m.standardId}`}>
@@ -65,6 +73,7 @@ function GoalCard({ m, onOpenLink, onToggleAchieved }: {
         <div className="ms-act">
           <button className="btn-sm fill" onClick={() => onOpenLink(m)}>활동 연결</button>
           <button className="btn-sm" onClick={() => onToggleAchieved(m.standardId)}>이뤘어요</button>
+          {removeBtn}
         </div>
       </div>
     )
@@ -76,6 +85,7 @@ function GoalCard({ m, onOpenLink, onToggleAchieved }: {
         <div className="ms-meta"><Circle />{m.coveredBy ? `${m.coveredBy}로 챙기는 중` : '챙기는 중'}</div>
         <div className="ms-act">
           <button className="btn-sm" onClick={() => onToggleAchieved(m.standardId)}>이뤘어요</button>
+          {removeBtn}
         </div>
       </div>
     )
@@ -87,6 +97,7 @@ function GoalCard({ m, onOpenLink, onToggleAchieved }: {
       <div className="ms-sub">{m.coveredBy ? '활동으로 이룸' : '직접 확인함'}</div>
       <div className="ms-act">
         <button className="btn-sm" onClick={() => onToggleAchieved(m.standardId)}>이룸 해제</button>
+        {removeBtn}
       </div>
     </div>
   )
@@ -105,7 +116,7 @@ function groupByCategory(milestones: readonly MilestoneVM[]): { label: string; i
   }))
 }
 
-export function DetailScreen({ vm, onBack, onOpenLink, onToggleAchieved }: DetailScreenProps) {
+export function DetailScreen({ vm, onBack, onOpenLink, onToggleAchieved, onAddGoal, onRemoveGoal }: DetailScreenProps) {
   const groups = groupByCategory(vm.milestones)
   // 챙김(챙기는중·됨)이 하나라도 있는 범주는 펼친다. 하나도 없으면 첫 범주만.
   const [open, setOpen] = useState<ReadonlySet<string>>(() => {
@@ -142,8 +153,21 @@ export function DetailScreen({ vm, onBack, onOpenLink, onToggleAchieved }: Detai
           {vm.noPublic && <div className="ms-sub" style={{ marginTop: 8 }}>공교육 기준이 없는 영역이라 선행 개념이 없어요 · 우리 목표로 챙겨요</div>}
         </div>
 
+        {onAddGoal && (
+          <button className="btn-add-goal" onClick={onAddGoal} data-testid="add-goal">
+            <span aria-hidden="true">+</span> 우리 목표 추가
+          </button>
+        )}
+
+        {vm.total === 0 && vm.noPublic && (
+          <div className="empty-goals">
+            아직 정한 목표가 없어요. <b>우리 집 영어 목표를 직접 정해</b>볼까요?
+          </div>
+        )}
+
         {groups.map((g) => {
-          const isOpen = open.has(g.label)
+          // 범주가 하나뿐이면 늘 펼친다 — 접을 다른 범주가 없고, 방금 추가한 목표를 숨기지 않는다
+          const isOpen = groups.length === 1 || open.has(g.label)
           const prog = g.items.filter((m) => m.status === '챙기는중').length
           const done = g.items.filter((m) => m.status === '됨').length
           const gap = g.items.filter((m) => m.status === '활동필요').length
@@ -163,7 +187,7 @@ export function DetailScreen({ vm, onBack, onOpenLink, onToggleAchieved }: Detai
               {isOpen && (
                 <div className="cat-body">
                   {g.items.map((m) => (
-                    <GoalCard key={m.standardId} m={m} onOpenLink={onOpenLink} onToggleAchieved={onToggleAchieved} />
+                    <GoalCard key={m.standardId} m={m} onOpenLink={onOpenLink} onToggleAchieved={onToggleAchieved} onRemoveGoal={onRemoveGoal} />
                   ))}
                 </div>
               )}

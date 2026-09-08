@@ -50,7 +50,11 @@ describe('초1~2 통합교과 — 하위 영역명을 지어내지 않고 교과
 })
 
 describe('자체(영어) — 공교육 근거 없음', () => {
-  it("origin='자체' 는 '우리 목표'", () => {
-    expect(categoryOf(byId('own-en-listen-picturebook'))).toBe('우리 목표')
+  it("origin='자체' 는 '우리 목표' (부모가 입력한 목표)", () => {
+    const 자체영어: Standard = {
+      id: 'own-en', domain: '영어', baselinePeriod: { start: '2000-01', end: '2099-12' },
+      statement: '영어 그림책 읽기', source: null, origin: '자체',
+    }
+    expect(categoryOf(자체영어)).toBe('우리 목표')
   })
 })

@@ -338,32 +338,15 @@ const 해석: readonly Standard[] = [
 ]
 
 // ═══════════════════════════════════════════════════════
-// 자체 — 공교육 기준이 **없는** 영역의 우리 목표
+// 자체 — 공교육 기준이 **없는** 영역의 목표는 코드에 박지 않는다
 // ═══════════════════════════════════════════════════════
 // ⚠️ 영어는 공교육에서 **초3(이 아이 2030-03)** 에 시작한다. 취학 전·초1~2엔 정규 영어 교과가 없다.
-//    따라서 아래 영어 목표는 부모/제품이 정한 '자체' 목표다 — source=null, origin='자체'.
-//    UI 에서 '공교육' 배지를 붙이면 안 된다(자유/자체로 표기). 신뢰 = 근거 없는 걸 없다고 말하는 것.
+//    영어처럼 공교육 기준이 없는 영역의 목표는 **부모가 앱에서 직접 입력한다** (origin='자체',
+//    source=null, 스냅샷에 customGoals 로 저장). 초판에 있던 영어 목표 2개는 개발자가 넣은
+//    예시였을 뿐이라 제거했다 — 신뢰 = 우리 것이 아닌 걸 우리 것처럼 미리 넣어두지 않는 것.
+//    UI 에서 '공교육' 배지를 붙이면 안 된다(자체 목표로 표기).
 
-const 자체: readonly Standard[] = [
-  {
-    id: 'own-en-listen-picturebook',
-    domain: '영어',
-    baselinePeriod: 지금,
-    statement: '영어 그림책 한 권을 끝까지 듣는다',
-    source: null,
-    origin: '자체',
-  },
-  {
-    id: 'own-en-daily-video',
-    domain: '영어',
-    baselinePeriod: 지금,
-    statement: '영어 영상을 하루 20분 본다',
-    source: null,
-    origin: '자체',
-  },
-]
-
-export const STANDARDS_2021: readonly Standard[] = [...누리, ...초1_2, ...해석, ...자체]
+export const STANDARDS_2021: readonly Standard[] = [...누리, ...초1_2, ...해석]
 
 /**
  * 현재 오프셋. docs/06-PRD.md §4.4

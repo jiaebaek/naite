@@ -335,6 +335,15 @@ body {
 .cat-body { padding: 2px 12px 12px; }
 .cat-body .ms:last-child { margin-bottom: 0; }
 
+/* 우리 목표 추가 (공교육 기준 없는 영역) */
+.btn-add-goal { width: 100%; margin-top: 14px; padding: 13px; border: 1.5px dashed var(--honey-2); border-radius: var(--r-md); background: var(--honey-soft); color: var(--honey-ink); font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; }
+.btn-add-goal span { font-size: 16px; margin-right: 4px; }
+.empty-goals { margin-top: 12px; padding: 16px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface-2); color: var(--ink-soft); font-size: 13.5px; line-height: 1.5; }
+.empty-goals b { color: var(--pine); font-weight: 700; }
+.btn-sm.ghost { background: none; border-color: transparent; color: var(--muted); }
+.domain.nopublic { border-left: 3px solid var(--honey-2); }
+.domain.nopublic .pill { background: var(--honey-soft); color: var(--honey-ink); }
+
 /* ---------- 관리 ---------- */
 .mng-sec { margin-top: 26px; }
 .mng-sec:first-of-type { margin-top: 4px; }

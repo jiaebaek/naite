@@ -45,7 +45,12 @@ describe('provenanceOf — 해석은 refines 를 따라 공교육으로 귀속 (
 
 describe('provenanceOf — 자체', () => {
   it('origin=자체 → 자체 (doc 없음)', () => {
-    expect(provenanceOf(find('own-en-listen-picturebook'), STANDARDS_2021)).toEqual({ kind: '자체' })
+    // 자체 목표(영어 등)는 이제 코드가 아니라 부모 입력이라 로컬 픽스처로 판정한다
+    const 자체영어: Standard = {
+      id: 'own-en', domain: '영어', baselinePeriod: { start: '2000-01', end: '2099-12' },
+      statement: '영어 그림책 읽기', source: null, origin: '자체',
+    }
+    expect(provenanceOf(자체영어, STANDARDS_2021)).toEqual({ kind: '자체' })
   })
 
   it('⭐ 근거(refines) 없는 해석은 자체로 본다', () => {

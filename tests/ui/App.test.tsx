@@ -14,10 +14,16 @@ const ONBOARD_KEY = 'naite.onboarded'
 const SETUP_KEY = 'naite.setup'
 /** 온보딩·셋업을 건너뛴 정상 상태로 */
 const ready = () => { localStorage.setItem(ONBOARD_KEY, '1'); localStorage.setItem(SETUP_KEY, '1') }
+// 영어(자체) 목표는 부모가 입력한 것 — 스냅샷 customGoals 로 심는다(시드 활동이 이걸 겨냥).
+const SEED_CUSTOM_GOALS = [
+  { id: 'own-en-listen-picturebook', domain: '영어', baselinePeriod: { start: '2000-01', end: '2099-12' }, statement: '영어 그림책 한 권을 끝까지 듣는다', source: null, origin: '자체' },
+  { id: 'own-en-daily-video', domain: '영어', baselinePeriod: { start: '2000-01', end: '2099-12' }, statement: '영어 영상을 하루 20분 본다', source: null, origin: '자체' },
+]
 /** 앱은 이제 빈 상태로 시작한다 — 시나리오가 필요한 테스트는 스냅샷을 심는다(시드=테스트 픽스처). */
 const seedData = () => localStorage.setItem(`edu-manager:v${SNAPSHOT_VERSION}`, JSON.stringify({
   version: SNAPSHOT_VERSION, completions: [], achieved: [], offsets: [],
   activities: SEED_ACTIVITIES, academies: SEED_ACADEMIES, care: INITIAL_CARE,
+  customGoals: SEED_CUSTOM_GOALS,
 }))
 const readySeeded = () => { ready(); seedData() }
 
@@ -94,12 +100,38 @@ describe('⭐ 빈 상태로 시작 + 셋업이 실제 데이터를 만든다 (�
     await screen.findByTestId('setup')
     fireEvent.click(screen.getByRole('button', { name: '다음' })) // → S2
     fireEvent.click(screen.getByRole('button', { name: '다음' })) // → S3 (학원 건너뜀)
-    fireEvent.click(screen.getByRole('button', { name: '엄마표 영어' })) // 영어 집활동
+    fireEvent.click(screen.getByRole('button', { name: '그림책 읽기' })) // 국어 집활동(해석→누리 원문 챙김)
     fireEvent.click(screen.getByRole('button', { name: /나이테 시작하기/ }))
     await screen.findByTestId('view-today')
     expect(screen.getByText(/벌써 1곳을 챙기고 있어요/)).toBeInTheDocument()
     // 집 활동은 오늘 할 일 카드로도 뜬다(등원과 달리 체크 대상)
-    expect(screen.getByText('엄마표 영어')).toBeInTheDocument()
+    expect(screen.getByText('그림책 읽기')).toBeInTheDocument()
+  })
+})
+
+describe('⭐ 영어(자체) 목표를 부모가 직접 입력한다', () => {
+  beforeEach(ready)
+
+  it('영역 화면에서 영어는 "우리가 정하는 영역"으로 나온다 (하드코딩 목표 없음)', async () => {
+    render(<App />)
+    await screen.findByTestId('view-today')
+    fireEvent.click(screen.getByRole('button', { name: '영역' }))
+    expect(screen.getByText('우리가 정하는 영역')).toBeInTheDocument()
+    // 초판 하드코딩 영어 목표가 사라졌다
+    expect(screen.queryByText('영어 영상을 하루 20분 본다')).not.toBeInTheDocument()
+  })
+
+  it('⭐ 영어 상세에서 목표를 입력하면 그 목표가 생긴다', async () => {
+    render(<App />)
+    await screen.findByTestId('view-today')
+    fireEvent.click(screen.getByRole('button', { name: '영역' }))
+    fireEvent.click(screen.getByRole('button', { name: '목표 정하기' })) // 영어 → 상세
+    fireEvent.click(screen.getByTestId('add-goal'))
+    fireEvent.change(screen.getByLabelText('목표 문장'), { target: { value: '영어 그림책 하루 한 권' } })
+    fireEvent.click(screen.getByRole('button', { name: /이 목표 추가하기/ }))
+    expect(await screen.findByText('영어 그림책 하루 한 권')).toBeInTheDocument()
+    // 자체 목표라 '자체' 배지가 붙는다 (공교육 배지가 아님)
+    expect(screen.getByText('자체 목표')).toBeInTheDocument()
   })
 })
 

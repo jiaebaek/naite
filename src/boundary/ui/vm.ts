@@ -27,8 +27,6 @@ const RECOMMEND: Readonly<Record<string, string>> = {
   'int-hs-screen': '타이머 정해 영상 보기',
   'int-pe-art-express': '자유롭게 그림 그리기',
   'int-pe-body-activity': '공원에서 뛰어놀기',
-  'own-en-listen-picturebook': '영어 그림책 함께 듣기',
-  'own-en-daily-video': '영어 영상 20분 보기',
 }
 
 export function recommendFor(standardId: string, domain: Domain): string {
@@ -80,6 +78,8 @@ export interface MilestoneVM {
   readonly done: boolean
   /** 추천 활동 텍스트 (있으면) */
   readonly recommend?: string
+  /** 부모가 직접 만든 자체 목표 — 삭제할 수 있다 (공교육 원문은 삭제 불가) */
+  readonly removable?: boolean
 }
 
 /** 영역 카드 · 상세 공용. 2축 3상태(§04): 이룸(done) · 챙기는 중(prog) · 비어있음(gap) */

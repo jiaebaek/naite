@@ -25,7 +25,7 @@ import {
 } from '../../domain/academy'
 import { INITIAL_CARE, grantToken } from '../../domain/pet'
 import type { CareState } from '../../domain/pet'
-import { STANDARDS_2021, INITIAL_OFFSETS, CHILD_BIRTH_YM, SCHOOL_ENTRY_YM } from '../../domain/standards/child2021'
+import { STANDARDS_2021 as REFERENCE_STANDARDS, INITIAL_OFFSETS, CHILD_BIRTH_YM, SCHOOL_ENTRY_YM } from '../../domain/standards/child2021'
 import { DOMAINS, NO_PUBLIC_STANDARD } from '../../domain/types'
 import type {
   Academy,
@@ -38,6 +38,7 @@ import type {
   Domain,
   IsoDate,
   PaceOffset,
+  Standard,
   StandardId,
 } from '../../domain/types'
 import { getStore } from '../store'
@@ -61,6 +62,7 @@ import { ManageSheet } from './ManageSheet'
 import type { ManageSheetTarget } from './ManageSheet'
 import { LinkSheet } from './LinkSheet'
 import type { LinkChoice } from './LinkSheet'
+import { GoalSheet } from './GoalSheet'
 import { badgeOf, recommendForGoal } from './vm'
 import type { DomainVM, MilestoneVM, TaskVM } from './vm'
 import { BrandMark, IconGear, TabIconArea, TabIconLog, TabIconToday } from './icons'
@@ -153,6 +155,7 @@ function serialize(s: AppSnapshot): string {
     activities: s.activities,
     academies: s.academies,
     care: s.care,
+    customGoals: s.customGoals,
   })
 }
 
@@ -162,6 +165,8 @@ export function App() {
   const [view, setView] = useState<View>('today')
   const [detailDomain, setDetailDomain] = useState<Domain | null>(null)
   const [linkTarget, setLinkTarget] = useState<MilestoneVM | null>(null)
+  // 우리 목표 정하기 시트가 열린 영역 (공교육 기준 없는 영역 · null = 닫힘)
+  const [goalSheetDomain, setGoalSheetDomain] = useState<Domain | null>(null)
   // 기록 탭: 지난 날 backfill 시트가 열린 날짜 (null = 닫힘)
   const [backfillDate, setBackfillDate] = useState<IsoDate | null>(null)
   // 관리 탭: 학원/활동 추가·편집 시트 (null = 닫힘)
@@ -188,6 +193,13 @@ export function App() {
   const [offsets, setOffsets] = useState<readonly PaceOffset[]>(INITIAL_OFFSETS)
   const [achieved, setAchieved] = useState<readonly StandardId[]>([])
   const [care, setCare] = useState<CareState>(INITIAL_CARE)
+  // 공교육 기준이 없는 영역(영어 등)의 목표는 부모가 직접 입력한다 — 코드가 아니라 데이터.
+  const [customGoals, setCustomGoals] = useState<readonly Standard[]>([])
+  // 지식 기반(누리·성취기준·해석) + 부모가 입력한 자체 목표를 합친 전체 기준
+  const standards = useMemo(
+    () => (customGoals.length > 0 ? [...REFERENCE_STANDARDS, ...customGoals] : REFERENCE_STANDARDS),
+    [customGoals],
+  )
 
   // 저장 계층
   const store = useMemo(() => getStore(), [])
@@ -201,6 +213,7 @@ export function App() {
     if (snap.activities) setActivities(snap.activities)
     if (snap.academies) setAcademies(snap.academies)
     if (snap.care) setCare(snap.care)
+    if (snap.customGoals) setCustomGoals(snap.customGoals)
   }, [])
 
   useEffect(() => {
@@ -218,12 +231,12 @@ export function App() {
 
   useEffect(() => {
     if (!loaded.current) return
-    const snapshot: AppSnapshot = { version: SNAPSHOT_VERSION, completions, achieved, offsets, activities, academies, care }
+    const snapshot: AppSnapshot = { version: SNAPSHOT_VERSION, completions, achieved, offsets, activities, academies, care, customGoals }
     const s = serialize(snapshot)
     if (s === lastPersisted.current) return
     lastPersisted.current = s
     void store.save(snapshot)
-  }, [store, completions, achieved, offsets, activities, academies, care])
+  }, [store, completions, achieved, offsets, activities, academies, care, customGoals])
 
   useEffect(() => {
     const pull = store.pull?.bind(store)
@@ -251,8 +264,8 @@ export function App() {
   // ── 지금 시기 목표 + 커버리지 (선행 제거: 오프셋 [] = 적기 그대로) ──
   // B′: 화면 목표 = 공교육 원문(publicGoals). 활동/등원이 겨냥하는 엔진 = 해석(interpTargets).
   const month = date.slice(0, 7)
-  const interpTargets = useMemo(() => currentTargets(STANDARDS_2021, [], month), [month])
-  const publicGoals = useMemo(() => currentPublicGoals(STANDARDS_2021, [], month), [month])
+  const interpTargets = useMemo(() => currentTargets(standards, [], month), [standards, month])
+  const publicGoals = useMemo(() => currentPublicGoals(standards, [], month), [standards, month])
   const coverageActivities = useMemo(
     () => [...activeActivities, ...attendanceActivities(academies, interpTargets)],
     [activeActivities, academies, interpTargets],
@@ -263,9 +276,9 @@ export function App() {
       const dts = publicGoals.filter((t) => t.domain === domain)
       const milestones: MilestoneVM[] = dts.map((std) => {
         // 원문 목표는 refines 해석(또는 직접 겨냥)을 통해 챙겨진다
-        const covering = coveringActivities(std.id, coverageActivities, STANDARDS_2021)
-        const status = publicGoalStatusOf(std.id, achieved, coverageActivities, STANDARDS_2021)
-        const badge = badgeOf(provenanceOf(std, STANDARDS_2021))
+        const covering = coveringActivities(std.id, coverageActivities, standards)
+        const status = publicGoalStatusOf(std.id, achieved, coverageActivities, standards)
+        const badge = badgeOf(provenanceOf(std, standards))
         return {
           standardId: std.id,
           statement: std.statement,
@@ -276,7 +289,8 @@ export function App() {
           // 활동이 이 목표를 겨냥하는지 — 됨이어도 유지('활동으로 이룸' 부제·관리 tending 용)
           coveredBy: covering[0]?.name ?? null,
           done: status === '됨',
-          ...(status === '활동필요' ? { recommend: recommendForGoal(std.id, domain, STANDARDS_2021) } : {}),
+          removable: std.origin === '자체',
+          ...(status === '활동필요' ? { recommend: recommendForGoal(std.id, domain, standards) } : {}),
         }
       })
       const total = milestones.length
@@ -292,27 +306,29 @@ export function App() {
         priority: priorityDomains.includes(domain),
       }
     })
-  }, [publicGoals, achieved, coverageActivities, priorityDomains])
+  }, [publicGoals, achieved, coverageActivities, priorityDomains, standards])
 
   // ── 갭 배너 ──
   const banner: GapBanner = useMemo(() => {
-    const gapDomains = domainVMs.filter((d) => d.group === 'empty')
+    // 공교육 기준 없이 아직 목표를 안 정한 영역(영어)은 챙김/갭 어느 쪽으로도 세지 않는다.
+    const assessable = domainVMs.filter((d) => !(d.noPublic && d.total === 0))
+    const gapDomains = assessable.filter((d) => d.group === 'empty')
     // 부모 우선 분야를 갭 칩 맨 앞으로 (중요도 = 부모가 정함)
     const gapNames = [...gapDomains].sort((a, b) => Number(b.priority) - Number(a.priority)).map((d) => d.domain)
     return {
       gapCount: gapDomains.length,
-      onCount: domainVMs.length - gapDomains.length,
-      totalDomains: domainVMs.length,
+      onCount: assessable.length - gapDomains.length,
+      totalDomains: assessable.length,
       gapNames,
       clear: gapDomains.length === 0,
-      segs: domainVMs.map((d) => (d.group === 'empty' ? 'gap' : 'on')),
+      segs: assessable.map((d) => (d.group === 'empty' ? 'gap' : 'on')),
     }
   }, [domainVMs])
 
   // ── 오늘 할 일 (이번 주 이미 채운 주N회는 숨김 — 피드백) ──
   const tasks = useMemo(
-    () => deriveTodayTasks(activeActivities, date, completions, STANDARDS_2021),
-    [activeActivities, date, completions],
+    () => deriveTodayTasks(activeActivities, date, completions, standards),
+    [activeActivities, date, completions, standards],
   )
   const visibleTasks = useMemo(
     () => tasks.filter((t) => !(t.weeklyProgress?.met && !t.done)),
@@ -369,7 +385,7 @@ export function App() {
   // 지난 날 backfill 시트에 띄울 그 날짜의 활동 체크시트 (오늘 그룹과 같은 소스)
   const dayTasks: readonly TaskVM[] = useMemo(() => {
     if (!backfillDate) return []
-    return deriveTodayTasks(activeActivities, backfillDate, completions, STANDARDS_2021).map((t): TaskVM => {
+    return deriveTodayTasks(activeActivities, backfillDate, completions, standards).map((t): TaskVM => {
       const rep = t.targets[0]
       const badge = badgeOf(rep?.provenance ?? null)
       return {
@@ -377,7 +393,7 @@ export function App() {
         badgeCls: badge.cls, badgeLabel: badge.label, aim: rep?.statement ?? null, done: t.done,
       }
     })
-  }, [backfillDate, activeActivities, completions])
+  }, [backfillDate, activeActivities, completions, standards])
 
   // ── 관리 탭 데이터 ──
   const academyName = useCallback(
@@ -452,25 +468,49 @@ export function App() {
     )
   }
 
+  // 공교육 기준 없는 영역(영어 등)에 부모가 목표를 직접 추가한다 (자체 Standard, 항상 지금 목표).
+  const handleAddGoal = (statement: string) => {
+    const domain = goalSheetDomain
+    if (!domain) return
+    const goal: Standard = {
+      id: `own-${newId()}`,
+      domain,
+      baselinePeriod: { start: '2000-01', end: '2099-12' },
+      statement,
+      source: null,
+      origin: '자체',
+    }
+    setCustomGoals((prev) => [...prev, goal])
+    setGoalSheetDomain(null)
+  }
+
+  // 부모가 만든 자체 목표 삭제 — 그 목표를 겨냥하던 활동은 겨냥만 풀린다(활동 자체는 유지).
+  const handleRemoveGoal = (standardId: StandardId) => {
+    setCustomGoals((prev) => prev.filter((g) => g.id !== standardId))
+    setAchieved((prev) => prev.filter((id) => id !== standardId))
+    setActivities((prev) => prev.map((a) =>
+      a.targetIds.includes(standardId) ? retarget(a, a.targetIds.filter((id) => id !== standardId), standards) : a))
+  }
+
   const openDetail = (domain: Domain) => { setDetailDomain(domain); setView('detail') }
   const openLink = (m: MilestoneVM) => setLinkTarget(m)
 
   const handleLinkConfirm = (choice: LinkChoice) => {
     const m = linkTarget
     if (!m) return
-    const std = STANDARDS_2021.find((s) => s.id === m.standardId)
+    const std = standards.find((s) => s.id === m.standardId)
     const domain = std?.domain ?? '국어'
     if (choice.kind === 'existing') {
       const act = activities.find((a) => a.id === choice.activityId)
       if (act) {
         const next = act.targetIds.includes(m.standardId) ? act.targetIds : [...act.targetIds, m.standardId]
-        setActivities((prev) => prev.map((a) => (a.id === act.id ? retarget(a, next, STANDARDS_2021) : a)))
+        setActivities((prev) => prev.map((a) => (a.id === act.id ? retarget(a, next, standards) : a)))
       }
     } else {
       const name = choice.kind === 'recommend' ? choice.name : `${domain} 활동`
       const created = createActivity(
         { name, domain, track: '집', targetIds: [m.standardId], cadence: { kind: '주N회', times: 2 }, owner: '엄마' },
-        STANDARDS_2021,
+        standards,
         newId,
       )
       setActivities((prev) => [...prev, created])
@@ -482,8 +522,8 @@ export function App() {
   const handleSaveActivity = (input: ActivityInput, editingItem: Activity | null) => {
     setActivities((prev) =>
       editingItem
-        ? prev.map((a) => (a.id === editingItem.id ? editActivity(a, input, STANDARDS_2021) : a))
-        : [...prev, createActivity(input, STANDARDS_2021, newId)],
+        ? prev.map((a) => (a.id === editingItem.id ? editActivity(a, input, standards) : a))
+        : [...prev, createActivity(input, standards, newId)],
     )
     setManageSheet(null)
   }
@@ -528,7 +568,7 @@ export function App() {
         name: h.name, domain: h.domain, track: '집',
         targetIds: interpTargets.filter((t) => t.domain === h.domain).map((t) => t.id),
         cadence: { kind: '주N회', times: 3 }, owner: '엄마',
-      }, STANDARDS_2021, newId))
+      }, standards, newId))
     if (newAcademies.length > 0) setAcademies((prev) => [...prev, ...newAcademies])
     if (newActivities.length > 0) setActivities((prev) => [...prev, ...newActivities])
     setShowSetup(false); writeLS(SETUP_KEY, '1')
@@ -560,7 +600,7 @@ export function App() {
   const shareCode = `N${ageYears}·${domainVMs.filter((d) => d.group === 'empty').length}C${shareOnCount}`
 
   const detailVM = detailDomain ? domainVMs.find((d) => d.domain === detailDomain) ?? null : null
-  const linkStd = linkTarget ? STANDARDS_2021.find((s) => s.id === linkTarget.standardId) : undefined
+  const linkStd = linkTarget ? standards.find((s) => s.id === linkTarget.standardId) : undefined
   const linkExisting = linkTarget
     ? activeActivities
         .filter((a) => a.domain === (linkStd?.domain ?? '') && !a.targetIds.includes(linkTarget.standardId))
@@ -601,7 +641,14 @@ export function App() {
           <AreaScreen dateLabel={formatDate(date)} domains={domainVMs} onOpenDetail={openDetail} />
         )}
         {view === 'detail' && detailVM && (
-          <DetailScreen vm={detailVM} onBack={() => setView('area')} onOpenLink={openLink} onToggleAchieved={handleToggleAchieved} />
+          <DetailScreen
+            vm={detailVM}
+            onBack={() => setView('area')}
+            onOpenLink={openLink}
+            onToggleAchieved={handleToggleAchieved}
+            onAddGoal={detailVM.noPublic ? () => setGoalSheetDomain(detailVM.domain) : undefined}
+            onRemoveGoal={handleRemoveGoal}
+          />
         )}
         {view === 'manage' && (
           <ManageScreen
@@ -648,10 +695,18 @@ export function App() {
           domain={linkStd.domain}
           statement={linkTarget.statement}
           standardId={linkTarget.standardId}
-          recommend={linkTarget.recommend ?? recommendForGoal(linkTarget.standardId, linkStd.domain, STANDARDS_2021)}
+          recommend={linkTarget.recommend ?? recommendForGoal(linkTarget.standardId, linkStd.domain, standards)}
           existing={linkExisting}
           onConfirm={handleLinkConfirm}
           onClose={() => setLinkTarget(null)}
+        />
+      )}
+
+      {goalSheetDomain && (
+        <GoalSheet
+          domain={goalSheetDomain}
+          onAdd={handleAddGoal}
+          onClose={() => setGoalSheetDomain(null)}
         />
       )}
 

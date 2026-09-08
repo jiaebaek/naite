@@ -11,6 +11,14 @@ import { STANDARDS_2021, INITIAL_OFFSETS } from '../../src/domain/standards/chil
 import { requireValidStandard } from '../../src/domain/guards'
 import { currentTargets, currentPublicGoals, resolveTargetPeriod, effectiveOffset } from '../../src/domain/pace'
 import { DOMAINS } from '../../src/domain/types'
+import type { Standard } from '../../src/domain/types'
+
+// 부모가 앱에서 직접 입력한 영어(자체) 목표를 흉내 낸 픽스처 — 이제 코드에 박혀있지 않다.
+const 영어자체: Standard = {
+  id: 'own-en-listen-picturebook', domain: '영어',
+  baselinePeriod: { start: '2000-01', end: '2099-12' },
+  statement: '영어 그림책 한 권을 끝까지 듣는다', source: null, origin: '자체',
+}
 
 describe('데이터가 Standard 계약을 만족한다', () => {
   it('모든 기준이 requireValidStandard 를 통과한다', () => {
@@ -32,9 +40,13 @@ describe('데이터가 Standard 계약을 만족한다', () => {
   })
 
   it('INV-STD-04 — 자체 기준은 source 가 없어도 된다', () => {
-    const own = STANDARDS_2021.filter((s) => s.origin === '자체')
-    expect(own.length).toBeGreaterThan(0)
-    expect(own.every((s) => s.source === null)).toBe(true)
+    // 자체 목표는 더 이상 코드에 박혀있지 않다(부모가 입력). 계약(guard)만 확인한다.
+    expect(() => requireValidStandard(영어자체, STANDARDS_2021)).not.toThrow()
+    expect(영어자체.source).toBeNull()
+  })
+
+  it('배포 기준 데이터엔 자체 목표가 없다 — 영어 목표는 부모가 입력한다', () => {
+    expect(STANDARDS_2021.some((s) => s.origin === '자체')).toBe(false)
   })
 
   it('INV-STD-08 — refines 는 모두 존재하는 공교육 기준을 가리킨다', () => {
@@ -155,8 +167,9 @@ describe('⭐ B′ currentPublicGoals — 화면 목표는 공교육 원문(+자
     expect(ids).not.toContain('std-2국01-01')
   })
 
-  it('자체(영어)는 오프셋 없이 지금 목표로 함께 뜬다', () => {
-    const ids = currentPublicGoals(STANDARDS_2021, [], NOW).map((g) => g.id)
+  it('부모가 입력한 자체(영어) 목표는 오프셋 없이 지금 목표로 함께 뜬다', () => {
+    // 배포 데이터엔 없고, 앱에서 병합된 customGoals(=영어자체)가 화면 목표로 나와야 한다.
+    const ids = currentPublicGoals([...STANDARDS_2021, 영어자체], [], NOW).map((g) => g.id)
     expect(ids).toContain('own-en-listen-picturebook')
   })
 
@@ -186,14 +199,13 @@ describe('1년 선행이 실제 상황과 맞는지 — 04 문서 §1-B 검증',
     expect(effectiveOffset('사회·인성', INITIAL_OFFSETS)).toBe(0)
   })
 
-  it('영어: 자체 기준이라 오프셋 없이 지금 목표다', () => {
-    const ids = currentTargets(STANDARDS_2021, INITIAL_OFFSETS, NOW).map((t) => t.id)
+  it('영어: 부모가 입력한 자체 목표는 오프셋 없이 지금 목표다', () => {
+    const ids = currentTargets([...STANDARDS_2021, 영어자체], INITIAL_OFFSETS, NOW).map((t) => t.id)
     expect(ids).toContain('own-en-listen-picturebook')
   })
 
   it('INV-PACE-02 — 영어 자체 기준에 오프셋을 걸어도 구간이 변하지 않는다', () => {
-    const en = STANDARDS_2021.find((s) => s.id === 'own-en-listen-picturebook')!
-    expect(resolveTargetPeriod(en, 24)).toEqual(en.baselinePeriod)
+    expect(resolveTargetPeriod(영어자체, 24)).toEqual(영어자체.baselinePeriod)
   })
 
   it('오프셋을 0으로 되돌리면 국어 목표가 사라진다 — 오프셋이 실제로 동작한다', () => {
@@ -249,7 +261,7 @@ describe('⭐ 누적 모델 — 선행은 바꿔치기가 아니라 더하는 �
   it('자체 기준(영어)은 오프셋과 무관하게 자기 시기에 뜬다 (INV-PACE-02)', () => {
     for (const months of [0, 12, 24] as const) {
       const ids = currentTargets(
-        STANDARDS_2021,
+        [...STANDARDS_2021, 영어자체],
         [{ domain: '국어', months }],
         NOW,
       ).map((t) => t.id)

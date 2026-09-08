@@ -188,6 +188,12 @@ describe('evaluateAllCoverage — F3 영역 현황판', () => {
 describe('⭐ P-6 실증 — 현재 우리 집 상태를 판정한다', () => {
   const NOW = '2026-11'
 
+  // 영어(자체) 목표는 이제 코드에 없다 — 부모가 입력한 것으로 흉내 내 병합한다.
+  const 영어자체: readonly Standard[] = [
+    { id: 'own-en-listen-picturebook', domain: '영어', baselinePeriod: { start: '2000-01', end: '2099-12' }, statement: '영어 그림책 한 권을 끝까지 듣는다', source: null, origin: '자체' },
+    { id: 'own-en-daily-video', domain: '영어', baselinePeriod: { start: '2000-01', end: '2099-12' }, statement: '영어 영상을 하루 20분 본다', source: null, origin: '자체' },
+  ]
+
   /** 인터뷰 A3·A4 의 실제 활동 */
   const 현재활동: readonly Activity[] = [
     act({ id: 'hw-hangul', domain: '국어', name: '한글 학원 숙제', owner: '아빠',
@@ -212,7 +218,7 @@ describe('⭐ P-6 실증 — 현재 우리 집 상태를 판정한다', () => {
   const targetsByDomain = new Map<Domain, readonly Standard[]>(
     DOMAINS.map((d) => [
       d,
-      currentTargets(STANDARDS_2021, INITIAL_OFFSETS, NOW).filter((s) => s.domain === d),
+      currentTargets([...STANDARDS_2021, ...영어자체], INITIAL_OFFSETS, NOW).filter((s) => s.domain === d),
     ]),
   )
 
