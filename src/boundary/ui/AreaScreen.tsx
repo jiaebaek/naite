@@ -25,7 +25,7 @@ function DomainCard({ d, onOpen }: { d: DomainVM; onOpen: () => void }) {
   if (d.group === 'empty') {
     return (
       <div className="domain empty" data-testid={`domain-${d.domain}`}>
-        <div className="d-top"><span className="d-name">{d.domain}</span><span className="pill empty">비어있음</span></div>
+        <div className="d-top"><span className="d-name">{d.domain}{d.priority && <span className="d-star" title="부모가 정한 우선 분야">중요</span>}</span><span className="pill empty">비어있음</span></div>
         {pips(d)}
         <div className="d-status">지금 시기 목표 <b>{d.gap}곳이 {d.total > 1 ? '모두 ' : ''}비어있어요</b> · 활동이 아직 없어요</div>
         <div className="d-actions">
@@ -38,7 +38,7 @@ function DomainCard({ d, onOpen }: { d: DomainVM; onOpen: () => void }) {
   if (d.group === 'partial') {
     return (
       <div className="domain" data-testid={`domain-${d.domain}`}>
-        <div className="d-top"><span className="d-name">{d.domain}</span><span className="pill on">{d.on}곳 챙기는 중</span></div>
+        <div className="d-top"><span className="d-name">{d.domain}{d.priority && <span className="d-star" title="부모가 정한 우선 분야">중요</span>}</span><span className="pill on">{d.on}곳 챙기는 중</span></div>
         {pips(d)}
         <div className="d-status">
           목표 {d.total}곳 · {d.done > 0 && <>이룸 {d.done} · </>}챙기는 중 {d.prog} · <b>비어있음 {d.gap}</b>
@@ -54,7 +54,7 @@ function DomainCard({ d, onOpen }: { d: DomainVM; onOpen: () => void }) {
   const allDone = d.total > 0 && d.done === d.total
   return (
     <div className="domain" data-testid={`domain-${d.domain}`}>
-      <div className="d-top"><span className="d-name">{d.domain}</span><span className="pill full">{allDone ? '다 이뤘어요' : '다 챙기는 중'}</span></div>
+      <div className="d-top"><span className="d-name">{d.domain}{d.priority && <span className="d-star" title="부모가 정한 우선 분야">중요</span>}</span><span className="pill full">{allDone ? '다 이뤘어요' : '다 챙기는 중'}</span></div>
       {pips(d)}
       <div className="d-status good">
         목표 {d.total}곳 모두 {allDone ? '이뤘어요' : '챙기는 중'}{d.total > 0 ? ' · ' : ''}<b>잘하고 있어요</b>
@@ -66,9 +66,11 @@ function DomainCard({ d, onOpen }: { d: DomainVM; onOpen: () => void }) {
 }
 
 export function AreaScreen({ dateLabel, domains, onOpenDetail }: AreaScreenProps) {
-  const empties = domains.filter((d) => d.group === 'empty')
-  const partials = domains.filter((d) => d.group === 'partial')
-  const fulls = domains.filter((d) => d.group === 'full')
+  // 그룹 안에서 부모 우선 분야를 맨 위로 (중요도 = 부모가 온보딩에서 정함)
+  const byPriority = (a: DomainVM, b: DomainVM) => Number(b.priority) - Number(a.priority)
+  const empties = domains.filter((d) => d.group === 'empty').sort(byPriority)
+  const partials = domains.filter((d) => d.group === 'partial').sort(byPriority)
+  const fulls = domains.filter((d) => d.group === 'full').sort(byPriority)
   const onCount = partials.length + fulls.length
   const gapCount = empties.length
   const segOf = (d: DomainVM) => (d.group === 'empty' ? 'gap' : d.total > 0 && d.done === d.total ? 'on' : 'prog')

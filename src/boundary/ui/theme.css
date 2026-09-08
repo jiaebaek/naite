@@ -242,6 +242,7 @@ body {
 .domain.empty { border-color: color-mix(in srgb, var(--honey) 40%, var(--line)); background: linear-gradient(180deg, var(--honey-soft), var(--surface)); }
 .d-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
 .d-name { font-size: 16px; font-weight: 700; }
+.d-star { font-size: 10px; font-weight: 700; color: var(--honey-ink); background: var(--honey-soft); border: 1px solid color-mix(in srgb, var(--honey) 30%, var(--line)); padding: 1px 7px; border-radius: 99px; margin-left: 7px; vertical-align: 2px; }
 .pill { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 99px; }
 .pill.on { background: var(--pine-soft); color: var(--pine); }
 .pill.empty { background: color-mix(in srgb, var(--honey-2) 30%, transparent); color: var(--honey-ink); }

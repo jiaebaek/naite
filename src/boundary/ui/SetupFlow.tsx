@@ -6,6 +6,7 @@
 import { useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import type { Domain } from '../../domain/types'
+import { DOMAINS } from '../../domain/types'
 import { IconCheck } from './icons'
 
 /** 프리셋 칩: 라벨 + 겨냥 영역(단일). */
@@ -33,6 +34,8 @@ export interface SetupResult {
   readonly birthYm: string
   readonly academies: readonly SetupPick[]
   readonly homeActivities: readonly SetupPick[]
+  /** 부모가 특히 챙기고 싶은 분야 1~2개 — 중요도 정렬의 기준 */
+  readonly priorityDomains: readonly Domain[]
 }
 
 export interface SetupFlowProps {
@@ -78,6 +81,11 @@ export function SetupFlow({ initialName, initialBirthYm, ageLabelOf, onComplete 
   const [birthYm, setBirthYm] = useState(initialBirthYm)
   const [aca, setAca] = useState<ReadonlySet<string>>(new Set())
   const [home, setHome] = useState<ReadonlySet<string>>(new Set())
+  const [priority, setPriority] = useState<readonly Domain[]>([])
+
+  // 부모 우선 분야 — 최대 2개 (한두개)
+  const togglePriority = (d: Domain) => setPriority((prev) =>
+    prev.includes(d) ? prev.filter((x) => x !== d) : prev.length < 2 ? [...prev, d] : prev)
 
   // 함수형 업데이트 — 빠른 연속 탭에도 이전 선택이 유지된다(스테일 클로저 방지)
   const makeToggle = (setSet: Dispatch<SetStateAction<ReadonlySet<string>>>) => (label: string) =>
@@ -94,6 +102,7 @@ export function SetupFlow({ initialName, initialBirthYm, ageLabelOf, onComplete 
     birthYm,
     academies: SUBJECTS.filter((s) => aca.has(s.label)).map((s) => ({ name: s.label, domain: s.domain })),
     homeActivities: HOME.filter((h) => home.has(h.label)).map((h) => ({ name: h.label, domain: h.domain })),
+    priorityDomains: [...priority],
   })
   const next = () => (step < 2 ? setStep(step + 1) : finish())
 
@@ -116,6 +125,18 @@ export function SetupFlow({ initialName, initialBirthYm, ageLabelOf, onComplete 
               <input className="inp" id="suBirth" type="month" value={birthYm} onChange={(e) => setBirthYm(e.target.value)} />
             </div>
             <div className="setup-reward"><IconCheck w={16} />{ageLabelOf(birthYm)} 좌표를 준비했어요</div>
+            <div className="field" style={{ marginTop: 18 }}>
+              <label>특별히 챙기고 싶은 분야 <span className="opt">(선택 · 최대 2개, 이 분야를 맨 위로)</span></label>
+              <div className="daypick wrap">
+                {DOMAINS.map((d) => {
+                  const on = priority.includes(d)
+                  return (
+                    <button key={d} type="button" className={`daybtn wide${on ? ' on' : ''}`} aria-pressed={on}
+                      disabled={!on && priority.length >= 2} onClick={() => togglePriority(d)}>{d}</button>
+                  )
+                })}
+              </div>
+            </div>
           </div>
         </div>
 

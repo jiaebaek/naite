@@ -20,7 +20,7 @@ const dom = (domain: Domain, statuses: MilestoneVM['status'][], noPublic = false
   const prog = milestones.filter((m) => m.status === '챙기는중').length
   const total = milestones.length
   const group: DomainVM['group'] = total === 0 ? 'full' : gap === total ? 'empty' : gap > 0 ? 'partial' : 'full'
-  return { domain, milestones, total, on: total - gap, done, prog, gap, group, noPublic }
+  return { domain, milestones, total, on: total - gap, done, prog, gap, group, noPublic, priority: false }
 }
 
 // 국어=부분, 과학·탐구=비어있음, 건강·안전=완료 (프로토타입 축약)
@@ -71,6 +71,22 @@ describe('⭐ 원칙 5 — 선행 UI 가 없다 (회귀 방지)', () => {
     setup()
     expect(screen.queryByRole('radio')).not.toBeInTheDocument()
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
+  })
+})
+
+describe('⭐ 부모 우선 분야 (중요도 = 부모가 정함)', () => {
+  it('같은 그룹에서 우선 분야가 맨 위로 오고 "중요" 표시가 붙는다', () => {
+    const onOpenDetail = vi.fn()
+    // 둘 다 비어있음. 과학·탐구가 먼저 들어오지만, 사회·인성이 부모 우선 → 맨 위로.
+    const doms: readonly DomainVM[] = [
+      dom('과학·탐구', ['활동필요', '활동필요']),
+      { ...dom('사회·인성', ['활동필요', '활동필요']), priority: true },
+    ]
+    const { container } = render(<AreaScreen dateLabel="9월 3일" domains={doms} onOpenDetail={onOpenDetail} />)
+    const cards = [...container.querySelectorAll('[data-testid^="domain-"]')]
+    expect(cards[0]!.getAttribute('data-testid')).toBe('domain-사회·인성')
+    expect(within(cards[0] as HTMLElement).getByText('중요')).toBeInTheDocument()
+    expect(within(cards[1] as HTMLElement).queryByText('중요')).not.toBeInTheDocument()
   })
 })
 

@@ -67,6 +67,16 @@ describe('S2·S3 칩 탭', () => {
     expect(result().homeActivities).toEqual([])
   })
 
+  it('⭐ 우선 분야를 최대 2개 고르면 결과에 담긴다 (부모가 정하는 중요도)', async () => {
+    const { result, next } = setup()
+    await userEvent.click(screen.getByRole('button', { name: '국어' }))
+    await userEvent.click(screen.getByRole('button', { name: '수학' }))
+    expect(screen.getByRole('button', { name: '과학·탐구' })).toBeDisabled() // 최대 2개
+    await next(); await next()
+    await userEvent.click(screen.getByRole('button', { name: /나이테 시작하기/ }))
+    expect(result().priorityDomains).toEqual(['국어', '수학'])
+  })
+
   it('학원/활동 선택은 칩 탭만 — 자유 입력 칸이 없다 (원칙 8)', async () => {
     const { next } = setup()
     await next() // S2 (현재 활성 스텝)

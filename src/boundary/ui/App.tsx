@@ -71,6 +71,7 @@ const ONBOARD_KEY = 'naite.onboarded'
 const SETUP_KEY = 'naite.setup'
 const CHILD_NAME_KEY = 'naite.childName'
 const CHILD_BIRTH_KEY = 'naite.childBirthYm'
+const PRIORITY_KEY = 'naite.priority'
 const readLS = (k: string, fallback: string): string => {
   try { return localStorage.getItem(k) ?? fallback } catch { return fallback }
 }
@@ -169,6 +170,10 @@ export function App() {
   const [showSetup, setShowSetup] = useState<boolean>(() => readLS(SETUP_KEY, '') !== '1')
   const [childName, setChildName] = useState<string>(() => readLS(CHILD_NAME_KEY, '첫째'))
   const [childBirthYm, setChildBirthYm] = useState<string>(() => readLS(CHILD_BIRTH_KEY, CHILD_BIRTH_YM))
+  // 부모 우선 분야 (온보딩에서 1~2개) — 중요도 정렬 기준
+  const [priorityDomains, setPriorityDomains] = useState<readonly Domain[]>(() => {
+    try { return JSON.parse(readLS(PRIORITY_KEY, '[]')) as Domain[] } catch { return [] }
+  })
   // 안도 공유 카드(§07-A)
   const [showShare, setShowShare] = useState(false)
 
@@ -275,18 +280,24 @@ export function App() {
       const on = total - gap
       const group: DomainVM['group'] =
         total === 0 ? 'full' : gap === total ? 'empty' : gap > 0 ? 'partial' : 'full'
-      return { domain, milestones, total, on, done, prog, gap, group, noPublic: NO_PUBLIC_STANDARD.includes(domain) }
+      return {
+        domain, milestones, total, on, done, prog, gap, group,
+        noPublic: NO_PUBLIC_STANDARD.includes(domain),
+        priority: priorityDomains.includes(domain),
+      }
     })
-  }, [targets, achieved, coverageActivities])
+  }, [targets, achieved, coverageActivities, priorityDomains])
 
   // ── 갭 배너 ──
   const banner: GapBanner = useMemo(() => {
     const gapDomains = domainVMs.filter((d) => d.group === 'empty')
+    // 부모 우선 분야를 갭 칩 맨 앞으로 (중요도 = 부모가 정함)
+    const gapNames = [...gapDomains].sort((a, b) => Number(b.priority) - Number(a.priority)).map((d) => d.domain)
     return {
       gapCount: gapDomains.length,
       onCount: domainVMs.length - gapDomains.length,
       totalDomains: domainVMs.length,
-      gapNames: gapDomains.map((d) => d.domain),
+      gapNames,
       clear: gapDomains.length === 0,
       segs: domainVMs.map((d) => (d.group === 'empty' ? 'gap' : 'on')),
     }
@@ -500,6 +511,7 @@ export function App() {
   const completeSetup = (r: SetupResult) => {
     setChildName(r.name); writeLS(CHILD_NAME_KEY, r.name)
     setChildBirthYm(r.birthYm); writeLS(CHILD_BIRTH_KEY, r.birthYm)
+    setPriorityDomains(r.priorityDomains); writeLS(PRIORITY_KEY, JSON.stringify(r.priorityDomains))
     // S2 학원 = 등원(coversDomains 로 그 영역의 지금 목표를 챙김 처리)
     const newAcademies = r.academies.map((a) =>
       createAcademy({ name: a.name, weekdays: [], coversDomains: [a.domain] }, newId))

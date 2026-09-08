@@ -22,7 +22,7 @@ const DONE: MilestoneVM = {
   badgeCls: 'gov', badgeLabel: '공교육·성취기준', status: '됨', coveredBy: null, done: true,
 }
 const VM: DomainVM = {
-  domain: '국어', milestones: [EMPTY, PROG, DONE], total: 3, on: 2, done: 1, prog: 1, gap: 1, group: 'partial', noPublic: false,
+  domain: '국어', milestones: [EMPTY, PROG, DONE], total: 3, on: 2, done: 1, prog: 1, gap: 1, group: 'partial', noPublic: false, priority: false,
 }
 
 const setup = (vm: DomainVM = VM) => {

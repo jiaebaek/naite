@@ -81,6 +81,8 @@ export interface DomainVM {
   readonly group: 'empty' | 'partial' | 'full'
   /** 영어처럼 공교육 기준 없는 영역 */
   readonly noPublic: boolean
+  /** 부모가 온보딩에서 고른 우선 분야 — 그룹 내에서 맨 위로 */
+  readonly priority: boolean
 }
 
 /** 기록 탭 주간 활동 행 */
