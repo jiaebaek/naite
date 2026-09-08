@@ -60,6 +60,39 @@ describe('데이터가 Standard 계약을 만족한다', () => {
   })
 })
 
+describe('⭐ 공교육 기준 전수 완전성 — 만3~초2 (외부 배포 신뢰)', () => {
+  const gong = STANDARDS_2021.filter((s) => s.origin === '공교육')
+  const countCode = (prefix: string) =>
+    gong.filter((s) => (s.source?.code ?? '').startsWith(prefix)).length
+
+  it('2019 누리과정 59개 전수', () => {
+    expect(gong.filter((s) => s.id.startsWith('nuri-')).length).toBe(59)
+  })
+
+  it('2022 개정 초1~2학년군 성취기준 100개 전수', () => {
+    expect(gong.filter((s) => s.id.startsWith('std-')).length).toBe(100)
+  })
+
+  it('초1~2 교과별 개수: 국어23 · 수학29 · 바른16 · 슬기16 · 즐생16', () => {
+    expect(countCode('2국')).toBe(23)
+    expect(countCode('2수')).toBe(29)
+    expect(countCode('2바')).toBe(16)
+    expect(countCode('2슬')).toBe(16)
+    expect(countCode('2즐')).toBe(16)
+  })
+
+  it('영어는 공교육 기준이 0개다 (초3 시작 — 취학 전·초1~2 정규 교과 없음)', () => {
+    expect(gong.filter((s) => s.domain === '영어').length).toBe(0)
+  })
+
+  it('원문 그대로 표본 — 곱셈구구·생태 탐구·학교 생활 습관', () => {
+    const find = (id: string) => STANDARDS_2021.find((s) => s.id === id)?.statement
+    expect(find('std-2수01-11')).toBe('곱셈구구를 이해하고, 한 자리 수의 곱셈을 할 수 있다.')
+    expect(find('std-2슬01-04')).toBe('사람과 자연, 동식물이 어우러져 사는 생태를 탐구한다.')
+    expect(find('std-2바01-01')).toBe('학교 생활 습관과 학습 습관을 형성하여 안전하고 건강하게 생활한다.')
+  })
+})
+
 describe('원문 충실성 — 공교육 기준은 원문 그대로여야 한다', () => {
   const find = (id: string) => STANDARDS_2021.find((s) => s.id === id)
 
