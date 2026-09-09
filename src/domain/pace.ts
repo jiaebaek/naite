@@ -107,6 +107,29 @@ export function shiftYearMonth(ym: YearMonth, minusMonths: number): YearMonth {
 }
 
 /**
+ * 시기 판정은 **시스템 달력이 아니라 입력받은 아이 나이** 기준이어야 한다.
+ *
+ * 기준 데이터(누리/성취기준)의 baselinePeriod 는 특정 코호트(cohortBirthYm)의 절대 연월로
+ * 쓰여 있다. 입력받은 아이가 코호트와 생년월이 다르면, 그 차이만큼 now 를 보정해
+ * "이 아이가 지금 코호트 타임라인의 어디에 있는지"를 만든다.
+ *   - 아이가 코호트보다 늦게 태어났으면(더 어리면) 유효 시점을 그만큼 앞당긴다.
+ *   - 일찍 태어났으면(더 크면) 뒤로 민다 → 더 상위 학년군 목표가 지금 뜬다.
+ * cohortBirthYm 과 같은 생년월이면 now 그대로 (기존 동작 보존).
+ */
+export function cohortAlignedMonth(
+  nowMonth: YearMonth,
+  childBirthYm: YearMonth,
+  cohortBirthYm: YearMonth,
+): YearMonth {
+  const abs = (ym: YearMonth): number => {
+    const [y, m] = ym.split('-')
+    return Number(y) * 12 + (Number(m) - 1)
+  }
+  const delta = abs(childBirthYm) - abs(cohortBirthYm) // 양수 = 코호트보다 어림
+  return shiftYearMonth(nowMonth, delta)
+}
+
+/**
  * 오늘 기준으로 "지금 우리 목표"에 해당하는 Standard 만 고른다. (F3)
  *
  * ⭐ 누적 모델 (INV-PACE-06) — 선행은 **바꿔치기가 아니라 더하는 것**이다.

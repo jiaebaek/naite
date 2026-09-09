@@ -11,7 +11,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { deriveTodayTasks, weekRangeOf } from '../../domain/today'
 import { weeklyReport } from '../../domain/report'
 import { findCompletion, toggleCompletion } from '../../domain/completion'
-import { currentTargets, currentPublicGoals } from '../../domain/pace'
+import { currentTargets, currentPublicGoals, cohortAlignedMonth } from '../../domain/pace'
 import { publicGoalStatusOf, coveringActivities } from '../../domain/coverage'
 import { categoryOf } from '../../domain/category'
 import { recommendForGap } from '../../domain/recommend'
@@ -265,7 +265,9 @@ export function App() {
 
   // ── 지금 시기 목표 + 커버리지 (선행 제거: 오프셋 [] = 적기 그대로) ──
   // B′: 화면 목표 = 공교육 원문(publicGoals). 활동/등원이 겨냥하는 엔진 = 해석(interpTargets).
-  const month = date.slice(0, 7)
+  // ⭐ 시기는 시스템 달력이 아니라 **입력받은 아이 나이**로 고른다(onboarding 생년월 기준).
+  //    기준 데이터 코호트(CHILD_BIRTH_YM)에 아이를 정렬해, 초1~2 아이면 지금 초1~2 목표가 뜬다.
+  const month = cohortAlignedMonth(date.slice(0, 7), childBirthYm, CHILD_BIRTH_YM)
   const interpTargets = useMemo(() => currentTargets(standards, [], month), [standards, month])
   const publicGoals = useMemo(() => currentPublicGoals(standards, [], month), [standards, month])
   const coverageActivities = useMemo(

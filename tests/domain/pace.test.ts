@@ -9,6 +9,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   assessOffsetRaise,
+  cohortAlignedMonth,
   effectiveOffset,
   resolveTargetPeriod,
   setPaceOffset,
@@ -207,5 +208,22 @@ describe('INV-PACE-05 — 오프셋 상향 시 반드시 경고를 반환한다'
     for (const [from, to] of pairs) {
       expect(assessOffsetRaise(from, to), `${from}→${to}`).not.toBeNull()
     }
+  })
+})
+
+describe('⭐ cohortAlignedMonth — 시기는 달력이 아니라 입력받은 아이 나이 기준', () => {
+  const 코호트 = '2021-01' // 기준 데이터가 쓰인 코호트 생년월
+
+  it('코호트와 같은 생년월이면 now 그대로 (기존 동작 보존)', () => {
+    expect(cohortAlignedMonth('2026-09', '2021-01', 코호트)).toBe('2026-09')
+  })
+
+  it('아이가 2년 늦게 태어났으면(더 어림) 유효 시점을 2년 앞당긴다', () => {
+    expect(cohortAlignedMonth('2026-09', '2023-01', 코호트)).toBe('2024-09')
+  })
+
+  it('⭐ 아이가 2년 일찍 태어났으면(더 큼) 유효 시점을 2년 뒤로 → 상위 학년군', () => {
+    // 2019-01 생 아이는 지금(2026) 이미 초1~2 → 초1~2 시점(2028-09)으로 정렬된다
+    expect(cohortAlignedMonth('2026-09', '2019-01', 코호트)).toBe('2028-09')
   })
 })
