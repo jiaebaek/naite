@@ -39,9 +39,19 @@ describe('활동 라이브러리 무결성 (§10-A)', () => {
     }
   })
 
-  it('현재 시드는 전부 self 태그다 — 놀이실행자료 원문 미확보라 가짜 nuri 인용 금지', () => {
+  it('출처는 self 또는 achievement 만 — 놀이실행자료 원문 미확보라 nuri 가짜 인용 없음', () => {
     for (const a of ACTIVITY_LIBRARY) {
-      expect(a.source, a.id).toBe('self')
+      expect(['self', 'achievement'], a.id).toContain(a.source)
+      expect(a.source, `${a.id} 는 nuri 를 자칭하면 안 됨(원문 미확보)`).not.toBe('nuri')
+    }
+  })
+
+  it('⭐ achievement(공교육·성취기준) 항목은 별책5 국어과를 근거로 인용한다', () => {
+    const gov = ACTIVITY_LIBRARY.filter((a) => a.source === 'achievement')
+    expect(gov.length, 'achievement 시드가 있어야 한다').toBeGreaterThan(0)
+    for (const a of gov) {
+      expect(a.sourceRef, a.id).toMatch(/별책5|국어과 교육과정/)
+      expect(a.domain, `${a.id} — 국어과만 achievement 로 승격됨`).toBe('국어')
     }
   })
 
