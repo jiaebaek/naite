@@ -14,7 +14,13 @@ export interface RecommendVM {
   readonly title: string
   /** gov=공교육 근거(누리/성취기준) · own=자체(근거 표기) */
   readonly badgeCls: 'gov' | 'own'
+  /** 카드에 붙는 **짧은** 배지: '자체' | '공교육·누리과정' | '공교육·성취기준' */
   readonly sourceLabel: string
+  /**
+   * 상세 근거(자체일 때 어느 누리 내용범주인지). **연결 시트에서만** 노출한다 —
+   * 목표 카드 위에 이미 공교육 배지가 있어 카드에선 중복이라 뺀다(§10-A · 안도-clean).
+   */
+  readonly sourceRef?: string
   readonly effortMin: number
   readonly placeLabel: string
   readonly cost: 'free' | 'paid'
@@ -31,11 +37,12 @@ export function recommendVM(a: RecommendedActivity): RecommendVM {
     ? '공교육·누리과정'
     : a.source === 'achievement'
       ? '공교육·성취기준'
-      : a.sourceRef ? `자체 · ${a.sourceRef}` : '자체'
+      : '자체' // 카드엔 짧게. 상세 근거는 sourceRef 로 분리(연결 시트에서만 노출)
   return {
     title: a.title,
     badgeCls: gov ? 'gov' : 'own',
     sourceLabel,
+    ...(a.sourceRef ? { sourceRef: a.sourceRef } : {}),
     effortMin: a.effortMin,
     placeLabel: PLACE_LABEL[a.place],
     cost: a.cost,

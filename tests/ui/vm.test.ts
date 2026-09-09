@@ -19,11 +19,14 @@ describe('recommendVM — 출처 배지', () => {
   it('achievement → 공교육·성취기준 배지(gov)', () => {
     expect(recommendVM({ ...base, source: 'achievement' })).toMatchObject({ badgeCls: 'gov', sourceLabel: '공교육·성취기준' })
   })
-  it("self + sourceRef → '자체 · {근거}' 배지(own)", () => {
+  it("self → 카드 배지는 짧게 '자체', 상세 근거는 sourceRef 로 분리(연결 시트용)", () => {
+    // 카드는 짧게. 근거는 별도 필드(목표 카드에 이미 공교육 배지가 있어 중복 방지 · §10-A)
     expect(recommendVM({ ...base, source: 'self', sourceRef: '육아종합지원센터' }))
-      .toMatchObject({ badgeCls: 'own', sourceLabel: '자체 · 육아종합지원센터' })
+      .toMatchObject({ badgeCls: 'own', sourceLabel: '자체', sourceRef: '육아종합지원센터' })
   })
-  it("self + 근거 없음 → '자체'", () => {
-    expect(recommendVM({ ...base, source: 'self' })).toMatchObject({ badgeCls: 'own', sourceLabel: '자체' })
+  it("self + 근거 없음 → '자체' (sourceRef 없음)", () => {
+    const vm = recommendVM({ ...base, source: 'self' })
+    expect(vm).toMatchObject({ badgeCls: 'own', sourceLabel: '자체' })
+    expect(vm.sourceRef).toBeUndefined()
   })
 })

@@ -47,7 +47,7 @@ export function LinkSheet({ domain, statement, recommend, existing, onConfirm, o
               <div className="opt-label">추천 활동</div>
               <button type="button" className={`opt${isSel('recommend') ? ' sel' : ''}`} onClick={() => setSel({ kind: 'recommend', name: recommend.title })}>
                 <span className="opt-radio" />
-                <span className="opt-main"><b>{recommend.title}</b><small>{recommend.sourceLabel} · {recommend.effortMin}분 · {recommend.placeLabel}</small></span>
+                <span className="opt-main"><b>{recommend.title}</b><small>{recommend.sourceLabel} · {recommend.effortMin}분 · {recommend.placeLabel}</small>{recommend.sourceRef && <small className="opt-src">근거 · {recommend.sourceRef}</small>}</span>
                 <span className="opt-tag">추천</span>
               </button>
             </>
