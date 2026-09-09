@@ -8,7 +8,7 @@
  * 이룸(됨)은 활동 연결과 무관하게 언제나 토글 가능. 선행 UI 없음(원칙 5).
  */
 import { useState } from 'react'
-import type { DomainVM, MilestoneVM } from './vm'
+import type { DomainVM, MilestoneVM, RecommendVM } from './vm'
 import { IconBack } from './icons'
 
 export interface DetailScreenProps {
@@ -56,6 +56,25 @@ function Chevron({ open }: { open: boolean }) {
 const rank = (m: MilestoneVM) => (m.status === '챙기는중' ? 0 : m.status === '됨' ? 1 : 2)
 const pipClass = (m: MilestoneVM) => (m.status === '됨' ? 'on' : m.status === '챙기는중' ? 'prog' : 'gap')
 
+/**
+ * 추천 활동 박스(§10-A) — 세로 스택. 출처 표기는 성격별로 다르게:
+ *   공교육(gov) = 짧고 신뢰 신호라 알약 배지 유지 / 자체(own) = 길어서 작은 회색 텍스트(덜 답답).
+ */
+function Suggest({ r }: { r: RecommendVM }) {
+  const meta = `${r.effortMin}분 · ${r.placeLabel}`
+  return (
+    <div className="suggest">
+      <span className="lb">추천 활동</span>
+      <b>{r.title}</b>
+      <span className="sg-meta">
+        {r.badgeCls === 'gov'
+          ? <><span className="badge gov">{r.sourceLabel}</span>{meta}</>
+          : `${r.sourceLabel} · ${meta}`}
+      </span>
+    </div>
+  )
+}
+
 /** 원문 목표 한 장 — 상태별 액션. */
 function GoalCard({ m, onOpenLink, onToggleAchieved, onRemoveGoal }: {
   m: MilestoneVM; onOpenLink: (m: MilestoneVM) => void; onToggleAchieved: (id: string) => void
@@ -69,13 +88,7 @@ function GoalCard({ m, onOpenLink, onToggleAchieved, onRemoveGoal }: {
       <div className="ms empty" data-testid={`ms-${m.standardId}`}>
         <div className="ms-top"><span className="ms-name">{m.statement}</span><span className={`badge ${m.badgeCls}`}>{m.badgeLabel}</span></div>
         <div className="ms-meta"><InfoDot />아직 챙기는 활동이 없어요</div>
-        {m.recommend && (
-          <div className="suggest">
-            <span className="lb">추천 활동</span> <b>{m.recommend.title}</b>
-            <span className={`badge ${m.recommend.badgeCls}`}>{m.recommend.sourceLabel}</span>
-            <span className="sg-meta">{m.recommend.effortMin}분 · {m.recommend.placeLabel}</span>
-          </div>
-        )}
+        {m.recommend && <Suggest r={m.recommend} />}
         <div className="ms-act">
           <button className="btn-sm fill" onClick={() => onOpenLink(m)}>활동 연결</button>
           <button className="btn-sm" onClick={() => onToggleAchieved(m.standardId)}>이뤘어요</button>
