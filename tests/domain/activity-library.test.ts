@@ -45,17 +45,29 @@ describe('활동 라이브러리 무결성 (§10-A)', () => {
     }
   })
 
-  it('겨냥 목표는 취학 전 화면목표(누리과정)뿐이다', () => {
+  it('겨냥 목표는 화면목표(취학 전 nuri-* / 초1~2 std-*)뿐이다', () => {
     for (const a of ACTIVITY_LIBRARY) {
       for (const mid of a.milestoneIds) {
-        expect(mid.startsWith('nuri-'), `${a.id} → ${mid}`).toBe(true)
+        expect(mid.startsWith('nuri-') || mid.startsWith('std-'), `${a.id} → ${mid}`).toBe(true)
       }
     }
   })
 
-  it('⭐ 시드가 실제로 엔진에 붙는다 — 갭 목표에 추천이 반환된다 (회귀 방지)', () => {
+  it('⭐ 취학 전 시드가 엔진에 붙는다 — 누리 갭 목표에 추천 반환 (회귀 방지)', () => {
     expect(recommendForGap('nuri-com-10', ACTIVITY_LIBRARY)).not.toBeNull() // 국어 책읽기
     expect(recommendForGap('nuri-nat-5', ACTIVITY_LIBRARY)).not.toBeNull() // 수학 세기
     expect(recommendForGap('nuri-saf-3', ACTIVITY_LIBRARY)).not.toBeNull() // 건강·안전 교통
+  })
+
+  it('⭐ 초1~2 시드가 엔진에 붙는다 — 성취기준 갭 목표에 추천 반환', () => {
+    expect(recommendForGap('std-2국05-01', ACTIVITY_LIBRARY)).not.toBeNull() // 국어 말놀이
+    expect(recommendForGap('std-2수04-01', ACTIVITY_LIBRARY)).not.toBeNull() // 수학 분류
+    expect(recommendForGap('std-2슬01-04', ACTIVITY_LIBRARY)).not.toBeNull() // 슬기 생태 탐구
+    expect(recommendForGap('std-2즐04-01', ACTIVITY_LIBRARY)).not.toBeNull() // 즐생 놀잇감
+  })
+
+  it('적기 원칙 — 학교가 담당하는 형식 학습엔 추천을 두지 않는다(선행 금지)', () => {
+    expect(recommendForGap('std-2국04-01', ACTIVITY_LIBRARY)).toBeNull() // 한글 자모 소릿값
+    expect(recommendForGap('std-2수01-11', ACTIVITY_LIBRARY)).toBeNull() // 곱셈구구
   })
 })
