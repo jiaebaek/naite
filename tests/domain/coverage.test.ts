@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { evaluateCoverage, evaluateAllCoverage, goalStatusOf, coveringActivities, publicGoalStatusOf } from '../../src/domain/coverage'
+import { evaluateCoverage, evaluateAllCoverage, goalStatusOf, coveringActivities, publicGoalStatusOf, domainHasActivity } from '../../src/domain/coverage'
 import { currentTargets } from '../../src/domain/pace'
 import { isDomainError } from '../../src/domain/errors'
 import { STANDARDS_2021, INITIAL_OFFSETS } from '../../src/domain/standards/child2021'
@@ -344,5 +344,30 @@ describe('⭐ B′ coveringActivities / publicGoalStatusOf — 원문 목표는 
     const 꺼진활동 = act({ id: 'x1', domain: '국어', targetIds: ['int-ko-listen'], active: false })
     expect(coveringActivities('nuri-com-10', [꺼진활동], STANDARDS_2021)).toEqual([])
     expect(publicGoalStatusOf('nuri-com-10', [], [꺼진활동], STANDARDS_2021)).toBe('활동필요')
+  })
+})
+
+describe('⭐ 영역 단위 챙김 — 학부모가 넣은 학원·활동이 그 영역을 챙긴다 (해석 의존 제거)', () => {
+  it('domainHasActivity — 그 영역에 활성 활동이 있으면 true', () => {
+    expect(domainHasActivity('국어', [act({ id: 'a', domain: '국어' })])).toBe(true)
+    expect(domainHasActivity('국어', [act({ id: 'a', domain: '수학' })])).toBe(false)
+    expect(domainHasActivity('국어', [act({ id: 'a', domain: '국어', active: false })])).toBe(false)
+    expect(domainHasActivity('국어', [])).toBe(false)
+  })
+
+  it('⭐ 목표를 명시로 안 겨냥해도(targetIds=[]) 같은 영역 활동이 있으면 챙기는중', () => {
+    // 셋업 활동은 영역만 지정한다(targetIds=[]). 그래도 그 영역 목표가 챙김으로 잡혀야 한다.
+    const 국어활동 = act({ id: 'home', domain: '국어', targetIds: [] })
+    expect(publicGoalStatusOf('nuri-com-1', [], [국어활동], STANDARDS_2021)).toBe('챙기는중')
+  })
+
+  it('다른 영역 활동은 이 영역 목표를 챙기지 않는다', () => {
+    const 수학활동 = act({ id: 'm', domain: '수학', targetIds: [] })
+    expect(publicGoalStatusOf('nuri-com-1', [], [수학활동], STANDARDS_2021)).toBe('활동필요')
+  })
+
+  it('부모가 됨 표시하면 영역 활동과 무관하게 됨', () => {
+    const 국어활동 = act({ id: 'home', domain: '국어', targetIds: [] })
+    expect(publicGoalStatusOf('nuri-com-1', ['nuri-com-1'], [국어활동], STANDARDS_2021)).toBe('됨')
   })
 })

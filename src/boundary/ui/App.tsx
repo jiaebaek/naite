@@ -11,7 +11,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { deriveTodayTasks, weekRangeOf } from '../../domain/today'
 import { weeklyReport } from '../../domain/report'
 import { findCompletion, toggleCompletion } from '../../domain/completion'
-import { currentTargets, currentPublicGoals, cohortAlignedMonth } from '../../domain/pace'
+import { currentPublicGoals, cohortAlignedMonth } from '../../domain/pace'
 import { publicGoalStatusOf, coveringActivities } from '../../domain/coverage'
 import { categoryOf } from '../../domain/category'
 import { recommendForGap } from '../../domain/recommend'
@@ -264,15 +264,15 @@ export function App() {
   const activeActivities = useMemo(() => activities.filter((a) => a.active), [activities])
 
   // ── 지금 시기 목표 + 커버리지 (선행 제거: 오프셋 [] = 적기 그대로) ──
-  // B′: 화면 목표 = 공교육 원문(publicGoals). 활동/등원이 겨냥하는 엔진 = 해석(interpTargets).
+  // B′: 화면 목표 = 공교육 원문(publicGoals).
   // ⭐ 시기는 시스템 달력이 아니라 **입력받은 아이 나이**로 고른다(onboarding 생년월 기준).
   //    기준 데이터 코호트(CHILD_BIRTH_YM)에 아이를 정렬해, 초1~2 아이면 지금 초1~2 목표가 뜬다.
   const month = cohortAlignedMonth(date.slice(0, 7), childBirthYm, CHILD_BIRTH_YM)
-  const interpTargets = useMemo(() => currentTargets(standards, [], month), [standards, month])
   const publicGoals = useMemo(() => currentPublicGoals(standards, [], month), [standards, month])
+  // 커버리지는 영역 단위 — 활동/등원의 domain 으로 판정한다(특정 아이용 해석 의존 제거).
   const coverageActivities = useMemo(
-    () => [...activeActivities, ...attendanceActivities(academies, interpTargets)],
-    [activeActivities, academies, interpTargets],
+    () => [...activeActivities, ...attendanceActivities(academies)],
+    [activeActivities, academies],
   )
 
   const domainVMs: readonly DomainVM[] = useMemo(() => {
@@ -569,12 +569,12 @@ export function App() {
     // S2 학원 = 등원(coversDomains 로 그 영역의 지금 목표를 챙김 처리)
     const newAcademies = r.academies.map((a) =>
       createAcademy({ name: a.name, weekdays: [], coversDomains: [a.domain] }, newId))
-    // S3 집 활동 = 실제 체크하는 활동. 그 영역의 해석(활동 엔진)을 겨냥(주3회 기본)
-    // → 해석이 refines 하는 공교육 원문 목표가 '챙기는 중'으로 뜬다.
+    // S3 집 활동 = 실제 체크하는 활동. 영역만 지정하면 그 영역이 챙김으로 잡힌다(영역 단위 커버).
+    // 특정 목표 겨냥은 나중에 상세 화면 '활동 연결'로 명시적으로 할 수 있다.
     const newActivities = r.homeActivities.map((h) =>
       createActivity({
         name: h.name, domain: h.domain, track: '집',
-        targetIds: interpTargets.filter((t) => t.domain === h.domain).map((t) => t.id),
+        targetIds: [],
         cadence: { kind: '주N회', times: 3 }, owner: '엄마',
       }, standards, newId))
     if (newAcademies.length > 0) setAcademies((prev) => [...prev, ...newAcademies])
