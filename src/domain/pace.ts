@@ -130,44 +130,11 @@ export function cohortAlignedMonth(
 }
 
 /**
- * 오늘 기준으로 "지금 우리 목표"에 해당하는 Standard 만 고른다. (F3)
+ * 지금 화면에 **목표로 보여줄 공교육 원문(+자체)**. (F3)
  *
- * ⭐ 누적 모델 (INV-PACE-06) — 선행은 **바꿔치기가 아니라 더하는 것**이다.
- *    사용자 지적: "6살껄 하면서 7살껄 미리 하는 게 선행인데, 1년 누르면 할 게 없다는 게 말이 안 된다"
- *    초판은 목표 구간을 통째로 과거로 밀어 지금 목표를 **없앴다.** 그래서 선행할수록 목표가 줄었다.
- *    누적 모델에서는 오프셋을 올릴수록 목표가 **늘어난다**:
- *      - 가속 지평(now + offset)까지 **이미 시작된** 목표이고 (start ≤ now+offset)
- *      - 실제 현재 기준으로 **아직 안 끝난** 목표 (end ≥ now)
- *
- * INV-STD-06 — origin='공교육' 은 제외한다. 원문은 근거 표시용이지 겨냥 대상이 아니다.
- * INV-PACE-02 — '자체' 는 오프셋을 적용하지 않는다 (자기 시기 그대로).
- */
-export function currentTargets(
-  standards: readonly Standard[],
-  offsets: readonly PaceOffset[],
-  now: YearMonth,
-): readonly Standard[] {
-  return standards.filter((s) => {
-    if (s.origin === '공교육') return false
-
-    const offset = s.origin === '자체' ? 0 : effectiveOffset(s.domain, offsets)
-    const horizon = shiftYearMonth(now, -offset) // now + offset (미래로 당긴 지평)
-
-    // 시작됐고(지평 기준) 아직 안 끝났다(현재 기준)
-    return s.baselinePeriod.start <= horizon && s.baselinePeriod.end >= now
-  })
-}
-
-/**
- * B′ — 지금 화면에 **목표로 보여줄 공교육 원문(+자체)**. `currentTargets` 의 표시용 짝이다.
- *
- *   공교육 — baselinePeriod(누리/학년군 구간)가 지금을 포함하면 노출한다. 선행 오프셋으로
- *            다음 구간을 앞당길 수 있다(누적 · currentTargets 와 같은 지평 규칙).
+ *   공교육 — baselinePeriod(누리/학년군 구간)가 지금을 포함하면 노출한다. 오프셋으로 다음
+ *            구간을 앞당길 수 있다(누적). 지금 앱은 오프셋 []로 호출한다(적기, 선행 없음).
  *   자체   — 오프셋 미적용, 자기 구간 그대로 (INV-PACE-02).
- *   해석   — **제외**. 해석은 활동이 겨냥하는 엔진일 뿐 화면 목표가 아니다.
- *
- * currentTargets 가 '해석'을 겨냥 대상으로 고르는 것과 정확히 대칭이다(origin 필터만 뒤집힘).
- * INV-STD-06 은 여전히 유효하다 — 원문은 겨냥(활동 target) 대상이 아니라 **표시** 대상이다.
  */
 export function currentPublicGoals(
   standards: readonly Standard[],

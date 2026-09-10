@@ -309,9 +309,9 @@ describe('Task.targets — 활동↔목표 연결·출처 (피드백 ③④)', (
     act({ id, domain: '국어', targetIds })
 
   it('겨냥 목표가 문장·출처와 함께 실린다', () => {
-    const t = deriveTodayTasks([real('r', ['int-ko-letter-sounds'])], 수요일, [], STANDARDS_2021)[0]!
+    const t = deriveTodayTasks([real('r', ['std-2국04-01'])], 수요일, [], STANDARDS_2021)[0]!
     expect(t.targets).toHaveLength(1)
-    expect(t.targets[0]!.statement).toBe('자음·모음의 소릿값을 안다')
+    expect(t.targets[0]!.statement).toBe('한글 자모의 이름과 소릿값을 알고 정확하게 발음하고 쓴다.')
     expect(t.targets[0]!.provenance).toEqual({ kind: '공교육', doc: '성취기준' })
   })
 
@@ -323,7 +323,7 @@ describe('Task.targets — 활동↔목표 연결·출처 (피드백 ③④)', (
   it('⭐ 공교육 근거 목표가 대표(첫째)로 정렬된다', () => {
     // 자체(영어) + 공교육(수학) 을 섞어도 공교육이 앞에 온다 (표시용이라 영역 혼합 허용)
     // 자체 목표(영어)는 부모 입력이라 로컬 픽스처를 병합해 쓴다
-    const mixed = act({ id: 'm', domain: '수학', targetIds: ['own-en', 'int-ma-pattern'] })
+    const mixed = act({ id: 'm', domain: '수학', targetIds: ['own-en', 'nuri-nat-8'] })
     const t = deriveTodayTasks([mixed], 수요일, [], [...STANDARDS_2021, 자체기준])[0]!
     expect(t.targets).toHaveLength(2)
     expect(t.targets[0]!.provenance.kind).toBe('공교육')

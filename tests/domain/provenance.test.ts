@@ -25,21 +25,22 @@ describe('provenanceOf — 공교육(누리과정/성취기준) 판정', () => {
   })
 })
 
-describe('provenanceOf — 해석은 refines 를 따라 공교육으로 귀속 (INV-STD-07/08)', () => {
-  it('성취기준을 refine 하는 해석 → 공교육·성취기준', () => {
-    // int-ko-letter-sounds → std-2국04-01 (국어과 성취기준)
-    expect(provenanceOf(find('int-ko-letter-sounds'), STANDARDS_2021)).toEqual({
-      kind: '공교육',
-      doc: '성취기준',
-    })
+describe('provenanceOf — refines 를 따라 공교육으로 귀속 (INV-STD-07/08)', () => {
+  // 해석 계층은 제거됐지만 refines 귀속 로직은 남는다(로컬 픽스처로 검증).
+  it('성취기준을 refine 하는 목표 → 공교육·성취기준', () => {
+    const 해석: Standard = {
+      id: 'int-x', domain: '국어', baselinePeriod: { start: '2027-03', end: '2027-08' },
+      statement: '자음·모음의 소릿값을 안다', source: { document: '04' }, origin: '해석', refines: 'std-2국04-01',
+    }
+    expect(provenanceOf(해석, STANDARDS_2021)).toEqual({ kind: '공교육', doc: '성취기준' })
   })
 
-  it('누리과정을 refine 하는 해석 → 공교육·누리과정', () => {
-    // int-ma-pattern → nuri-nat-8 (누리과정)
-    expect(provenanceOf(find('int-ma-pattern'), STANDARDS_2021)).toEqual({
-      kind: '공교육',
-      doc: '누리과정',
-    })
+  it('누리과정을 refine 하는 목표 → 공교육·누리과정', () => {
+    const 해석: Standard = {
+      id: 'int-y', domain: '수학', baselinePeriod: { start: '2026-08', end: '2027-02' },
+      statement: '반복 규칙을 이어간다', source: { document: '04' }, origin: '해석', refines: 'nuri-nat-8',
+    }
+    expect(provenanceOf(해석, STANDARDS_2021)).toEqual({ kind: '공교육', doc: '누리과정' })
   })
 })
 
@@ -53,9 +54,12 @@ describe('provenanceOf — 자체', () => {
     expect(provenanceOf(자체영어, STANDARDS_2021)).toEqual({ kind: '자체' })
   })
 
-  it('⭐ 근거(refines) 없는 해석은 자체로 본다', () => {
-    // int-hs-sit-40min 은 refines 가 없다 (누리과정 원문에 없는 해석)
-    expect(provenanceOf(find('int-hs-sit-40min'), STANDARDS_2021)).toEqual({ kind: '자체' })
+  it('⭐ 근거(refines) 없는 목표는 자체로 본다', () => {
+    const 근거없음: Standard = {
+      id: 'int-z', domain: '건강·안전', baselinePeriod: { start: '2027-09', end: '2028-02' },
+      statement: '40분간 자리에 앉아 있는다', source: { document: '04' }, origin: '해석',
+    }
+    expect(provenanceOf(근거없음, STANDARDS_2021)).toEqual({ kind: '자체' })
   })
 })
 

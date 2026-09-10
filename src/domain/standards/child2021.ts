@@ -4,16 +4,18 @@
  * ⚠️ 이 파일의 규칙
  *  - `origin: '공교육'` 은 **원문 그대로**만 쓴다. 요약·의역 금지.
  *    출처: docs/원문/누리과정_취학전.md · docs/원문/성취기준_초1-2학년군.md
- *  - `origin: '공교육'` 의 baselinePeriod 는 학년군/누리과정 구간이다 (INV-STD-06).
- *    근거 표시용이며 목표 판정 대상이 아니다.
- *  - `origin: '해석'` 이 실제로 겨냥하는 목표다. 오프셋이 여기 걸린다.
- *  - `origin: '자체'` 는 공교육 기준이 없는 영역의 우리 목표다. 오프셋 미적용.
+ *  - `origin: '공교육'` 의 baselinePeriod 는 학년군/누리과정 구간이다. 화면목표로 직접 쓴다.
+ *  - `origin: '자체'` 는 공교육 기준이 없는 영역(영어 등)의 목표 — 코드에 박지 않고 부모가
+ *    앱에서 입력한다(스냅샷 customGoals). 이 파일엔 공교육 원문만 있다.
+ *
+ * ※ 초판의 '해석' 계층(2021-01 전용 손작성 목표)은 제거했다 — 커버리지가 영역 단위로
+ *   바뀌면서 더는 쓰지 않는다. 이 파일은 어떤 아이든 정렬해 쓰는 코호트 기준 데이터다.
  *
  * 누리과정 59개 내용은 **전수** 수록했다 (docs/원문/전수매핑.md).
  * 취학 전 아이의 기준선이므로 빠진 영역이 있으면 P-6 가 성립하지 않는다.
  */
 
-import type { Domain, PaceOffset, Standard, StandardSource } from '../types'
+import type { Domain, PaceOffset, Standard } from '../types'
 
 export const CHILD_BIRTH_YM = '2021-01'
 export const SCHOOL_ENTRY_YM = '2028-03'
@@ -27,7 +29,6 @@ const 국어과 = '교육부 고시 제2022-33호 [별책 5] 국어과 교육과
 const 수학과 = '교육부 고시 제2022-33호 [별책 8] 수학과 교육과정'
 const 통합교과 = '교육부 고시 제2022-33호 통합교과 교육과정 (바른 생활·슬기로운 생활·즐거운 생활)'
 const KICE = 'https://stas.moe.go.kr'
-const 해석출처: StandardSource = { document: 'docs/04-교육기준표-2021년생.md' }
 
 /** 누리과정 원문 한 줄 */
 const nuri = (
@@ -273,71 +274,6 @@ const 초1_2: readonly Standard[] = [
 ]
 
 // ═══════════════════════════════════════════════════════
-// 🟨 해석 — 실제로 겨냥하는 목표. 오프셋이 여기 걸린다
-// ═══════════════════════════════════════════════════════
-
-const 취학직전_후반 = { start: '2027-09', end: '2028-02' } as const
-const 취학직전_전반 = { start: '2027-03', end: '2027-08' } as const
-const 지금 = { start: '2026-08', end: '2027-02' } as const
-
-const int = (
-  id: string,
-  domain: Domain,
-  period: { start: string; end: string },
-  statement: string,
-  refines?: string,
-): Standard => ({
-  id: `int-${id}`,
-  domain,
-  baselinePeriod: period,
-  statement,
-  source: 해석출처,
-  origin: '해석',
-  ...(refines ? { refines } : {}),
-})
-
-const 해석: readonly Standard[] = [
-  // 국어
-  int('ko-listen', '국어', 지금, '책을 읽어주면 끝까지 듣는다', 'nuri-com-10'),
-  int('ko-find-letters', '국어', 지금, '간판·과자봉지에서 아는 글자를 찾아낸다', 'nuri-com-8'),
-  int('ko-letter-sounds', '국어', 취학직전_전반, '자음·모음의 소릿값을 안다', 'std-2국04-01'),
-  int('ko-write-name', '국어', 취학직전_전반, '자기 이름을 쓴다', 'std-2국03-01'),
-  int('ko-read-simple-words', '국어', 취학직전_후반, '받침 없는 단어를 소리 내어 읽는다', 'std-2국02-01'),
-  int('ko-read-short-sentence', '국어', 취학직전_후반, '짧은 문장을 더듬더듬 읽는다', 'std-2국02-01'),
-
-  // 수학
-  int('ma-count-10', '수학', 지금, '10까지 세고, 물건 개수와 수를 연결한다', 'nuri-nat-5'),
-  int('ma-compare', '수학', 지금, '크다/작다, 길다/짧다를 비교한다', 'nuri-nat-7'),
-  int('ma-pattern', '수학', 지금, '반복 규칙(빨강-파랑-빨강-…)을 이어간다', 'nuri-nat-8'),
-  int('ma-count-20', '수학', 취학직전_전반, '20까지 세고 숫자를 읽는다', 'std-2수01-01'),
-  int('ma-count-50', '수학', 취학직전_후반, '50까지 센다', 'std-2수01-01'),
-  int('ma-write-digits', '수학', 취학직전_후반, '숫자 0~9를 쓴다', 'std-2수01-01'),
-
-  // 과학·탐구 (오프셋 0 — 선행 개념이 성립하지 않는다)
-  int('sci-curious', '과학·탐구', 지금, '궁금한 것을 묻고 함께 찾아본다', 'nuri-nat-2'),
-  int('sci-living', '과학·탐구', 지금, '주변의 동식물을 관찰하고 관심을 보인다', 'nuri-nat-11'),
-  int('sci-season', '과학·탐구', 지금, '날씨·계절의 변화를 알아차리고 말한다', 'nuri-nat-13'),
-
-  // 사회·인성 (오프셋 0)
-  int('soc-self-do', '사회·인성', 지금, '내가 할 수 있는 것을 스스로 한다', 'nuri-soc-3'),
-  int('soc-emotion', '사회·인성', 지금, '자기 감정을 말로 표현한다', 'nuri-soc-2'),
-  int('soc-rules', '사회·인성', 취학직전_전반, '차례를 기다리고 약속을 지킨다', 'nuri-soc-9'),
-  int('soc-conflict', '사회·인성', 취학직전_후반, '친구와 갈등을 말로 해결하려 시도한다', 'nuri-soc-6'),
-
-  // 건강·안전 (오프셋 0)
-  int('hs-clean', '건강·안전', 지금, '손 씻기·이 닦기를 스스로 한다', 'nuri-hlt-1'),
-  int('hs-traffic', '건강·안전', 지금, '길을 건널 때 멈추고 좌우를 살핀다', 'nuri-saf-3'),
-  int('hs-screen', '건강·안전', 지금, '정한 시간만큼만 화면을 본다', 'nuri-saf-2'),
-  int('hs-school-habit', '건강·안전', 취학직전_후반, '옷·신발·가방을 스스로 정리한다', 'std-2바01-01'),
-  // ⚠️ 누리과정 원문에 없다. 초1 수업 시간(40분)에서 역산한 해석이다.
-  int('hs-sit-40min', '건강·안전', 취학직전_후반, '40분간 자리에 앉아 있는다'),
-
-  // 예체능 (오프셋 0)
-  int('pe-art-express', '예체능', 지금, '미술 재료와 도구로 자기 생각을 표현한다', 'nuri-art-6'),
-  int('pe-body-activity', '예체능', 지금, '몸을 크게 쓰는 신체활동에 즐겁게 참여한다', 'nuri-phy-4'),
-]
-
-// ═══════════════════════════════════════════════════════
 // 자체 — 공교육 기준이 **없는** 영역의 목표는 코드에 박지 않는다
 // ═══════════════════════════════════════════════════════
 // ⚠️ 영어는 공교육에서 **초3(이 아이 2030-03)** 에 시작한다. 취학 전·초1~2엔 정규 영어 교과가 없다.
@@ -346,7 +282,7 @@ const 해석: readonly Standard[] = [
 //    예시였을 뿐이라 제거했다 — 신뢰 = 우리 것이 아닌 걸 우리 것처럼 미리 넣어두지 않는 것.
 //    UI 에서 '공교육' 배지를 붙이면 안 된다(자체 목표로 표기).
 
-export const STANDARDS_2021: readonly Standard[] = [...누리, ...초1_2, ...해석]
+export const STANDARDS_2021: readonly Standard[] = [...누리, ...초1_2]
 
 /**
  * 현재 오프셋. docs/06-PRD.md §4.4

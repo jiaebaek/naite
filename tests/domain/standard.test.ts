@@ -10,9 +10,8 @@
 
 import { describe, it, expect } from 'vitest'
 import { requireValidStandard } from '../../src/domain/guards'
-import { currentTargets } from '../../src/domain/pace'
 import { isDomainError } from '../../src/domain/errors'
-import type { PaceOffset, Standard } from '../../src/domain/types'
+import type { Standard } from '../../src/domain/types'
 
 // ── 픽스처 ─────────────────────────────────────────────
 
@@ -49,11 +48,6 @@ const 자체_영어그림책: Standard = {
   source: null,
   origin: '자체',
 }
-
-const OFFSETS: readonly PaceOffset[] = [
-  { domain: '국어', months: 12 },
-  { domain: '수학', months: 12 },
-]
 
 // ── INV-STD-02 ─────────────────────────────────────────
 describe('INV-STD-02 — origin 은 공교육 | 해석 | 자체 중 하나여야 한다', () => {
@@ -168,39 +162,3 @@ describe('INV-STD-08 — refines 는 존재하는 공교육 기준을 가리켜�
   })
 })
 
-// ── INV-STD-06 · currentTargets ────────────────────────
-describe("INV-STD-06 — origin='공교육' 은 currentTargets 에 포함되지 않는다", () => {
-  const all = [공교육_한글자모, 해석_받침없는단어, 자체_영어그림책]
-
-  it('⭐ 공교육 원문은 근거 표시용이지 목표가 아니다', () => {
-    const targets = currentTargets(all, OFFSETS, '2026-11')
-    expect(targets.some((t) => t.origin === '공교육')).toBe(false)
-  })
-
-  it('해석 기준은 오프셋이 적용되어 지금 목표가 된다', () => {
-    // 2027-09~2028-02 에 국어 오프셋 12개월 → 2026-09~2027-02. 2026-11 은 그 안이다
-    const targets = currentTargets(all, OFFSETS, '2026-11')
-    expect(targets.map((t) => t.id)).toContain('int-ko-simple-words')
-  })
-
-  it('오프셋을 0으로 되돌리면 아직 목표가 아니다', () => {
-    const targets = currentTargets(all, [{ domain: '국어', months: 0 }], '2026-11')
-    expect(targets.map((t) => t.id)).not.toContain('int-ko-simple-words')
-  })
-
-  it('자체 기준은 오프셋 없이 자기 구간에서 목표가 된다 (INV-PACE-02)', () => {
-    // 2026-09~2027-02. 영어에는 오프셋이 없다
-    const targets = currentTargets(all, OFFSETS, '2026-11')
-    expect(targets.map((t) => t.id)).toContain('own-en-picturebook')
-  })
-
-  it('구간을 벗어난 시점에는 목표가 아니다', () => {
-    const targets = currentTargets(all, OFFSETS, '2025-01')
-    expect(targets).toHaveLength(0)
-  })
-
-  it('구간 양끝은 포함이다', () => {
-    expect(currentTargets(all, OFFSETS, '2026-09').map((t) => t.id)).toContain('int-ko-simple-words')
-    expect(currentTargets(all, OFFSETS, '2027-02').map((t) => t.id)).toContain('int-ko-simple-words')
-  })
-})
