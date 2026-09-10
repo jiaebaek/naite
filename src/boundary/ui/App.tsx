@@ -27,7 +27,7 @@ import {
 } from '../../domain/academy'
 import { INITIAL_CARE, grantToken } from '../../domain/pet'
 import type { CareState } from '../../domain/pet'
-import { STANDARDS_2021 as REFERENCE_STANDARDS, INITIAL_OFFSETS, CHILD_BIRTH_YM, SCHOOL_ENTRY_YM } from '../../domain/standards/child2021'
+import { STANDARDS_2021 as REFERENCE_STANDARDS, CHILD_BIRTH_YM, SCHOOL_ENTRY_YM } from '../../domain/standards/child2021'
 import { DOMAINS, NO_PUBLIC_STANDARD } from '../../domain/types'
 import type {
   Academy,
@@ -39,7 +39,6 @@ import type {
   Completion,
   Domain,
   IsoDate,
-  PaceOffset,
   Standard,
   StandardId,
 } from '../../domain/types'
@@ -153,7 +152,6 @@ function serialize(s: AppSnapshot): string {
     version: s.version,
     completions: s.completions,
     achieved: s.achieved,
-    offsets: s.offsets,
     activities: s.activities,
     academies: s.academies,
     care: s.care,
@@ -191,13 +189,11 @@ export function App() {
   const [activities, setActivities] = useState<readonly Activity[]>([])
   const [academies, setAcademies] = useState<readonly Academy[]>([])
   const [completions, setCompletions] = useState<readonly Completion[]>([])
-  // 오프셋은 스냅샷 호환을 위해 유지하되, 목표 계산엔 쓰지 않는다 (선행 UI 제거 — 원칙 5).
-  const [offsets, setOffsets] = useState<readonly PaceOffset[]>(INITIAL_OFFSETS)
   const [achieved, setAchieved] = useState<readonly StandardId[]>([])
   const [care, setCare] = useState<CareState>(INITIAL_CARE)
   // 공교육 기준이 없는 영역(영어 등)의 목표는 부모가 직접 입력한다 — 코드가 아니라 데이터.
   const [customGoals, setCustomGoals] = useState<readonly Standard[]>([])
-  // 지식 기반(누리·성취기준·해석) + 부모가 입력한 자체 목표를 합친 전체 기준
+  // 지식 기반(누리·성취기준 원문) + 부모가 입력한 자체 목표를 합친 전체 기준
   const standards = useMemo(
     () => (customGoals.length > 0 ? [...REFERENCE_STANDARDS, ...customGoals] : REFERENCE_STANDARDS),
     [customGoals],
@@ -211,7 +207,6 @@ export function App() {
   const applySnapshot = useCallback((snap: AppSnapshot) => {
     setCompletions(snap.completions)
     setAchieved(snap.achieved)
-    setOffsets(snap.offsets)
     if (snap.activities) setActivities(snap.activities)
     if (snap.academies) setAcademies(snap.academies)
     if (snap.care) setCare(snap.care)
@@ -233,12 +228,12 @@ export function App() {
 
   useEffect(() => {
     if (!loaded.current) return
-    const snapshot: AppSnapshot = { version: SNAPSHOT_VERSION, completions, achieved, offsets, activities, academies, care, customGoals }
+    const snapshot: AppSnapshot = { version: SNAPSHOT_VERSION, completions, achieved, activities, academies, care, customGoals }
     const s = serialize(snapshot)
     if (s === lastPersisted.current) return
     lastPersisted.current = s
     void store.save(snapshot)
-  }, [store, completions, achieved, offsets, activities, academies, care, customGoals])
+  }, [store, completions, achieved, activities, academies, care, customGoals])
 
   useEffect(() => {
     const pull = store.pull?.bind(store)
@@ -268,7 +263,7 @@ export function App() {
   // ⭐ 시기는 시스템 달력이 아니라 **입력받은 아이 나이**로 고른다(onboarding 생년월 기준).
   //    기준 데이터 코호트(CHILD_BIRTH_YM)에 아이를 정렬해, 초1~2 아이면 지금 초1~2 목표가 뜬다.
   const month = cohortAlignedMonth(date.slice(0, 7), childBirthYm, CHILD_BIRTH_YM)
-  const publicGoals = useMemo(() => currentPublicGoals(standards, [], month), [standards, month])
+  const publicGoals = useMemo(() => currentPublicGoals(standards, month), [standards, month])
   // 커버리지는 영역 단위 — 활동/등원의 domain 으로 판정한다(특정 아이용 해석 의존 제거).
   const coverageActivities = useMemo(
     () => [...activeActivities, ...attendanceActivities(academies)],

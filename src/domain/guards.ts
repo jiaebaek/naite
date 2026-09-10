@@ -6,41 +6,14 @@
 
 import { DomainError } from './errors'
 import type { ErrorCode } from './errors'
-import { DOMAINS, OFFSET_MONTHS, STANDARD_ORIGINS } from './types'
+import { DOMAINS, STANDARD_ORIGINS } from './types'
 import type {
   ActivityInput,
   Cadence,
   Domain,
   IsoDate,
-  OffsetMonths,
   Standard,
 } from './types'
-
-const NOT_IMPLEMENTED = 'NOT_IMPLEMENTED'
-
-/**
- * INV-PACE-01 — months 는 0 | 12 | 24 여야 한다.
- * @throws DomainError E-PACE-INVALID-MONTHS
- */
-export function requireValidOffsetMonths(
-  months: number,
-): asserts months is OffsetMonths {
-  if (!(OFFSET_MONTHS as readonly number[]).includes(months)) {
-    throw new DomainError(
-      'E-PACE-INVALID-MONTHS',
-      `오프셋은 ${OFFSET_MONTHS.join('/')}개월만 가능합니다 (받은 값: ${months})`,
-    )
-  }
-}
-
-/**
- * INV-PACE-02 — origin='자체' 기준에는 오프셋을 적용하지 않는다.
- * @throws DomainError E-PACE-NOT-APPLICABLE
- */
-export function requireOffsetApplicable(standard: Standard): void {
-  // TODO(INV-PACE-02): standard.origin === '자체' 면 E-PACE-NOT-APPLICABLE
-  throw new Error(NOT_IMPLEMENTED)
-}
 
 /**
  * INV-ACT-01 — 이름은 공백일 수 없다. 활동·학원 공용.

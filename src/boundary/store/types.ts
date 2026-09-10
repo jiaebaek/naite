@@ -9,7 +9,6 @@ import type {
   Academy,
   Activity,
   Completion,
-  PaceOffset,
   Standard,
   StandardId,
 } from '../../domain/types'
@@ -23,7 +22,6 @@ export interface AppSnapshot {
   readonly version: number
   readonly completions: readonly Completion[]
   readonly achieved: readonly StandardId[]
-  readonly offsets: readonly PaceOffset[]
   /** 사용자가 등록·편집한 활동. 없으면(구버전) 시드로 시작 */
   readonly activities?: readonly Activity[]
   /** 등록한 학원. 없으면 시드로 시작 */

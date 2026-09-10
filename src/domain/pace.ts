@@ -1,98 +1,13 @@
 /**
- * 선행 오프셋 (F3 · P-3). docs/07-계약.md §1
+ * 시기 산출 (F3). docs/00-전략-원칙.md §10 결정 A.
  *
- *   우리 집 목표 시기 = Standard.baselinePeriod − PaceOffset(domain)
+ * 선행(달력식 앞서기) 오프셋은 제품에 없다 — 목표는 언제나 "현재 시기 band" 한 겹뿐이다.
+ * 시기는 시스템 달력이 아니라 **입력받은 아이 나이**로 고른다(cohortAlignedMonth).
  */
 
-import { requireValidOffsetMonths } from './guards'
-import type {
-  Domain,
-  OffsetMonths,
-  OffsetWarning,
-  PaceOffset,
-  Period,
-  Standard,
-  YearMonth,
-} from './types'
+import type { Standard, YearMonth } from './types'
 
-const NOT_IMPLEMENTED = 'NOT_IMPLEMENTED'
-
-/**
- * INV-PACE-01 months ∈ {0,12,24}
- * INV-PACE-03 영역당 오프셋은 0개 또는 1개
- * @throws DomainError E-PACE-INVALID-MONTHS
- */
-export function setPaceOffset(domain: Domain, months: number): PaceOffset {
-  // assertion 가드라 이 아래에서 months 는 OffsetMonths 로 좁혀진다 — 캐스팅 불필요
-  requireValidOffsetMonths(months)
-  return { domain, months }
-}
-
-/**
- * INV-PACE-04 — 설정되지 않은 영역의 실효 오프셋은 0 이다.
- */
-export function effectiveOffset(
-  domain: Domain,
-  offsets: readonly PaceOffset[],
-): OffsetMonths {
-  return offsets.find((o) => o.domain === domain)?.months ?? 0
-}
-
-/**
- * 기준 시기에 오프셋을 적용해 "우리 집 목표 시기"를 만든다.
- *
- * INV-PACE-02  origin='자체' → 오프셋을 적용하지 않고 baselinePeriod 를 그대로 반환
- * INV-PERIOD-01 결과는 start <= end
- * INV-PERIOD-02 구간 길이를 보존한다 (start·end 를 같은 폭으로 이동)
- *
- * @throws DomainError E-PACE-INVALID-MONTHS
- */
-export function resolveTargetPeriod(
-  standard: Standard,
-  offsetMonths: OffsetMonths,
-): Period {
-  requireValidOffsetMonths(offsetMonths)
-
-  // INV-PACE-02 — 자체 기준은 이미 시기까지 우리가 정한 것이다.
-  // 오프셋을 얹으면 이중 조정이 된다.
-  if (standard.origin === '자체') return standard.baselinePeriod
-
-  // INV-PERIOD-02 — 두 끝을 같은 폭으로 이동하므로 구간 길이가 보존된다.
-  return {
-    start: shiftYearMonth(standard.baselinePeriod.start, offsetMonths),
-    end: shiftYearMonth(standard.baselinePeriod.end, offsetMonths),
-  }
-}
-
-/** 오프셋 상향 시 함께 노출할 발달 신호. docs/04-교육기준표-2021년생.md §1-B */
-const DEVELOPMENT_SIGNALS: readonly string[] = [
-  '아이가 해당 활동을 회피하거나 "하기 싫어"가 반복된다',
-  '같은 내용을 반복해도 진전이 없다',
-  '활동 중 짜증·울음 빈도가 올라간다',
-]
-
-/**
- * INV-PACE-05 — 오프셋 **상향 시 반드시 경고를 반환**한다. 무음 상향 불가.
- *
- * 이 계약이 없으면 이 앱은 적기교육 도구가 아니라 선행 압박 도구가 된다.
- */
-export function assessOffsetRaise(
-  current: OffsetMonths,
-  next: OffsetMonths,
-): OffsetWarning | null {
-  if (next <= current) return null
-
-  return {
-    from: current,
-    to: next,
-    message:
-      '오프셋은 목표 시기를 당길 뿐 발달 단계를 이기지 못합니다. ' +
-      '아래 신호가 보이면 다시 낮추세요.',
-    signals: DEVELOPMENT_SIGNALS,
-  }
-}
-
-/** 'YYYY-MM' 에서 months 만큼 뺀다. 연도 경계를 넘어간다. */
+/** 'YYYY-MM' 에서 months 만큼 뺀다(음수면 더한다). 연도 경계를 넘어간다. */
 export function shiftYearMonth(ym: YearMonth, minusMonths: number): YearMonth {
   const [yearPart, monthPart] = ym.split('-')
   const year = Number(yearPart)
@@ -114,7 +29,7 @@ export function shiftYearMonth(ym: YearMonth, minusMonths: number): YearMonth {
  * "이 아이가 지금 코호트 타임라인의 어디에 있는지"를 만든다.
  *   - 아이가 코호트보다 늦게 태어났으면(더 어리면) 유효 시점을 그만큼 앞당긴다.
  *   - 일찍 태어났으면(더 크면) 뒤로 민다 → 더 상위 학년군 목표가 지금 뜬다.
- * cohortBirthYm 과 같은 생년월이면 now 그대로 (기존 동작 보존).
+ * cohortBirthYm 과 같은 생년월이면 now 그대로.
  */
 export function cohortAlignedMonth(
   nowMonth: YearMonth,
@@ -131,22 +46,14 @@ export function cohortAlignedMonth(
 
 /**
  * 지금 화면에 **목표로 보여줄 공교육 원문(+자체)**. (F3)
- *
- *   공교육 — baselinePeriod(누리/학년군 구간)가 지금을 포함하면 노출한다. 오프셋으로 다음
- *            구간을 앞당길 수 있다(누적). 지금 앱은 오프셋 []로 호출한다(적기, 선행 없음).
- *   자체   — 오프셋 미적용, 자기 구간 그대로 (INV-PACE-02).
+ * baselinePeriod(누리/학년군 구간)가 now 를 포함하는 목표만 — 선행 없음(현재 시기 한 겹).
+ * 해석(refines 판단층)은 제품에서 제거됐고, 혹시 남아도 화면 목표가 아니므로 제외한다.
  */
 export function currentPublicGoals(
   standards: readonly Standard[],
-  offsets: readonly PaceOffset[],
   now: YearMonth,
 ): readonly Standard[] {
-  return standards.filter((s) => {
-    if (s.origin === '해석') return false
-
-    const offset = s.origin === '자체' ? 0 : effectiveOffset(s.domain, offsets)
-    const horizon = shiftYearMonth(now, -offset)
-
-    return s.baselinePeriod.start <= horizon && s.baselinePeriod.end >= now
-  })
+  return standards.filter(
+    (s) => s.origin !== '해석' && s.baselinePeriod.start <= now && s.baselinePeriod.end >= now,
+  )
 }

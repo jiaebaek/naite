@@ -68,9 +68,6 @@ export type Track = '학원' | '집'
 /** 표시 전용. 어떤 연산도 이 값으로 알림·할당을 만들지 않는다. INV-ACT-05 / OOS-1 */
 export type Owner = '엄마' | '아빠'
 
-export const OFFSET_MONTHS = [0, 12, 24] as const
-export type OffsetMonths = (typeof OFFSET_MONTHS)[number]
-
 /** 0 = 일요일 */
 export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6
 
@@ -169,11 +166,6 @@ export interface Activity {
 
 export type ActivityInput = Omit<Activity, 'id' | 'active'>
 
-export interface PaceOffset {
-  readonly domain: Domain
-  readonly months: OffsetMonths
-}
-
 export interface Completion {
   readonly date: IsoDate
   readonly activityId: ActivityId
@@ -229,14 +221,6 @@ export interface Task {
    * 대신 이어온 기록을 보여준다. 0이면 undefined.
    */
   readonly streak?: number
-}
-
-export interface OffsetWarning {
-  readonly from: OffsetMonths
-  readonly to: OffsetMonths
-  readonly message: string
-  /** 오프셋이 아이보다 앞서갔음을 알리는 관찰 신호 */
-  readonly signals: readonly string[]
 }
 
 export type ToggleResult =

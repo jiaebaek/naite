@@ -13,7 +13,6 @@ import type {
   ActivityId,
   Completion,
   IsoDate,
-  PaceOffset,
   Standard,
 } from '../domain/types'
 
@@ -34,11 +33,6 @@ export interface CompletionRepository {
   listBetween(from: IsoDate, to: IsoDate): Promise<readonly Completion[]>
   add(completion: Completion): Promise<void>
   remove(activityId: ActivityId, date: IsoDate): Promise<void>
-}
-
-export interface PaceOffsetRepository {
-  listAll(): Promise<readonly PaceOffset[]>
-  save(offset: PaceOffset): Promise<void>
 }
 
 /**

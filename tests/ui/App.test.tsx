@@ -21,7 +21,7 @@ const SEED_CUSTOM_GOALS = [
 ]
 /** 앱은 이제 빈 상태로 시작한다 — 시나리오가 필요한 테스트는 스냅샷을 심는다(시드=테스트 픽스처). */
 const seedData = () => localStorage.setItem(`edu-manager:v${SNAPSHOT_VERSION}`, JSON.stringify({
-  version: SNAPSHOT_VERSION, completions: [], achieved: [], offsets: [],
+  version: SNAPSHOT_VERSION, completions: [], achieved: [],
   activities: SEED_ACTIVITIES, academies: SEED_ACADEMIES, care: INITIAL_CARE,
   customGoals: SEED_CUSTOM_GOALS,
 }))

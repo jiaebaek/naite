@@ -9,7 +9,7 @@
 import { describe, it, expect } from 'vitest'
 import { STANDARDS_2021 } from '../../src/domain/standards/child2021'
 import { requireValidStandard } from '../../src/domain/guards'
-import { currentPublicGoals, cohortAlignedMonth, resolveTargetPeriod } from '../../src/domain/pace'
+import { currentPublicGoals, cohortAlignedMonth } from '../../src/domain/pace'
 import { CHILD_BIRTH_YM } from '../../src/domain/standards/child2021'
 import { DOMAINS } from '../../src/domain/types'
 import type { Standard } from '../../src/domain/types'
@@ -139,25 +139,25 @@ describe('⭐ B′ currentPublicGoals — 화면 목표는 공교육 원문(+자
   const NOW = '2026-11' // 만 5세 (취학 전) → 누리과정 구간
 
   it('취학 전이면 누리과정 원문 59개가 모두 지금 목표다 (band 가 지금을 포함)', () => {
-    const goals = currentPublicGoals(STANDARDS_2021, [], NOW)
+    const goals = currentPublicGoals(STANDARDS_2021, NOW)
     const nuri = goals.filter((g) => g.id.startsWith('nuri-'))
     expect(nuri.length).toBe(59)
     expect(goals.map((g) => g.id)).toContain('nuri-com-1') // 의사소통 · 듣기와 말하기
   })
 
   it('초1~2 성취기준은 아직 목표가 아니다 (band 가 미래 2028-03~)', () => {
-    const ids = currentPublicGoals(STANDARDS_2021, [], NOW).map((g) => g.id)
+    const ids = currentPublicGoals(STANDARDS_2021, NOW).map((g) => g.id)
     expect(ids).not.toContain('std-2국01-01')
   })
 
   it('부모가 입력한 자체(영어) 목표는 오프셋 없이 지금 목표로 함께 뜬다', () => {
     // 배포 데이터엔 없고, 앱에서 병합된 customGoals(=영어자체)가 화면 목표로 나와야 한다.
-    const ids = currentPublicGoals([...STANDARDS_2021, 영어자체], [], NOW).map((g) => g.id)
+    const ids = currentPublicGoals([...STANDARDS_2021, 영어자체], NOW).map((g) => g.id)
     expect(ids).toContain('own-en-listen-picturebook')
   })
 
   it('입학 후(2028-06)엔 초1~2 성취기준 원문이 지금 목표가 된다', () => {
-    const ids = currentPublicGoals(STANDARDS_2021, [], '2028-06').map((g) => g.id)
+    const ids = currentPublicGoals(STANDARDS_2021, '2028-06').map((g) => g.id)
     expect(ids).toContain('std-2국04-01') // 한글 자모 소릿값
     expect(ids).not.toContain('nuri-com-1') // 누리 band(~2028-02)는 끝났다
   })
@@ -165,21 +165,16 @@ describe('⭐ B′ currentPublicGoals — 화면 목표는 공교육 원문(+자
   it('⭐ 시기는 달력이 아니라 입력 나이 기준 — 초1~2 아이는 시스템이 2026이어도 초1~2 목표를 본다', () => {
     // 2019-01 생 아이(지금 만 7세, 초2)를 입력하면 달력이 2026이라도 std-* 가 지금 목표여야 한다.
     const 유효월 = cohortAlignedMonth('2026-09', '2019-01', CHILD_BIRTH_YM)
-    const ids = currentPublicGoals(STANDARDS_2021, [], 유효월).map((g) => g.id)
+    const ids = currentPublicGoals(STANDARDS_2021, 유효월).map((g) => g.id)
     expect(ids).toContain('std-2국01-01') // 초1~2 성취기준이 지금 뜬다
     expect(ids).not.toContain('nuri-com-1') // 취학 전 누리는 이제 아니다
   })
 
   it('같은 코호트(2021-01) 아이는 지금(2026) 누리과정이 뜬다 — 기존 동작 보존', () => {
     const 유효월 = cohortAlignedMonth('2026-09', CHILD_BIRTH_YM, CHILD_BIRTH_YM)
-    const ids = currentPublicGoals(STANDARDS_2021, [], 유효월).map((g) => g.id)
+    const ids = currentPublicGoals(STANDARDS_2021, 유효월).map((g) => g.id)
     expect(ids).toContain('nuri-com-1')
     expect(ids).not.toContain('std-2국01-01')
   })
 })
 
-describe('INV-PACE-02 — 자체(영어) 목표는 오프셋을 걸어도 구간이 안 변한다', () => {
-  it('resolveTargetPeriod 는 자체 기준의 baselinePeriod 를 그대로 돌려준다', () => {
-    expect(resolveTargetPeriod(영어자체, 24)).toEqual(영어자체.baselinePeriod)
-  })
-})

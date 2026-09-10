@@ -15,7 +15,7 @@
  * 취학 전 아이의 기준선이므로 빠진 영역이 있으면 P-6 가 성립하지 않는다.
  */
 
-import type { Domain, PaceOffset, Standard } from '../types'
+import type { Domain, Standard } from '../types'
 
 export const CHILD_BIRTH_YM = '2021-01'
 export const SCHOOL_ENTRY_YM = '2028-03'
@@ -283,17 +283,3 @@ const 초1_2: readonly Standard[] = [
 //    UI 에서 '공교육' 배지를 붙이면 안 된다(자체 목표로 표기).
 
 export const STANDARDS_2021: readonly Standard[] = [...누리, ...초1_2]
-
-/**
- * 현재 오프셋. docs/06-PRD.md §4.4
- * 영어는 자체 기준을 쓰므로 오프셋을 두지 않는다 (INV-PACE-02).
- * 국어·수학만 1년 선행이고, 나머지는 선행 개념이 성립하지 않거나 필요가 없다.
- */
-export const INITIAL_OFFSETS: readonly PaceOffset[] = [
-  { domain: '국어', months: 12 },
-  { domain: '수학', months: 12 },
-  { domain: '과학·탐구', months: 0 },
-  { domain: '사회·인성', months: 0 },
-  { domain: '예체능', months: 0 },
-  { domain: '건강·안전', months: 0 },
-]

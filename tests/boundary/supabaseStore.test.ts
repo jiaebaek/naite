@@ -17,7 +17,6 @@ const snap = (over: Partial<AppSnapshot> = {}): AppSnapshot => ({
   version: SNAPSHOT_VERSION,
   completions: [{ activityId: 'a1', date: '2026-11-04' }],
   achieved: ['int-ko-read'],
-  offsets: [{ domain: '국어', months: 12 }],
   ...over,
 })
 

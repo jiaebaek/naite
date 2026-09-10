@@ -6,9 +6,6 @@
  */
 
 export const ERROR_CODES = [
-  // PaceOffset
-  'E-PACE-INVALID-MONTHS',
-  'E-PACE-NOT-APPLICABLE',
   // Activity
   'E-ACT-EMPTY-NAME',
   'E-ACT-EMPTY-WEEKDAYS',

@@ -16,7 +16,6 @@ const snap = (tag: string): AppSnapshot => ({
   version: SNAPSHOT_VERSION,
   completions: [],
   achieved: [tag],
-  offsets: [],
 })
 
 /** 메모리 저장소 — 로컬/원격 둘 다 흉내낸다 */
