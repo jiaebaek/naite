@@ -9,26 +9,31 @@ import type { Domain } from '../../domain/types'
 import { DOMAINS } from '../../domain/types'
 import { IconCheck } from './icons'
 
-/** 프리셋 칩: 라벨 + 겨냥 영역(단일). */
-interface Preset { readonly label: string; readonly domain: Domain }
+/**
+ * 프리셋 칩: 라벨 + 폴백 영역 + (선택) 활동유형 프리셋 type.
+ *   presetType 가 있으면 App 이 그 프리셋의 primary 목표를 아이 현재 band 로 걸러 **겨냥 목표로 확정**한다
+ *   (docs/10 보수적 매핑). 없으면 자동 겨냥 없음(원칙3·과소청구) → domain 만 쓰는 자유/자체 활동.
+ *   ⚠️ presetType↔칩 매핑은 docs/10 큐레이션 표의 활동유형 그대로. 결합칩은 대표 1개.
+ */
+interface Preset { readonly label: string; readonly domain: Domain; readonly presetType?: string }
 
-const SUBJECTS: readonly Preset[] = [ // S2 · 다니는 학원(등원 커버)
-  { label: '한글·독서', domain: '국어' }, { label: '수학·연산', domain: '수학' },
-  { label: '영어', domain: '영어' }, { label: '미술', domain: '예체능' },
-  { label: '피아노', domain: '예체능' }, { label: '발레·무용', domain: '예체능' },
-  { label: '태권도', domain: '건강·안전' }, { label: '축구·체육', domain: '건강·안전' },
+const SUBJECTS: readonly Preset[] = [ // S2 · 다니는 학원
+  { label: '한글·독서', domain: '국어', presetType: '한글' }, { label: '수학·연산', domain: '수학', presetType: '사고력수학' },
+  { label: '영어', domain: '영어', presetType: '영어' }, { label: '미술', domain: '예체능', presetType: '미술' },
+  { label: '피아노', domain: '예체능', presetType: '피아노' }, { label: '발레·무용', domain: '예체능', presetType: '발레' },
+  { label: '태권도', domain: '예체능', presetType: '태권도' }, { label: '축구·체육', domain: '예체능', presetType: '축구' },
   { label: '과학·실험', domain: '과학·탐구' }, { label: '학습지(방문)', domain: '국어' },
 ]
 const HOME: readonly Preset[] = [ // S3 · 집에서 하는 활동
-  { label: '그림책 읽기', domain: '국어' }, { label: '한글 놀이', domain: '국어' },
-  { label: '받아쓰기', domain: '국어' }, { label: '숫자·연산 놀이', domain: '수학' },
-  { label: '보드게임', domain: '수학' }, { label: '엄마표 영어', domain: '영어' },
-  { label: '영어 영상', domain: '영어' }, { label: '미술·만들기', domain: '예체능' },
+  { label: '그림책 읽기', domain: '국어', presetType: '독서' }, { label: '한글 놀이', domain: '국어', presetType: '한글' },
+  { label: '받아쓰기', domain: '국어' }, { label: '숫자·연산 놀이', domain: '수학', presetType: '사고력수학' },
+  { label: '보드게임', domain: '수학', presetType: '사고력수학' }, { label: '엄마표 영어', domain: '영어', presetType: '영어' },
+  { label: '영어 영상', domain: '영어', presetType: '영어' }, { label: '미술·만들기', domain: '예체능', presetType: '미술' },
   { label: '바깥 놀이', domain: '건강·안전' },
 ]
 
-/** 셋업에서 고른 항목(칩) — 라벨=이름, domain=겨냥 영역 */
-export interface SetupPick { readonly name: string; readonly domain: Domain }
+/** 셋업에서 고른 항목(칩) — 라벨=이름, domain=폴백 영역, presetType=활동유형(있으면 겨냥 목표 확정) */
+export interface SetupPick { readonly name: string; readonly domain: Domain; readonly presetType?: string }
 export interface SetupResult {
   readonly name: string
   readonly birthYm: string
@@ -100,8 +105,8 @@ export function SetupFlow({ initialName, initialBirthYm, ageLabelOf, onComplete 
   const finish = () => onComplete({
     name: name.trim() || '첫째',
     birthYm,
-    academies: SUBJECTS.filter((s) => aca.has(s.label)).map((s) => ({ name: s.label, domain: s.domain })),
-    homeActivities: HOME.filter((h) => home.has(h.label)).map((h) => ({ name: h.label, domain: h.domain })),
+    academies: SUBJECTS.filter((s) => aca.has(s.label)).map((s) => ({ name: s.label, domain: s.domain, ...(s.presetType ? { presetType: s.presetType } : {}) })),
+    homeActivities: HOME.filter((h) => home.has(h.label)).map((h) => ({ name: h.label, domain: h.domain, ...(h.presetType ? { presetType: h.presetType } : {}) })),
     priorityDomains: [...priority],
   })
   const next = () => (step < 2 ? setStep(step + 1) : finish())

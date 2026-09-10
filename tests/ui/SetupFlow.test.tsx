@@ -39,17 +39,18 @@ describe('S2·S3 칩 탭', () => {
     const { result, next } = setup()
     await next() // → S2
     await userEvent.click(screen.getByRole('button', { name: '한글·독서' })) // 국어 학원
-    await userEvent.click(screen.getByRole('button', { name: '태권도' }))   // 건강·안전 학원
+    await userEvent.click(screen.getByRole('button', { name: '태권도' }))   // 예체능 학원(프리셋 기준)
     await next() // → S3
     await userEvent.click(screen.getByRole('button', { name: '엄마표 영어' })) // 영어 집활동
     await userEvent.click(screen.getByRole('button', { name: /나이테 시작하기/ }))
 
     const r = result()
+    // 칩은 활동유형 프리셋 type 을 함께 넘긴다(App 이 이걸로 겨냥 목표를 확정). 태권도 영역=예체능(프리셋 원천).
     expect(r.academies).toEqual([
-      { name: '한글·독서', domain: '국어' },
-      { name: '태권도', domain: '건강·안전' },
+      { name: '한글·독서', domain: '국어', presetType: '한글' },
+      { name: '태권도', domain: '예체능', presetType: '태권도' },
     ])
-    expect(r.homeActivities).toEqual([{ name: '엄마표 영어', domain: '영어' }])
+    expect(r.homeActivities).toEqual([{ name: '엄마표 영어', domain: '영어', presetType: '영어' }])
   })
 
   it('칩을 안 고르면 빈 배열로 완료된다', async () => {

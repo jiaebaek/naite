@@ -150,18 +150,21 @@ describe('⭐ 안도 공유 카드 (§07-A)', () => {
 describe('⭐ 현황 배너 — 안도 먼저 (원칙 6 · 회귀 방지)', () => {
   beforeEach(readySeeded)
 
-  it('시드로 안도 먼저: "벌써 5곳을 챙기고 있어요"로 문을 연다', async () => {
+  it('시드로 안도 먼저: "벌써 4곳을 챙기고 있어요"로 문을 연다', async () => {
+    // 국어·수학·예체능·영어 = 4곳 챙김(명시적 겨냥 목표 기준). 등원 통째 커버 폐기 후 회귀 방지.
     render(<App />)
-    expect(await screen.findByText(/벌써 5곳을 챙기고 있어요/)).toBeInTheDocument()
+    expect(await screen.findByText(/벌써 4곳을 챙기고 있어요/)).toBeInTheDocument()
   })
 
-  it('갭(2곳)은 서브에서 넌지시 + 영역 이름 칩', async () => {
+  it('갭(3곳)은 서브에서 넌지시 + 영역 이름 칩', async () => {
+    // 과학·탐구·사회·인성 + 건강·안전(유아체육은 예체능만 챙기고 안전은 못 챙긴다 — 오버클레임 금지).
     render(<App />)
     await screen.findByTestId('view-today')
-    const banner = screen.getByText(/벌써 5곳을 챙기고 있어요/).closest('.gapcard')!
-    expect(banner.textContent).toContain('2곳만 더 보면')
+    const banner = screen.getByText(/벌써 4곳을 챙기고 있어요/).closest('.gapcard')!
+    expect(banner.textContent).toContain('3곳만 더 보면')
     expect(banner.textContent).toContain('과학·탐구')
     expect(banner.textContent).toContain('사회·인성')
+    expect(banner.textContent).toContain('건강·안전')
   })
 })
 

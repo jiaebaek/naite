@@ -9,10 +9,12 @@ import { ManageSheet } from '../../src/boundary/ui/ManageSheet'
 import type { TargetOption } from '../../src/boundary/ui/ManageSheet'
 import type { Academy, Activity } from '../../src/domain/types'
 
+// 유형 프리셋('한글')은 그 활동유형의 primary(nuri-com-8·7)만 미리 체크한다 →
+// 폼의 겨냥 목표 옵션(이 시기 목표)에 그 id 가 있어야 체크된다. 실제 id 로 픽스처를 맞춘다.
 const TARGETS: readonly TargetOption[] = [
-  { id: 'int-ko-a', statement: '아는 글자를 찾아낸다', domain: '국어' },
-  { id: 'int-ko-b', statement: '책을 끝까지 듣는다', domain: '국어' },
-  { id: 'int-ma-a', statement: '10까지 센다', domain: '수학' },
+  { id: 'nuri-com-8', statement: '아는 글자를 찾아낸다', domain: '국어' },
+  { id: 'nuri-com-7', statement: '책을 끝까지 듣는다', domain: '국어' },
+  { id: 'nuri-nat-8', statement: '10까지 센다', domain: '수학' },
 ]
 const ACADEMIES = [{ id: 'ac1', name: '더하다사고력' }]
 
@@ -41,7 +43,7 @@ describe('활동 추가 폼', () => {
     const [input, editing] = h.onSaveActivity.mock.calls[0]!
     expect(editing).toBeNull()
     expect(input).toMatchObject({
-      name: '한글 놀이', domain: '국어', track: '집', targetIds: ['int-ko-a'],
+      name: '한글 놀이', domain: '국어', track: '집', targetIds: ['nuri-com-8'],
       cadence: { kind: '주N회', times: 2 },
     })
   })
@@ -85,14 +87,15 @@ describe('활동 추가 폼', () => {
     expect(screen.queryByText(/삭제/)).not.toBeInTheDocument()
   })
 
-  it('⭐ 유형 프리셋을 누르면 이름·영역·겨냥 목표가 자동 채워진다 (원칙 8)', async () => {
+  it('⭐ 유형 프리셋을 누르면 이름·영역·겨냥 목표(프리셋 primary만)가 자동 채워진다 (원칙 8·과소청구)', async () => {
     const h = setup({ kind: 'activity' })
     await userEvent.click(screen.getByRole('button', { name: '한글·독서' }))
     expect(screen.getByDisplayValue('한글 학원 숙제')).toBeInTheDocument() // 이름 자동
     await userEvent.click(screen.getByRole('button', { name: '추가' }))
     const input = h.onSaveActivity.mock.calls[0]![0]
     expect(input).toMatchObject({ name: '한글 학원 숙제', domain: '국어', track: '학원' })
-    expect(input.targetIds).toEqual(['int-ko-a', 'int-ko-b']) // 국어 목표 자동 겨냥
+    // 영역 전체가 아니라 활동유형 프리셋('한글')의 primary 만 미리 체크된다.
+    expect(input.targetIds).toEqual(['nuri-com-8', 'nuri-com-7'])
   })
 
   it('편집 폼엔 유형 프리셋이 없다', () => {

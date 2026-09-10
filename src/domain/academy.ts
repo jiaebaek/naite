@@ -97,31 +97,7 @@ export function homeworkOf(
   return activities.filter((a) => a.academyId === academyId)
 }
 
-/**
- * 등원용 영역 커버리지를 위한 **합성 활동** (INV-ACAD-06).
- *   - 활성 학원의 coversDomains 각 영역마다, 그 영역을 챙기는 합성 활동을 만든다.
- *   - 커버리지는 **영역 단위**다(coverage.domainHasActivity) — 특정 아이용 '해석/지금 목표'에
- *     의존하지 않는다. 그래서 어떤 나이의 아이든, 다니는 학원이 그 영역에 곧바로 반영된다.
- *   - 커버리지 계산에만 쓴다. **오늘 화면(deriveTodayTasks)에는 절대 넣지 않는다** (INV-ACAD-03).
- */
-export function attendanceActivities(
-  academies: readonly Academy[],
-): readonly Activity[] {
-  const out: Activity[] = []
-  for (const ac of academies) {
-    if (!ac.active || !ac.coversDomains) continue
-    for (const domain of ac.coversDomains) {
-      out.push({
-        id: `att-${ac.id}-${domain}`,
-        name: `${ac.name} 등원`,
-        domain,
-        track: '학원',
-        targetIds: [], // 영역 단위 커버 — 특정 목표를 겨냥하지 않는다
-        cadence: { kind: '요일지정', weekdays: ac.weekdays.length > 0 ? ac.weekdays : [0] },
-        owner: '엄마',
-        active: true,
-      })
-    }
-  }
-  return out
-}
+// ⛔ attendanceActivities (합성 등원 활동)는 2026-09 결정으로 제거됐다.
+//    등원(coversDomains) 기반 영역-whole 자동커버는 오버클레임(신뢰①)이라 폐기.
+//    이제 커버리지는 학원의 **실제 숙제 활동**(setup 이 프리셋으로 targetIds 를 확정해 생성)이 낸다.
+//    docs/10 "매핑 확정 → 커버리지 배선" · coverage.publicGoalStatusOf 참조.

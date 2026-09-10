@@ -20,11 +20,11 @@ import { provenanceOf } from '../../domain/provenance'
 import { createActivity, deactivate, editActivity, retarget } from '../../domain/activity'
 import {
   academiesToday,
-  attendanceActivities,
   createAcademy,
   deactivateAcademy,
   editAcademy,
 } from '../../domain/academy'
+import { presetByType, suggestedTargets } from '../../domain/standards/activityPresets'
 import { INITIAL_CARE, grantToken } from '../../domain/pet'
 import type { CareState } from '../../domain/pet'
 import { STANDARDS_2021 as REFERENCE_STANDARDS, CHILD_BIRTH_YM, SCHOOL_ENTRY_YM } from '../../domain/standards/child2021'
@@ -55,7 +55,7 @@ import { LogScreen } from './LogScreen'
 import type { WeekDayVM, RecordRowVM } from './LogScreen'
 import { Onboarding } from './Onboarding'
 import { SetupFlow } from './SetupFlow'
-import type { SetupResult } from './SetupFlow'
+import type { SetupResult, SetupPick } from './SetupFlow'
 import { ShareSheet } from './ShareSheet'
 import type { CoordArea } from './NaiteCoordArt'
 import { DaySheet } from './DaySheet'
@@ -264,11 +264,9 @@ export function App() {
   //    기준 데이터 코호트(CHILD_BIRTH_YM)에 아이를 정렬해, 초1~2 아이면 지금 초1~2 목표가 뜬다.
   const month = cohortAlignedMonth(date.slice(0, 7), childBirthYm, CHILD_BIRTH_YM)
   const publicGoals = useMemo(() => currentPublicGoals(standards, month), [standards, month])
-  // 커버리지는 영역 단위 — 활동/등원의 domain 으로 판정한다(특정 아이용 해석 의존 제거).
-  const coverageActivities = useMemo(
-    () => [...activeActivities, ...attendanceActivities(academies)],
-    [activeActivities, academies],
-  )
+  // 커버리지는 활동이 명시적으로 겨냥한 목표(targetIds)로만 판정한다(2026-09 결정 · docs/10 배선).
+  // 등원(coversDomains)은 커버리지에 넣지 않는다 — 표시 전용. 학원 챙김은 그 학원의 숙제 활동이 낸다.
+  const coverageActivities = activeActivities
 
   const domainVMs: readonly DomainVM[] = useMemo(() => {
     // 가족이 이미 하는 장소(§10-A 원칙: 가족 패턴에 맞는 추천을 앞세운다)
@@ -561,17 +559,39 @@ export function App() {
     setChildName(r.name); writeLS(CHILD_NAME_KEY, r.name)
     setChildBirthYm(r.birthYm); writeLS(CHILD_BIRTH_KEY, r.birthYm)
     setPriorityDomains(r.priorityDomains); writeLS(PRIORITY_KEY, JSON.stringify(r.priorityDomains))
-    // S2 학원 = 등원(coversDomains 로 그 영역의 지금 목표를 챙김 처리)
-    const newAcademies = r.academies.map((a) =>
-      createAcademy({ name: a.name, weekdays: [], coversDomains: [a.domain] }, newId))
-    // S3 집 활동 = 실제 체크하는 활동. 영역만 지정하면 그 영역이 챙김으로 잡힌다(영역 단위 커버).
-    // 특정 목표 겨냥은 나중에 상세 화면 '활동 연결'로 명시적으로 할 수 있다.
-    const newActivities = r.homeActivities.map((h) =>
-      createActivity({
-        name: h.name, domain: h.domain, track: '집',
-        targetIds: [],
+
+    // 아이 현재 band(입력 생년월)의 지금 목표 — 프리셋 primary 를 이 band 로 걸러 겨냥 목표로 확정한다.
+    // (미리 체크된 제안을 '시작하기'로 넘기면 = 봤고 끌 수 있었으니 확정으로 간주 · docs/10 배선 rule3)
+    const setupMonth = cohortAlignedMonth(date.slice(0, 7), r.birthYm, CHILD_BIRTH_YM)
+    const bandIds = new Set(currentPublicGoals(standards, setupMonth).map((g) => g.id))
+    // 칩 → 프리셋 → (현재 band 필터) 확정 목표. 프리셋 없거나 band 매칭 없으면 [] (자동 겨냥 없음·과소청구·원칙3).
+    const resolve = (pick: SetupPick): { domain: Domain; targetIds: readonly StandardId[] } => {
+      const preset = pick.presetType ? presetByType(pick.presetType) : undefined
+      return preset
+        ? { domain: preset.domain, targetIds: suggestedTargets(preset, bandIds) }
+        : { domain: pick.domain, targetIds: [] }
+    }
+
+    // S2 학원 = 등원 엔티티 + 그 학원의 숙제 활동(프리셋 확정 목표를 겨냥) 자동 생성 (명세 §06-A)
+    const s2 = r.academies.map((a) => {
+      const { domain, targetIds } = resolve(a)
+      const academy = createAcademy({ name: a.name, weekdays: [], coversDomains: [domain] }, newId)
+      const homework = createActivity({
+        name: `${a.name} 숙제`, domain, track: '학원', targetIds,
+        cadence: { kind: '주N회', times: 2 }, owner: '엄마', academyId: academy.id,
+      }, standards, newId)
+      return { academy, homework }
+    })
+    // S3 집 활동 = 실제 체크하는 활동. 프리셋이 있으면 확정 목표를 겨냥(챙기는중), 없으면 자유.
+    const s3 = r.homeActivities.map((h) => {
+      const { domain, targetIds } = resolve(h)
+      return createActivity({
+        name: h.name, domain, track: '집', targetIds,
         cadence: { kind: '주N회', times: 3 }, owner: '엄마',
-      }, standards, newId))
+      }, standards, newId)
+    })
+    const newAcademies = s2.map((x) => x.academy)
+    const newActivities = [...s2.map((x) => x.homework), ...s3]
     if (newAcademies.length > 0) setAcademies((prev) => [...prev, ...newAcademies])
     if (newActivities.length > 0) setActivities((prev) => [...prev, ...newActivities])
     setShowSetup(false); writeLS(SETUP_KEY, '1')

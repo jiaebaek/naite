@@ -34,6 +34,18 @@ describe('프리셋 데이터 무결성', () => {
     expect(en.primary).toEqual([])
     expect(en.domain).toBe('영어')
   })
+
+  it('모든 프리셋이 why(매핑 이유) 한 줄을 가진다 — 연결 시트 근거 노출(신뢰 ②)', () => {
+    for (const p of ACTIVITY_PRESETS) {
+      expect(p.why.trim().length, `${p.type}`).toBeGreaterThan(0)
+    }
+  })
+
+  it('MVP: primaryElem(초1~2 std-*)은 아직 미큐레이션 — 비어 있다', () => {
+    for (const p of ACTIVITY_PRESETS) {
+      expect(p.primaryElem ?? [], `${p.type}`).toEqual([])
+    }
+  })
 })
 
 describe('⭐ 부풀리기 가드레일 — 주 매핑은 1영역·목표 ≤2 (SSOT §5)', () => {
@@ -50,19 +62,28 @@ describe('⭐ 부풀리기 가드레일 — 주 매핑은 1영역·목표 ≤2 (
   })
 
   it('⭐ 3목표면 가드레일이 실패로 잡는다', () => {
-    const bad: ActivityPreset = { type: 'X', domain: '예체능', primary: ['nuri-phy-3', 'nuri-phy-4', 'nuri-art-6'] }
+    const bad: ActivityPreset = { type: 'X', domain: '예체능', primary: ['nuri-phy-3', 'nuri-phy-4', 'nuri-art-6'], why: 'x' }
     expect(presetGuardrailViolations(bad, STANDARDS_2021).length).toBeGreaterThan(0)
   })
 
   it('⭐ 2영역에 걸치면 가드레일이 실패로 잡는다', () => {
-    const bad: ActivityPreset = { type: 'X', domain: '예체능', primary: ['nuri-phy-3', 'nuri-com-1'] }
+    const bad: ActivityPreset = { type: 'X', domain: '예체능', primary: ['nuri-phy-3', 'nuri-com-1'], why: 'x' }
     const v = presetGuardrailViolations(bad, STANDARDS_2021)
     expect(v.some((m) => m.includes('영역'))).toBe(true)
   })
 
   it('없는 목표를 가리키면 잡는다', () => {
-    const bad: ActivityPreset = { type: 'X', domain: '국어', primary: ['nuri-없음'] }
+    const bad: ActivityPreset = { type: 'X', domain: '국어', primary: ['nuri-없음'], why: 'x' }
     expect(presetGuardrailViolations(bad, STANDARDS_2021).length).toBeGreaterThan(0)
+  })
+
+  it('⭐ primaryElem(초1~2 band)도 각 band별로 3목표면 잡는다', () => {
+    const bad: ActivityPreset = {
+      type: 'X', domain: '국어', primary: [], why: 'x',
+      primaryElem: ['std-a', 'std-b', 'std-c'],
+    }
+    const v = presetGuardrailViolations(bad, STANDARDS_2021)
+    expect(v.some((m) => m.includes('primaryElem'))).toBe(true)
   })
 })
 

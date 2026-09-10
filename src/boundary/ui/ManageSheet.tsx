@@ -13,6 +13,7 @@ import type {
   Weekday,
 } from '../../domain/types'
 import { DOMAINS } from '../../domain/types'
+import { presetByType, suggestedTargets } from '../../domain/standards/activityPresets'
 import { IconX } from './icons'
 
 export interface TargetOption {
@@ -41,14 +42,18 @@ const WD: readonly { label: string; value: Weekday }[] = [
   { label: '목', value: 4 }, { label: '금', value: 5 }, { label: '토', value: 6 }, { label: '일', value: 0 },
 ]
 
-/** 활동 폼 유형 프리셋(원칙 8) — 누르면 이름·소속·주간목표·겨냥 목표를 자동 추천. */
-const ACT_PRESETS: readonly { label: string; name: string; where: '학원' | '자체'; domain: Domain; times: number }[] = [
-  { label: '한글·독서', name: '한글 학원 숙제', where: '학원', domain: '국어', times: 3 },
-  { label: '수학·연산', name: '수학 학습', where: '학원', domain: '수학', times: 2 },
-  { label: '영어', name: '엄마표 영어', where: '자체', domain: '영어', times: 3 },
-  { label: '미술', name: '미술', where: '학원', domain: '예체능', times: 1 },
-  { label: '피아노', name: '피아노', where: '학원', domain: '예체능', times: 2 },
-  { label: '태권도', name: '태권도', where: '학원', domain: '건강·안전', times: 2 },
+/**
+ * 활동 폼 유형 프리셋(원칙 8) — 누르면 이름·소속·주간목표·겨냥 목표를 자동 추천.
+ * presetType 이 있으면 겨냥 목표 = 그 활동유형 프리셋의 primary(현재 band)만 미리 체크한다.
+ *   영역 전체를 겨냥하지 않는다(오버클레임·신뢰① 위반) — docs/10 보수적 매핑.
+ */
+const ACT_PRESETS: readonly { label: string; name: string; where: '학원' | '자체'; domain: Domain; times: number; presetType?: string }[] = [
+  { label: '한글·독서', name: '한글 학원 숙제', where: '학원', domain: '국어', times: 3, presetType: '한글' },
+  { label: '수학·연산', name: '수학 학습', where: '학원', domain: '수학', times: 2, presetType: '사고력수학' },
+  { label: '영어', name: '엄마표 영어', where: '자체', domain: '영어', times: 3, presetType: '영어' },
+  { label: '미술', name: '미술', where: '학원', domain: '예체능', times: 1, presetType: '미술' },
+  { label: '피아노', name: '피아노', where: '학원', domain: '예체능', times: 2, presetType: '피아노' },
+  { label: '태권도', name: '태권도', where: '학원', domain: '예체능', times: 2, presetType: '태권도' },
   { label: '과학·실험', name: '과학 실험', where: '학원', domain: '과학·탐구', times: 1 },
   { label: '학습지', name: '학습지', where: '자체', domain: '국어', times: 3 },
 ]
@@ -137,10 +142,14 @@ function ActivityBody({ editing, academies, targets, onSaveActivity, onDelete, o
   const domainTargets = targets.filter((t) => t.domain === domain)
   const togglePick = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]))
   const changeDomain = (d: Domain) => { setDomain(d); setPicked([]) } // 영역 바꾸면 겨냥 목표 초기화(계약: 같은 영역만)
-  // 원칙 8 — 유형 프리셋: 이름·소속·주간목표·겨냥 목표(그 영역 지금 목표)를 자동 추천 → 손질만
+  // 원칙 8 — 유형 프리셋: 이름·소속·주간목표·겨냥 목표를 자동 추천 → 손질만.
+  // 겨냥 목표는 영역 전체가 아니라 그 활동유형 프리셋의 primary(현재 band)만 미리 체크(과소청구·docs/10).
   const applyPreset = (p: typeof ACT_PRESETS[number]) => {
-    setName(p.name); setWhere(p.where); setDomain(p.domain); setTimes(p.times)
-    setPicked(targets.filter((t) => t.domain === p.domain).map((t) => t.id))
+    const preset = p.presetType ? presetByType(p.presetType) : undefined
+    const dom = preset?.domain ?? p.domain
+    setName(p.name); setWhere(p.where); setDomain(dom); setTimes(p.times)
+    const ids = new Set(targets.map((t) => t.id))
+    setPicked(preset ? [...suggestedTargets(preset, ids)] : [])
     setErr(null)
   }
 

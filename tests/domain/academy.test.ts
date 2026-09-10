@@ -9,7 +9,6 @@
 import { describe, it, expect } from 'vitest'
 import {
   academiesToday,
-  attendanceActivities,
   createAcademy,
   deactivateAcademy,
   editAcademy,
@@ -18,7 +17,7 @@ import {
   rescheduleAcademy,
 } from '../../src/domain/academy'
 import { isDomainError } from '../../src/domain/errors'
-import type { Academy, AcademyInput, Activity, Standard } from '../../src/domain/types'
+import type { Academy, AcademyInput, Activity } from '../../src/domain/types'
 
 let seq = 0
 const newId = () => `acad-${++seq}`
@@ -151,45 +150,10 @@ describe('homeworkOf — 학원의 숙제 (academyId 연결)', () => {
   })
 })
 
-describe('⭐ attendanceActivities — 등원용 영역 커버리지 (INV-ACAD-06, 영역 단위)', () => {
-  const 체육 = createAcademy(input({ name: '유아체육', coversDomains: ['예체능'] }), newId)
-  const 더하다 = createAcademy(input({ name: '더하다' }), newId) // coversDomains 없음
-
-  it('coversDomains 영역을 챙기는 합성 활동을 만든다 (특정 목표 겨냥 X · 영역 단위)', () => {
-    const synth = attendanceActivities([체육])
-    expect(synth).toHaveLength(1)
-    expect(synth[0]!.domain).toBe('예체능')
-    expect(synth[0]!.targetIds).toEqual([]) // 영역 단위 — 특정 목표를 겨냥하지 않는다
-    expect(synth[0]!.active).toBe(true)
-  })
-
-  it('coversDomains 없는 학원은 합성 활동을 안 만든다', () => {
-    expect(attendanceActivities([더하다])).toEqual([])
-  })
-
-  it('비활성 학원은 제외', () => {
-    expect(attendanceActivities([deactivateAcademy(체육)])).toEqual([])
-  })
-
-  it('⭐ 그 영역에 정의된 목표가 없어도 등원 합성 활동은 만들어진다 (해석 의존 제거)', () => {
-    // 초판 버그: 특정 아이용 '지금 목표'가 없으면 등원 커버가 사라졌다. 이제 영역만 있으면 챙긴다.
-    const 음악학원 = createAcademy(input({ name: '음악', coversDomains: ['영어'] }), newId)
-    const synth = attendanceActivities([음악학원])
-    expect(synth).toHaveLength(1)
-    expect(synth[0]!.domain).toBe('영어')
-  })
-
-  it('⭐ 등원만으로 그 영역이 챙김이 된다 — 아이 나이·목표 정의와 무관', async () => {
-    const { domainHasActivity, publicGoalStatusOf } = await import('../../src/domain/coverage')
-    const synth = attendanceActivities([체육])
-    expect(domainHasActivity('예체능', synth)).toBe(true)
-    const 예체능목표: Standard = {
-      id: 'nuri-art-3', domain: '예체능', baselinePeriod: { start: '2024-03', end: '2028-02' },
-      statement: '노래를 즐겨 부른다', source: { document: '누리' }, origin: '공교육',
-    }
-    expect(publicGoalStatusOf('nuri-art-3', [], synth, [예체능목표])).toBe('챙기는중')
-  })
-})
+// ⛔ attendanceActivities (등원용 영역 커버 합성 활동) 은 2026-09 결정으로 제거됐다.
+//    영역-whole 자동커버 = 오버클레임(신뢰①). 커버리지는 이제 학원의 **실제 숙제 활동**(setup 이
+//    프리셋으로 targetIds 를 확정해 생성)이 낸다. 커버리지 판정은 tests/domain/coverage.test.ts.
+//    coversDomains 필드는 학원 과목 메타데이터로만 남는다(editAcademy 보존 테스트는 아래 유지).
 
 describe('editAcademy (편집 폼 저장) ⭐', () => {
   it('id·active 보존, 이름·요일·시간·연락처 교체', () => {
