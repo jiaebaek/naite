@@ -15,6 +15,11 @@ import type { Domain } from '../types'
 export interface ActivityPreset {
   readonly type: string
   readonly domain: Domain
+  /**
+   * 커버 방식 기본값 (T8 · SSOT §5). 등원형=등원 자체가 묶음 커버(숙제 활동 없음, 오늘=일정만) /
+   * 숙제형=딸린 숙제 활동이 커버(오늘=체크). 부모가 "숙제 있어요?" 토글로 조정.
+   */
+  readonly coverMode: '등원형' | '숙제형'
   /** 취학 전(nuri) 자동 제안 묶음 id. 가드레일: ≤2·1영역. */
   readonly primary: readonly string[]
   /** 초1~2(elem) 자동 제안 묶음 id. */
@@ -28,23 +33,23 @@ export interface ActivityPreset {
 }
 
 export const ACTIVITY_PRESETS: readonly ActivityPreset[] = [
-  { type: '한글', domain: '국어', primary: ['cl-nuri-ko-literacy'], primaryElem: ['cl-el-ko-hangul', 'cl-el-ko-read'], why: '글자·읽기(취학 전=관심 / 초1~2=해득·읽기)', reject: ['해득', '문해력 완성'], note: '취학전은 "관심"만. 초1~2는 해득·읽기를 실제 겨냥하되 매핑은 챙기는중만(이룸=부모 확인).' },
-  { type: '독서', domain: '국어', primary: ['cl-nuri-ko-book'], primaryElem: ['cl-el-ko-read', 'cl-el-ko-lit'], why: '책·이야기 즐기기, 읽기·문학', reject: ['문해력', '논술'] },
-  { type: '논술', domain: '국어', primary: [], primaryElem: ['cl-el-ko-read', 'cl-el-ko-write'], why: '읽고 쓰기(초1~2)', note: '초1~2만.' },
-  { type: '사고력수학', domain: '수학', primary: ['cl-nuri-ma-explore'], primaryElem: ['cl-el-ma-pattern', 'cl-el-ma-shape'], why: '규칙·도형·공간(취학 전 누리엔 연산 없음)', reject: ['연산', '선행'], note: '연산형이면 cl-el-ma-num.' },
-  { type: '연산', domain: '수학', primary: [], primaryElem: ['cl-el-ma-num'], why: '수와 연산(초1~2 문제집)', note: '초1~2만.' },
-  { type: '영어', domain: '영어', primary: [], primaryElem: [], why: '공교육 기준 없음(초3 시작) — 자체목표(customGoals)로만 연결', reject: ['공교육 매핑'], note: 'nuri/std 자동 매핑 금지.' },
-  { type: '미술', domain: '예체능', primary: ['cl-nuri-pe-art'], primaryElem: ['cl-el-pe-art'], why: '예술 경험·표현', reject: ['창의력', '소근육', '두뇌'] },
-  { type: '피아노', domain: '예체능', primary: ['cl-nuri-pe-art'], primaryElem: ['cl-el-pe-art'], why: '악기로 소리·리듬, 문화예술 향유', reject: ['두뇌', '집중력', '수학'] },
-  { type: '발레', domain: '예체능', primary: ['cl-nuri-pe-art'], primaryElem: ['cl-el-pe-art'], why: '움직임·춤으로 표현', reject: ['자세교정', '집중력'] },
-  { type: '태권도', domain: '예체능', primary: ['cl-nuri-pe-body'], primaryElem: ['cl-el-pe-body'], why: '몸을 쓰는 신체활동·놀이', reject: ['인성교육'] },
-  { type: '유아체육', domain: '예체능', primary: ['cl-nuri-pe-body'], primaryElem: ['cl-el-pe-body'], why: '몸을 쓰는 신체활동·놀이', reject: ['두뇌', '집중력'] },
-  { type: '축구', domain: '예체능', primary: ['cl-nuri-pe-body'], primaryElem: ['cl-el-pe-body'], why: '몸을 쓰는 신체활동·놀이', reject: ['리더십', '사회성'] },
-  { type: '수영', domain: '예체능', primary: ['cl-nuri-pe-body'], primaryElem: ['cl-el-pe-body'], why: '몸을 쓰는 신체활동·놀이', reject: ['심폐', '두뇌'] },
-  { type: '코딩·로봇', domain: '과학·탐구', primary: [], primaryElem: ['cl-el-sci-things'], why: '사물·도구·조사 탐구(초1~2)', note: '초1~2만.' },
-  { type: '보드게임', domain: '수학', primary: ['cl-nuri-ma-explore'], primaryElem: ['cl-el-ma-pattern'], why: '규칙·수·공간 놀이' },
-  { type: '일기·글쓰기', domain: '국어', primary: [], primaryElem: ['cl-el-ko-write'], why: '쓰기(초1~2)', note: '초1~2만.' },
-  { type: '바깥놀이', domain: '예체능', primary: ['cl-nuri-pe-body'], primaryElem: [], why: '몸을 쓰는 신체활동·놀이', note: '자연관찰은 부수(과학·탐구)로 가능.' },
+  { type: '한글', domain: '국어', coverMode: '숙제형', primary: ['cl-nuri-ko-literacy'], primaryElem: ['cl-el-ko-hangul', 'cl-el-ko-read'], why: '글자·읽기(취학 전=관심 / 초1~2=해득·읽기)', reject: ['해득', '문해력 완성'], note: '취학전은 "관심"만. 초1~2는 해득·읽기를 실제 겨냥하되 매핑은 챙기는중만(이룸=부모 확인).' },
+  { type: '독서', domain: '국어', coverMode: '숙제형', primary: ['cl-nuri-ko-book'], primaryElem: ['cl-el-ko-read', 'cl-el-ko-lit'], why: '책·이야기 즐기기, 읽기·문학', reject: ['문해력', '논술'] },
+  { type: '논술', domain: '국어', coverMode: '숙제형', primary: [], primaryElem: ['cl-el-ko-read', 'cl-el-ko-write'], why: '읽고 쓰기(초1~2)', note: '초1~2만.' },
+  { type: '사고력수학', domain: '수학', coverMode: '숙제형', primary: ['cl-nuri-ma-explore'], primaryElem: ['cl-el-ma-pattern', 'cl-el-ma-shape'], why: '규칙·도형·공간(취학 전 누리엔 연산 없음)', reject: ['연산', '선행'], note: '연산형이면 cl-el-ma-num.' },
+  { type: '연산', domain: '수학', coverMode: '숙제형', primary: [], primaryElem: ['cl-el-ma-num'], why: '수와 연산(초1~2 문제집)', note: '초1~2만.' },
+  { type: '영어', domain: '영어', coverMode: '숙제형', primary: [], primaryElem: [], why: '공교육 기준 없음(초3 시작) — 자체목표(customGoals)로만 연결', reject: ['공교육 매핑'], note: 'nuri/std 자동 매핑 금지.' },
+  { type: '미술', domain: '예체능', coverMode: '등원형', primary: ['cl-nuri-pe-art'], primaryElem: ['cl-el-pe-art'], why: '예술 경험·표현', reject: ['창의력', '소근육', '두뇌'] },
+  { type: '피아노', domain: '예체능', coverMode: '등원형', primary: ['cl-nuri-pe-art'], primaryElem: ['cl-el-pe-art'], why: '악기로 소리·리듬, 문화예술 향유', reject: ['두뇌', '집중력', '수학'] },
+  { type: '발레', domain: '예체능', coverMode: '등원형', primary: ['cl-nuri-pe-art'], primaryElem: ['cl-el-pe-art'], why: '움직임·춤으로 표현', reject: ['자세교정', '집중력'] },
+  { type: '태권도', domain: '예체능', coverMode: '등원형', primary: ['cl-nuri-pe-body'], primaryElem: ['cl-el-pe-body'], why: '몸을 쓰는 신체활동·놀이', reject: ['인성교육'] },
+  { type: '유아체육', domain: '예체능', coverMode: '등원형', primary: ['cl-nuri-pe-body'], primaryElem: ['cl-el-pe-body'], why: '몸을 쓰는 신체활동·놀이', reject: ['두뇌', '집중력'] },
+  { type: '축구', domain: '예체능', coverMode: '등원형', primary: ['cl-nuri-pe-body'], primaryElem: ['cl-el-pe-body'], why: '몸을 쓰는 신체활동·놀이', reject: ['리더십', '사회성'] },
+  { type: '수영', domain: '예체능', coverMode: '등원형', primary: ['cl-nuri-pe-body'], primaryElem: ['cl-el-pe-body'], why: '몸을 쓰는 신체활동·놀이', reject: ['심폐', '두뇌'] },
+  { type: '코딩·로봇', domain: '과학·탐구', coverMode: '등원형', primary: [], primaryElem: ['cl-el-sci-things'], why: '사물·도구·조사 탐구(초1~2)', note: '초1~2만.' },
+  { type: '보드게임', domain: '수학', coverMode: '숙제형', primary: ['cl-nuri-ma-explore'], primaryElem: ['cl-el-ma-pattern'], why: '규칙·수·공간 놀이' },
+  { type: '일기·글쓰기', domain: '국어', coverMode: '숙제형', primary: [], primaryElem: ['cl-el-ko-write'], why: '쓰기(초1~2)', note: '초1~2만.' },
+  { type: '바깥놀이', domain: '예체능', coverMode: '등원형', primary: ['cl-nuri-pe-body'], primaryElem: [], why: '몸을 쓰는 신체활동·놀이', note: '자연관찰은 부수(과학·탐구)로 가능.' },
 ]
 
 /** 활동유형(type)으로 프리셋을 찾는다. 없으면 undefined(→ 자동 제안 안 함, 원칙3). */

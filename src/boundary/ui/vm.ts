@@ -4,6 +4,7 @@
  */
 import type { Domain, Provenance } from '../../domain/types'
 import type { GoalStatus } from '../../domain/coverage'
+import type { Lane } from '../../domain/lanes'
 import type { RecommendedActivity } from '../../domain/recommend'
 
 /**
@@ -99,6 +100,8 @@ export interface DomainVM {
   readonly prog: number // 챙기는 중 (활동 연결·아직 이룸 아님)
   readonly gap: number // 비어있음 (활동필요)
   readonly group: 'empty' | 'partial' | 'full'
+  /** 두 레인(SSOT §5): 학습(활동·추천·pull) / 생활·마음(안심·저액션). */
+  readonly lane: Lane
   /** 영어처럼 공교육 기준 없는 영역 */
   readonly noPublic: boolean
   /** 부모가 온보딩에서 고른 우선 분야 — 그룹 내에서 맨 위로 */

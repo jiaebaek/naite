@@ -21,6 +21,7 @@ import { provenanceOf } from '../../domain/provenance'
 import { createActivity, deactivate, editActivity, retarget } from '../../domain/activity'
 import {
   academiesToday,
+  attendanceActivities,
   createAcademy,
   deactivateAcademy,
   editAcademy,
@@ -30,6 +31,7 @@ import { INITIAL_CARE, grantToken } from '../../domain/pet'
 import type { CareState } from '../../domain/pet'
 import { STANDARDS_2021 as REFERENCE_STANDARDS, CHILD_BIRTH_YM, SCHOOL_ENTRY_YM } from '../../domain/standards/child2021'
 import { DOMAINS, NO_PUBLIC_STANDARD } from '../../domain/types'
+import { laneOf } from '../../domain/lanes'
 import type {
   Academy,
   AcademyInput,
@@ -263,10 +265,14 @@ export function App() {
   const activeActivities = useMemo(() => activities.filter((a) => a.active), [activities])
 
   // ── 커버리지 (묶음 단위) ──
-  // 커버리지는 활동이 명시적으로 겨냥한 묶음(targetIds)으로만 판정한다(모델 A · docs/11 §5).
-  // 등원(coversDomains)은 커버리지에 넣지 않는다 — 표시 전용. 학원 챙김은 그 학원의 숙제 활동이 낸다.
+  // 커버리지 = 활동이 명시적으로 겨냥한 묶음(targetIds)(모델 A · docs/11 §5).
+  //   숙제형 학원·집 활동 = activeActivities · 등원형 학원 = attendanceActivities(coversClusters).
+  //   등원 합성 활동은 오늘 화면(deriveTodayTasks)엔 안 들어간다 — 등원은 일정만(T8·SSOT §5).
   const publicGoals = standards
-  const coverageActivities = activeActivities
+  const coverageActivities = useMemo(
+    () => [...activeActivities, ...attendanceActivities(academies)],
+    [activeActivities, academies],
+  )
 
   const domainVMs: readonly DomainVM[] = useMemo(() => {
     // 가족이 이미 하는 장소(§10-A 원칙: 가족 패턴에 맞는 추천을 앞세운다)
@@ -308,6 +314,7 @@ export function App() {
         total === 0 ? 'full' : gap === total ? 'empty' : gap > 0 ? 'partial' : 'full'
       return {
         domain, milestones, total, on, done, prog, gap, group,
+        lane: laneOf(domain),
         noPublic: NO_PUBLIC_STANDARD.includes(domain),
         priority: priorityDomains.includes(domain),
       }
@@ -316,8 +323,9 @@ export function App() {
 
   // ── 갭 배너 ──
   const banner: GapBanner = useMemo(() => {
-    // 공교육 기준 없이 아직 목표를 안 정한 영역(영어)은 챙김/갭 어느 쪽으로도 세지 않는다.
-    const assessable = domainVMs.filter((d) => !(d.noPublic && d.total === 0))
+    // 배너(안도 카드)는 **학습 레인만** 센다 — 생활·마음(사회·인성·건강·안전)은 빈칸을 갭 알람으로
+    // 띄우지 않는다(SSOT §5 안심 레인). 공교육 기준 없이 목표 미정 영역(영어)도 제외.
+    const assessable = domainVMs.filter((d) => d.lane === '학습' && !(d.noPublic && d.total === 0))
     const gapDomains = assessable.filter((d) => d.group === 'empty')
     // 부모 우선 분야를 갭 칩 맨 앞으로 (중요도 = 부모가 정함)
     const gapNames = [...gapDomains].sort((a, b) => Number(b.priority) - Number(a.priority)).map((d) => d.domain)
@@ -573,22 +581,28 @@ export function App() {
     //    입력받은 생년월의 band 묶음으로 한다 — 안 그러면 elem 묶음 겨냥이 stale nuri 로 검증돼 튕긴다.
     const setupStandards = [...currentClusterStandards(setupMonth), ...customGoals]
     // 칩 → 프리셋 → (현재 band 필터) 확정 묶음. 프리셋 없거나 band 매칭 없으면 [] (자동 겨냥 없음·과소청구·원칙3).
-    const resolve = (pick: SetupPick): { domain: Domain; targetIds: readonly StandardId[] } => {
+    const resolve = (pick: SetupPick): { domain: Domain; targetIds: readonly StandardId[]; coverMode: '등원형' | '숙제형' } => {
       const preset = pick.presetType ? presetByType(pick.presetType) : undefined
       return preset
-        ? { domain: preset.domain, targetIds: suggestedTargets(preset, bandClusterIds) }
-        : { domain: pick.domain, targetIds: [] }
+        ? { domain: preset.domain, targetIds: suggestedTargets(preset, bandClusterIds), coverMode: preset.coverMode }
+        : { domain: pick.domain, targetIds: [], coverMode: '숙제형' }
     }
 
-    // S2 학원 = 등원 엔티티 + 그 학원의 숙제 활동(프리셋 확정 목표를 겨냥) 자동 생성 (명세 §06-A)
+    // S2 학원 = 등원 엔티티. 커버 방식(T8·SSOT §5):
+    //   등원형 → 등원 자체가 묶음 커버(coversClusters), 숙제 활동 없음(오늘=일정만).
+    //   숙제형 → 학원 + 숙제 활동(targetIds=묶음)이 커버(오늘=체크).
     const s2 = r.academies.map((a) => {
-      const { domain, targetIds } = resolve(a)
-      const academy = createAcademy({ name: a.name, weekdays: [], coversDomains: [domain] }, newId)
+      const { domain, targetIds, coverMode } = resolve(a)
+      if (coverMode === '등원형') {
+        const academy = createAcademy({ name: a.name, weekdays: [], coversClusters: targetIds }, newId)
+        return { academy, homework: null as Activity | null }
+      }
+      const academy = createAcademy({ name: a.name, weekdays: [] }, newId)
       const homework = createActivity({
         name: `${a.name} 숙제`, domain, track: '학원', targetIds,
         cadence: { kind: '주N회', times: 2 }, owner: '엄마', academyId: academy.id,
       }, setupStandards, newId)
-      return { academy, homework }
+      return { academy, homework: homework as Activity | null }
     })
     // S3 집 활동 = 실제 체크하는 활동. 프리셋이 있으면 확정 목표를 겨냥(챙기는중), 없으면 자유.
     const s3 = r.homeActivities.map((h) => {
@@ -599,7 +613,7 @@ export function App() {
       }, setupStandards, newId)
     })
     const newAcademies = s2.map((x) => x.academy)
-    const newActivities = [...s2.map((x) => x.homework), ...s3]
+    const newActivities = [...s2.map((x) => x.homework).filter((h): h is Activity => h !== null), ...s3]
     if (newAcademies.length > 0) setAcademies((prev) => [...prev, ...newAcademies])
     if (newActivities.length > 0) setActivities((prev) => [...prev, ...newActivities])
     setShowSetup(false); writeLS(SETUP_KEY, '1')

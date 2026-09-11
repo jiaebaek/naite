@@ -106,10 +106,14 @@ export interface Academy {
   /** 연락처. 선택 (우선순위 낮음, 추후 지도 연동) */
   readonly contact?: string
   /**
-   * 등원 자체가 챙기는 영역 (INV-ACAD-06). 유아체육 → ['예체능'].
-   * 숙제의 영역과 다르다 — 이건 "가는 것"이 덮는 영역이다. 커버리지에만 반영.
+   * (레거시) 등원이 챙기는 영역. T8 이후 커버리지 산정엔 쓰지 않는다 — coversClusters 로 대체.
    */
   readonly coversDomains?: readonly Domain[]
+  /**
+   * 등원형 학원이 **등원 자체로 챙기는 묶음 id** (T8 · SSOT §5 등원 커버). 예: 태권도 → ['cl-nuri-pe-body'].
+   * 숙제형 학원은 비우고, 딸린 숙제 활동(targetIds)이 커버한다. 커버리지에만 반영(오늘 화면엔 일정만).
+   */
+  readonly coversClusters?: readonly string[]
   readonly active: boolean
 }
 

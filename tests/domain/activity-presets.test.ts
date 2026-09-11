@@ -57,22 +57,22 @@ describe('⭐ 부풀리기 가드레일 — 각 band 자동제안 ≤2묶음·1�
   })
 
   it('⭐ 3묶음이면 가드레일이 실패로 잡는다', () => {
-    const bad: ActivityPreset = { type: 'X', domain: '국어', why: 'x', primary: ['cl-nuri-ko-listen', 'cl-nuri-ko-literacy', 'cl-nuri-ko-book'] }
+    const bad: ActivityPreset = { type: 'X', domain: '국어', coverMode: '숙제형', why: 'x', primary: ['cl-nuri-ko-listen', 'cl-nuri-ko-literacy', 'cl-nuri-ko-book'] }
     expect(presetGuardrailViolations(bad).length).toBeGreaterThan(0)
   })
 
   it('⭐ 2영역에 걸치면 가드레일이 실패로 잡는다', () => {
-    const bad: ActivityPreset = { type: 'X', domain: '국어', why: 'x', primary: ['cl-nuri-ko-listen', 'cl-nuri-ma-explore'] }
+    const bad: ActivityPreset = { type: 'X', domain: '국어', coverMode: '숙제형', why: 'x', primary: ['cl-nuri-ko-listen', 'cl-nuri-ma-explore'] }
     expect(presetGuardrailViolations(bad).some((m) => m.includes('영역'))).toBe(true)
   })
 
   it('없는 묶음을 가리키면 잡는다', () => {
-    const bad: ActivityPreset = { type: 'X', domain: '국어', why: 'x', primary: ['cl-없음'] }
+    const bad: ActivityPreset = { type: 'X', domain: '국어', coverMode: '숙제형', why: 'x', primary: ['cl-없음'] }
     expect(presetGuardrailViolations(bad).length).toBeGreaterThan(0)
   })
 
   it('⭐ primaryElem(초1~2 band)도 각 band별로 3묶음이면 잡는다', () => {
-    const bad: ActivityPreset = { type: 'X', domain: '수학', why: 'x', primary: [], primaryElem: ['cl-el-ma-num', 'cl-el-ma-pattern', 'cl-el-ma-shape'] }
+    const bad: ActivityPreset = { type: 'X', domain: '수학', coverMode: '숙제형', why: 'x', primary: [], primaryElem: ['cl-el-ma-num', 'cl-el-ma-pattern', 'cl-el-ma-shape'] }
     expect(presetGuardrailViolations(bad).some((m) => m.includes('primaryElem'))).toBe(true)
   })
 })

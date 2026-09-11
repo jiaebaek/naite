@@ -8,6 +8,7 @@ import userEvent from '@testing-library/user-event'
 import { AreaScreen } from '../../src/boundary/ui/AreaScreen'
 import type { DomainVM, MilestoneVM } from '../../src/boundary/ui/vm'
 import type { Domain } from '../../src/domain/types'
+import { laneOf } from '../../src/domain/lanes'
 
 const ms = (status: MilestoneVM['status']): MilestoneVM => ({
   standardId: `s-${Math.random()}`, statement: '목표', badgeCls: 'gov', badgeLabel: '공교육·누리과정',
@@ -20,13 +21,14 @@ const dom = (domain: Domain, statuses: MilestoneVM['status'][], noPublic = false
   const prog = milestones.filter((m) => m.status === '챙기는중').length
   const total = milestones.length
   const group: DomainVM['group'] = total === 0 ? 'full' : gap === total ? 'empty' : gap > 0 ? 'partial' : 'full'
-  return { domain, milestones, total, on: total - gap, done, prog, gap, group, noPublic, priority: false }
+  return { domain, milestones, total, on: total - gap, done, prog, gap, group, lane: laneOf(domain), noPublic, priority: false }
 }
 
-// 국어=부분, 과학·탐구=비어있음, 건강·안전=완료 (프로토타입 축약)
+// 학습 레인: 국어=부분, 과학·탐구=비어있음, 수학=완료. + 생활 레인: 건강·안전(안심 섹션).
 const DOMAINS_VM: readonly DomainVM[] = [
   dom('국어', ['챙기는중', '활동필요']),
   dom('과학·탐구', ['활동필요', '활동필요', '활동필요']),
+  dom('수학', ['챙기는중', '챙기는중', '챙기는중']),
   dom('건강·안전', ['챙기는중', '챙기는중', '챙기는중']),
 ]
 
@@ -77,16 +79,26 @@ describe('⭐ 원칙 5 — 선행 UI 가 없다 (회귀 방지)', () => {
 describe('⭐ 부모 우선 분야 (중요도 = 부모가 정함)', () => {
   it('같은 그룹에서 우선 분야가 맨 위로 오고 "중요" 표시가 붙는다', () => {
     const onOpenDetail = vi.fn()
-    // 둘 다 비어있음. 과학·탐구가 먼저 들어오지만, 사회·인성이 부모 우선 → 맨 위로.
+    // 둘 다 학습 레인·비어있음. 과학·탐구가 먼저 들어오지만, 예체능이 부모 우선 → 맨 위로.
     const doms: readonly DomainVM[] = [
       dom('과학·탐구', ['활동필요', '활동필요']),
-      { ...dom('사회·인성', ['활동필요', '활동필요']), priority: true },
+      { ...dom('예체능', ['활동필요', '활동필요']), priority: true },
     ]
     const { container } = render(<AreaScreen dateLabel="9월 3일" domains={doms} onOpenDetail={onOpenDetail} />)
     const cards = [...container.querySelectorAll('[data-testid^="domain-"]')]
-    expect(cards[0]!.getAttribute('data-testid')).toBe('domain-사회·인성')
+    expect(cards[0]!.getAttribute('data-testid')).toBe('domain-예체능')
     expect(within(cards[0] as HTMLElement).getByText('중요')).toBeInTheDocument()
     expect(within(cards[1] as HTMLElement).queryByText('중요')).not.toBeInTheDocument()
+  })
+})
+
+describe('⭐ T8 두 레인 — 생활·마음은 안심 섹션(갭 알람 X)', () => {
+  it('생활·마음 레인이 별도 안심 섹션으로, 비어있어도 갭 알람 톤이 아니다', () => {
+    setup()
+    const life = screen.getByTestId('lane-life')
+    expect(within(life).getByText(/일상에서 챙겨지고 있어요/)).toBeInTheDocument()
+    // 건강·안전(생활 레인)은 학습 개요 카운트(3개 영역)에 안 들어간다
+    expect(screen.getByText(/3개 영역 중 2곳 챙기고 있어요/)).toBeInTheDocument()
   })
 })
 

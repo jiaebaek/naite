@@ -9,6 +9,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   academiesToday,
+  attendanceActivities,
   createAcademy,
   deactivateAcademy,
   editAcademy,
@@ -150,10 +151,38 @@ describe('homeworkOf — 학원의 숙제 (academyId 연결)', () => {
   })
 })
 
-// ⛔ attendanceActivities (등원용 영역 커버 합성 활동) 은 2026-09 결정으로 제거됐다.
-//    영역-whole 자동커버 = 오버클레임(신뢰①). 커버리지는 이제 학원의 **실제 숙제 활동**(setup 이
-//    프리셋으로 targetIds 를 확정해 생성)이 낸다. 커버리지 판정은 tests/domain/coverage.test.ts.
-//    coversDomains 필드는 학원 과목 메타데이터로만 남는다(editAcademy 보존 테스트는 아래 유지).
+// ⭐ attendanceActivities (T8 · 등원형 학원의 등원 커버) — coversClusters 를 겨냥하는 합성 활동.
+//    영역-whole 아님: 프리셋이 확정한 특정 묶음만. 오늘 화면엔 안 들어간다(일정만).
+describe('⭐ attendanceActivities — 등원형 학원의 묶음 커버 (T8)', () => {
+  const 체육 = createAcademy(input({ name: '유아체육', weekdays: [0], coversClusters: ['cl-nuri-pe-body'] }), newId)
+  const 더하다 = createAcademy(input({ name: '더하다' }), newId) // coversClusters 없음(숙제형)
+
+  it('coversClusters 를 겨냥하는 합성 활동을 만든다 (특정 묶음만)', () => {
+    const synth = attendanceActivities([체육])
+    expect(synth).toHaveLength(1)
+    expect(synth[0]!.targetIds).toEqual(['cl-nuri-pe-body'])
+    expect(synth[0]!.domain).toBe('예체능') // 묶음의 영역에서 파생
+    expect(synth[0]!.active).toBe(true)
+  })
+
+  it('coversClusters 없는(숙제형) 학원은 합성 활동을 안 만든다', () => {
+    expect(attendanceActivities([더하다])).toEqual([])
+  })
+
+  it('비활성 학원은 제외', () => {
+    expect(attendanceActivities([deactivateAcademy(체육)])).toEqual([])
+  })
+
+  it('⭐ 등원 커버로 그 묶음이 챙기는중이 된다 (오늘 화면과 무관)', async () => {
+    const { publicGoalStatusOf } = await import('../../src/domain/coverage')
+    const synth = attendanceActivities([체육])
+    const 묶음 = {
+      id: 'cl-nuri-pe-body', domain: '예체능' as const, baselinePeriod: { start: '2024-03', end: '2028-02' },
+      statement: '신체활동', source: { document: '누리', code: 'cl-nuri-pe-body' }, origin: '공교육' as const,
+    }
+    expect(publicGoalStatusOf('cl-nuri-pe-body', [], synth, [묶음])).toBe('챙기는중')
+  })
+})
 
 describe('editAcademy (편집 폼 저장) ⭐', () => {
   it('id·active 보존, 이름·요일·시간·연락처 교체', () => {

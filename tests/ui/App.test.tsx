@@ -156,15 +156,15 @@ describe('⭐ 현황 배너 — 안도 먼저 (원칙 6 · 회귀 방지)', () =
     expect(await screen.findByText(/벌써 4곳을 챙기고 있어요/)).toBeInTheDocument()
   })
 
-  it('갭(3곳)은 서브에서 넌지시 + 영역 이름 칩', async () => {
-    // 과학·탐구·사회·인성 + 건강·안전(유아체육은 예체능만 챙기고 안전은 못 챙긴다 — 오버클레임 금지).
+  it('갭은 학습 레인만 — 과학·탐구 1곳(생활·마음은 배너 갭에서 제외)', async () => {
+    // T8: 배너(안도 카드)는 학습 레인만 센다. 사회·인성·건강·안전(생활·마음)은 갭 알람 안 함(SSOT §5).
     render(<App />)
     await screen.findByTestId('view-today')
     const banner = screen.getByText(/벌써 4곳을 챙기고 있어요/).closest('.gapcard')!
-    expect(banner.textContent).toContain('3곳만 더 보면')
+    expect(banner.textContent).toContain('1곳만 더 보면')
     expect(banner.textContent).toContain('과학·탐구')
-    expect(banner.textContent).toContain('사회·인성')
-    expect(banner.textContent).toContain('건강·안전')
+    expect(banner.textContent).not.toContain('사회·인성')
+    expect(banner.textContent).not.toContain('건강·안전')
   })
 })
 

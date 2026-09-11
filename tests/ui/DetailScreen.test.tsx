@@ -23,7 +23,7 @@ const DONE: MilestoneVM = {
   badgeCls: 'gov', badgeLabel: '공교육·성취기준', status: '됨', coveredBy: null, done: true,
 }
 const VM: DomainVM = {
-  domain: '국어', milestones: [EMPTY, PROG, DONE], total: 3, on: 2, done: 1, prog: 1, gap: 1, group: 'partial', noPublic: false, priority: false,
+  domain: '국어', milestones: [EMPTY, PROG, DONE], total: 3, on: 2, done: 1, prog: 1, gap: 1, group: 'partial', lane: '학습', noPublic: false, priority: false,
 }
 
 const setup = (vm: DomainVM = VM) => {
@@ -115,7 +115,7 @@ describe('⭐ T7 — 묶음 목록 + 근거 상세 (개별 성취기준)', () =>
       cl('cl-nuri-ko-listen', '듣기·말하기', '챙기는중', ['말이나 이야기를 관심 있게 듣는다', '자신의 경험, 느낌, 생각을 말한다']),
       cl('cl-nuri-ko-literacy', '읽기·쓰기 관심', '활동필요', ['주변의 상징, 글자 등의 읽기에 관심을 가진다']),
     ],
-    total: 2, on: 1, done: 0, prog: 1, gap: 1, group: 'partial', noPublic: false, priority: false,
+    total: 2, on: 1, done: 0, prog: 1, gap: 1, group: 'partial', lane: '학습', noPublic: false, priority: false,
   }
 
   it('묶음이 카드로 뜬다(묶음 라벨)', () => {

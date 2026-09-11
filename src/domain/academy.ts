@@ -9,6 +9,7 @@
 
 import { requireNonEmptyName } from './guards'
 import { weekdayOf } from './today'
+import { clusterById } from './standards/clusters'
 import type {
   Academy,
   AcademyId,
@@ -31,6 +32,7 @@ export function createAcademy(input: AcademyInput, newId: () => string): Academy
     ...(input.time !== undefined ? { time: input.time } : {}),
     ...(input.contact !== undefined ? { contact: input.contact } : {}),
     ...(input.coversDomains !== undefined ? { coversDomains: [...input.coversDomains] } : {}),
+    ...(input.coversClusters !== undefined ? { coversClusters: [...input.coversClusters] } : {}),
     active: true,
   }
 }
@@ -50,6 +52,7 @@ export function renameAcademy(academy: Academy, name: string): Academy {
 export function editAcademy(academy: Academy, input: AcademyInput): Academy {
   requireNonEmptyName(input.name, 'E-ACAD-EMPTY-NAME')
   const covers = input.coversDomains ?? academy.coversDomains
+  const coversCl = input.coversClusters ?? academy.coversClusters
   return {
     id: academy.id,
     active: academy.active,
@@ -58,6 +61,7 @@ export function editAcademy(academy: Academy, input: AcademyInput): Academy {
     ...(input.time !== undefined ? { time: input.time } : {}),
     ...(input.contact !== undefined ? { contact: input.contact } : {}),
     ...(covers !== undefined ? { coversDomains: [...covers] } : {}),
+    ...(coversCl !== undefined ? { coversClusters: [...coversCl] } : {}),
   }
 }
 
@@ -97,7 +101,29 @@ export function homeworkOf(
   return activities.filter((a) => a.academyId === academyId)
 }
 
-// ⛔ attendanceActivities (합성 등원 활동)는 2026-09 결정으로 제거됐다.
-//    등원(coversDomains) 기반 영역-whole 자동커버는 오버클레임(신뢰①)이라 폐기.
-//    이제 커버리지는 학원의 **실제 숙제 활동**(setup 이 프리셋으로 targetIds 를 확정해 생성)이 낸다.
-//    docs/10 "매핑 확정 → 커버리지 배선" · coverage.publicGoalStatusOf 참조.
+/**
+ * 등원형 학원의 **등원 커버**를 위한 합성 활동 (T8 · SSOT §5 등원 커버).
+ *   - 등원형 학원은 숙제 활동이 없다. 대신 등원 자체가 `coversClusters`(특정 묶음)를 챙긴다.
+ *   - 여기서 만든 합성 활동을 **커버리지 계산에만** 합친다(coverage.coveringActivities).
+ *   - ⚠️ 오늘 화면(deriveTodayTasks)에는 절대 넣지 않는다 — 등원은 일정만, 체크 대상 아님(INV-ACAD-03).
+ *   - 영역-whole 자동커버 아님: 프리셋이 확정한 **특정 묶음**만 겨냥한다(과소청구·신뢰①).
+ */
+export function attendanceActivities(
+  academies: readonly Academy[],
+): readonly Activity[] {
+  const out: Activity[] = []
+  for (const ac of academies) {
+    if (!ac.active || !ac.coversClusters || ac.coversClusters.length === 0) continue
+    out.push({
+      id: `att-${ac.id}`,
+      name: `${ac.name} 등원`,
+      domain: clusterById(ac.coversClusters[0]!)?.domain ?? '예체능',
+      track: '학원',
+      targetIds: [...ac.coversClusters],
+      cadence: { kind: '요일지정', weekdays: ac.weekdays.length > 0 ? ac.weekdays : [0] },
+      owner: '엄마',
+      active: true,
+    })
+  }
+  return out
+}

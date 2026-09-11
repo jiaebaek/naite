@@ -4,24 +4,23 @@
  * ⚠️ 앱은 더 이상 이걸 기본값으로 쓰지 않는다 — 빈 상태로 시작하고, 데이터는 사용자가
  *    온보딩 셋업(§06-A)·관리에서 직접 입력한다. 이 파일은 이제 **테스트 픽스처/예시**다.
  *
- * ⭐ 커버리지는 활동이 명시적으로 겨냥한 **묶음(cluster) id**로만 잡힌다(T7 모델 A · docs/11 §5).
- *    등원(coversDomains)은 커버리지에 쓰지 않는다 — 학원마다 **숙제 활동**을 두고 그 활동이
- *    프리셋 묶음(취학 전 cl-nuri-*)을 겨냥한다(셋업이 자동 생성하는 것과 같은 모양).
+ * ⭐ 커버리지는 활동/등원이 명시적으로 겨냥한 **묶음(cluster) id**로만 잡힌다(T7 모델 A · docs/11 §5).
+ *    커버 방식은 둘(T8·SSOT §5):
+ *      - 숙제형 학원(한글·수학) = 딸린 **숙제 활동**(targetIds)이 커버. 오늘 화면에 체크로 뜬다.
+ *      - 등원형 학원(미술·유아체육) = 등원 자체(`coversClusters`)가 커버. 오늘 화면엔 일정만(체크 X).
  *
- * 이 가족의 그림: 국어·수학·예체능·영어는 챙기는 중, **과학·탐구·사회·인성·건강·안전은 갭**이다.
- *   (유아체육은 예체능 신체활동을 챙기지만 '안전하게 생활하기'(건강·안전)까지 챙기진 않는다 —
- *    영역 통째 챙김을 주장하지 않는 게 신뢰다. 안전은 집에서만 채워지는 실제 갭.)
+ * 이 가족의 그림: 국어·수학·예체능·영어는 챙기는 중, **과학·탐구(학습 갭)**. 생활·마음(사회·인성·건강·안전)은
+ *   안심 레인이라 배너 갭으로 세지 않는다.
  */
 
 import type { Academy, Activity } from '../domain/types'
 
 export const SEED_ACADEMIES: readonly Academy[] = [
-  // 더하다는 숙제(한글·팩토)가 국어·수학을 챙긴다. 등원용 영역은 없다.
+  // 더하다 = 숙제형. 숙제(한글·팩토)가 국어·수학 묶음을 챙긴다.
   { id: 'ac-plus', name: '더하다사고력', weekdays: [1], time: '14:30', active: true },
-  // 미술·체육은 등원 엔티티 + 각자의 숙제 활동(hw-art·hw-pe)이 예체능을 챙긴다.
-  // coversDomains 는 과목 메타데이터일 뿐 커버리지 산정엔 쓰지 않는다.
-  { id: 'ac-art', name: '아이마음아트', weekdays: [3], time: '14:30', coversDomains: ['예체능'], active: true },
-  { id: 'ac-pe', name: '유아체육', weekdays: [0], time: '13:30', coversDomains: ['예체능'], active: true },
+  // 미술·유아체육 = 등원형. 숙제 없이 등원 자체가 예체능 묶음을 챙긴다(오늘=일정만).
+  { id: 'ac-art', name: '아이마음아트', weekdays: [3], time: '14:30', coversClusters: ['cl-nuri-pe-art'], active: true },
+  { id: 'ac-pe', name: '유아체육', weekdays: [0], time: '13:30', coversClusters: ['cl-nuri-pe-body'], active: true },
 ]
 
 export const SEED_ACTIVITIES: readonly Activity[] = [
@@ -50,30 +49,7 @@ export const SEED_ACTIVITIES: readonly Activity[] = [
     active: true,
     academyId: 'ac-plus',
   },
-  {
-    id: 'hw-art',
-    name: '미술 학원 숙제',
-    domain: '예체능',
-    track: '학원',
-    // 프리셋 '미술' → 취학 전 묶음 '예술 경험'.
-    targetIds: ['cl-nuri-pe-art'],
-    cadence: { kind: '주N회', times: 1 },
-    owner: '엄마',
-    active: true,
-    academyId: 'ac-art',
-  },
-  {
-    id: 'hw-pe',
-    name: '유아체육 숙제',
-    domain: '예체능',
-    track: '학원',
-    // 프리셋 '유아체육' → 취학 전 묶음 '신체활동'.
-    targetIds: ['cl-nuri-pe-body'],
-    cadence: { kind: '주N회', times: 1 },
-    owner: '엄마',
-    active: true,
-    academyId: 'ac-pe',
-  },
+  // (미술·유아체육은 등원형 → 숙제 활동 없음. 예체능 커버는 학원 coversClusters 로.)
 
   // ── 엄마표 활동 (academyId 없음) ───────────────────
   {

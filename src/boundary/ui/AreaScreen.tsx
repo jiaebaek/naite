@@ -21,7 +21,18 @@ function pips(d: DomainVM) {
   )
 }
 
-function DomainCard({ d, onOpen }: { d: DomainVM; onOpen: () => void }) {
+function DomainCard({ d, onOpen, calm = false }: { d: DomainVM; onOpen: () => void; calm?: boolean }) {
+  // 생활·마음(안심) 레인: 빈칸을 갭 알람으로 띄우지 않는다(SSOT §5). 부드러운 톤.
+  if (calm && d.group !== 'full') {
+    return (
+      <div className="domain calm" data-testid={`domain-${d.domain}`}>
+        <div className="d-top"><span className="d-name">{d.domain}{d.priority && <span className="d-star" title="부모가 정한 우선 분야">중요</span>}</span><span className="pill">일상에서</span></div>
+        {pips(d)}
+        <div className="d-status">유치원·일상에서 챙겨지고 있어요{d.prog + d.done > 0 ? ` · 이미 ${d.prog + d.done}곳 확인` : ''}</div>
+        <div className="d-actions"><button className="btn-sm" onClick={onOpen}>자세히</button></div>
+      </div>
+    )
+  }
   // 공교육 기준 없는 영역(영어)인데 아직 정한 목표가 없다 → '완료'가 아니라 '정해요'
   if (d.noPublic && d.total === 0) {
     return (
@@ -78,9 +89,12 @@ function DomainCard({ d, onOpen }: { d: DomainVM; onOpen: () => void }) {
 export function AreaScreen({ dateLabel, domains, onOpenDetail }: AreaScreenProps) {
   // 그룹 안에서 부모 우선 분야를 맨 위로 (중요도 = 부모가 온보딩에서 정함)
   const byPriority = (a: DomainVM, b: DomainVM) => Number(b.priority) - Number(a.priority)
-  // 공교육 기준 없는 미설정 영역(영어)은 챙김/비어있음 어느 쪽도 아니다 — 따로 뺀다
-  const toDefine = domains.filter((d) => d.noPublic && d.total === 0).sort(byPriority)
-  const rest = domains.filter((d) => !(d.noPublic && d.total === 0))
+  // ── 두 레인 분리 (SSOT §5) ──
+  const learn = domains.filter((d) => d.lane === '학습')
+  const life = domains.filter((d) => d.lane === '생활·마음').sort(byPriority)
+  // 학습 레인: 공교육 기준 없는 미설정 영역(영어)은 따로, 나머지는 상태별 gap-우선
+  const toDefine = learn.filter((d) => d.noPublic && d.total === 0).sort(byPriority)
+  const rest = learn.filter((d) => !(d.noPublic && d.total === 0))
   const empties = rest.filter((d) => d.group === 'empty').sort(byPriority)
   const partials = rest.filter((d) => d.group === 'partial').sort(byPriority)
   const fulls = rest.filter((d) => d.group === 'full').sort(byPriority)
@@ -94,7 +108,7 @@ export function AreaScreen({ dateLabel, domains, onOpenDetail }: AreaScreenProps
         <p className="datestrip">{dateLabel}</p>
 
         <div className="overview">
-          <div className="eyebrow">이 나이에 챙길 영역</div>
+          <div className="eyebrow">학습 — 이 나이에 챙길 영역</div>
           <div className="ov-num">{rest.length}개 영역 중 {onCount}곳 챙기고 있어요 · <b>비어있는 곳 {gapCount}</b></div>
           <div className="coverbar" aria-hidden="true">
             {rest.map((d) => <span key={d.domain} className={`seg ${segOf(d)}`} />)}
@@ -129,6 +143,13 @@ export function AreaScreen({ dateLabel, domains, onOpenDetail }: AreaScreenProps
             <div className="dgrp-label">우리가 정하는 영역</div>
             {toDefine.map((d) => <DomainCard key={d.domain} d={d} onOpen={() => onOpenDetail(d.domain)} />)}
           </>
+        )}
+
+        {life.length > 0 && (
+          <div className="lane-life" data-testid="lane-life">
+            <div className="dgrp-label">생활·마음 · 일상에서 챙겨지고 있어요</div>
+            {life.map((d) => <DomainCard key={d.domain} d={d} onOpen={() => onOpenDetail(d.domain)} calm />)}
+          </div>
         )}
       </div>
     </section>
