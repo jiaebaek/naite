@@ -9,6 +9,8 @@ export interface AreaScreenProps {
   readonly dateLabel: string
   readonly domains: readonly DomainVM[]
   readonly onOpenDetail: (domain: Domain) => void
+  /** 생활·마음 관찰 체크 모듈 열기(§06-B). */
+  readonly onObsCheck?: (() => void) | undefined
 }
 
 const pipOf = (m: MilestoneVM) => (m.status === '됨' ? 'on' : m.status === '챙기는중' ? 'prog' : 'gap')
@@ -86,7 +88,7 @@ function DomainCard({ d, onOpen, calm = false }: { d: DomainVM; onOpen: () => vo
   )
 }
 
-export function AreaScreen({ dateLabel, domains, onOpenDetail }: AreaScreenProps) {
+export function AreaScreen({ dateLabel, domains, onOpenDetail, onObsCheck }: AreaScreenProps) {
   // 그룹 안에서 부모 우선 분야를 맨 위로 (중요도 = 부모가 온보딩에서 정함)
   const byPriority = (a: DomainVM, b: DomainVM) => Number(b.priority) - Number(a.priority)
   // ── 두 레인 분리 (SSOT §5) ──
@@ -148,6 +150,11 @@ export function AreaScreen({ dateLabel, domains, onOpenDetail }: AreaScreenProps
         {life.length > 0 && (
           <div className="lane-life" data-testid="lane-life">
             <div className="dgrp-label">생활·마음 · 일상에서 챙겨지고 있어요</div>
+            {onObsCheck && (
+              <button className="btn-obs" onClick={onObsCheck} data-testid="obs-entry">
+                🌱 3분 우리 애 체크 — 생활·마음도 챙겨지는지 확인해요
+              </button>
+            )}
             {life.map((d) => <DomainCard key={d.domain} d={d} onOpen={() => onOpenDetail(d.domain)} calm />)}
           </div>
         )}

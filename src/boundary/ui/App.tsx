@@ -13,6 +13,7 @@ import { weeklyReport } from '../../domain/report'
 import { findCompletion, toggleCompletion } from '../../domain/completion'
 import { cohortAlignedMonth } from '../../domain/pace'
 import { currentClusterStandards, currentClusterIds, clusterById, bandOfMonth } from '../../domain/standards/clusters'
+import { checksForClusters } from '../../domain/standards/observationChecks'
 import { publicGoalStatusOf, coveringActivities } from '../../domain/coverage'
 import { categoryOf } from '../../domain/category'
 import { recommendForGap } from '../../domain/recommend'
@@ -67,6 +68,7 @@ import type { ManageSheetTarget } from './ManageSheet'
 import { LinkSheet } from './LinkSheet'
 import type { LinkChoice } from './LinkSheet'
 import { GoalSheet } from './GoalSheet'
+import { ObservationCheck } from './ObservationCheck'
 import { badgeOf, recommendVM } from './vm'
 import type { DomainVM, MilestoneVM, TaskVM } from './vm'
 import { BrandMark, IconGear, TabIconArea, TabIconLog, TabIconToday } from './icons'
@@ -185,6 +187,8 @@ export function App() {
   })
   // 안도 공유 카드(§07-A)
   const [showShare, setShowShare] = useState(false)
+  // 생활·마음 관찰 체크 모듈(§06-B) — 온보딩 밖, 재방문 훅
+  const [showObs, setShowObs] = useState(false)
 
   const [date] = useState<IsoDate>(todayIso)
   // 빈 상태로 시작한다 — 데이터는 온보딩 셋업(§06-A)과 관리에서 사용자가 직접 입력한다.
@@ -204,6 +208,8 @@ export function App() {
   const standards = useMemo(() => [...clusterGoals, ...customGoals], [clusterGoals, customGoals])
   // 개별 성취기준 문장 → 묶음 근거 상세용 조회.
   const stmtById = useMemo(() => new Map(REFERENCE_STANDARDS.map((s) => [s.id, s.statement])), [])
+  // 생활·마음 관찰 체크 질문 — 아이 현재 band 의 생활 묶음만(§06-B).
+  const obsChecks = useMemo(() => checksForClusters(currentClusterIds(month)), [month])
 
   // 저장 계층
   const store = useMemo(() => getStore(), [])
@@ -482,6 +488,11 @@ export function App() {
     )
   }
 
+  // 생활·마음 관찰 체크 완료(§06-B): '예'로 이룸 처리된 묶음을 achieved 에 합친다(중복 제거).
+  const handleObsComplete = (clusterIds: readonly string[]) => {
+    if (clusterIds.length > 0) setAchieved((prev) => [...new Set([...prev, ...clusterIds])])
+  }
+
   // 공교육 기준 없는 영역(영어 등)에 부모가 목표를 직접 추가한다 (자체 Standard, 항상 지금 목표).
   const handleAddGoal = (statement: string) => {
     const domain = goalSheetDomain
@@ -685,7 +696,7 @@ export function App() {
           />
         )}
         {view === 'area' && (
-          <AreaScreen dateLabel={formatDate(date)} domains={domainVMs} onOpenDetail={openDetail} />
+          <AreaScreen dateLabel={formatDate(date)} domains={domainVMs} onOpenDetail={openDetail} onObsCheck={() => setShowObs(true)} />
         )}
         {view === 'detail' && detailVM && (
           <DetailScreen
@@ -789,6 +800,14 @@ export function App() {
           code={shareCode}
           areas={coordAreas}
           onClose={() => setShowShare(false)}
+        />
+      )}
+
+      {showObs && (
+        <ObservationCheck
+          checks={obsChecks}
+          onClose={() => setShowObs(false)}
+          onComplete={handleObsComplete}
         />
       )}
 

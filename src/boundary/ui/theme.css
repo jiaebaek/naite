@@ -546,3 +546,18 @@ body {
 .evidence { margin-top: 8px; font-size: 12.5px; }
 .evidence > summary { color: var(--muted); cursor: pointer; list-style: revert; }
 .ev-list { margin: 6px 0 2px; padding-left: 18px; color: var(--ink-soft); display: flex; flex-direction: column; gap: 3px; }
+
+/* ── T9-2 생활·마음 관찰 체크 (§06-B) ── */
+.btn-obs { width: 100%; text-align: left; font-size: 13px; font-weight: 700; color: var(--pine); background: var(--pine-soft); border: 1px solid color-mix(in srgb, var(--pine) 22%, var(--line)); border-radius: 12px; padding: 12px 14px; margin: 4px 0 12px; cursor: pointer; }
+.obs-intro { font-size: 13.5px; color: var(--ink-soft); margin: 0 2px 14px; }
+.obs-cl { border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+.obs-cl-name { font-weight: 700; font-size: 14px; margin-bottom: 8px; }
+.obs-q { display: flex; flex-direction: column; gap: 6px; padding: 8px 0; border-top: 1px solid var(--line); }
+.obs-q:first-of-type { border-top: none; }
+.obs-q-text { font-size: 13.5px; color: var(--ink); }
+.obs-opts { display: flex; gap: 6px; }
+.obs-opt { flex: 1; font-size: 13px; font-weight: 700; padding: 8px; border-radius: 10px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-soft); cursor: pointer; }
+.obs-opt.on { background: var(--pine); border-color: var(--pine); color: var(--paper); }
+.obs-result { text-align: center; padding: 24px 8px; }
+.obs-result-big { font-family: var(--serif); font-size: 22px; font-weight: 700; line-height: 1.35; color: var(--pine); margin-bottom: 12px; }
+.obs-result p { font-size: 14px; color: var(--ink-soft); }
