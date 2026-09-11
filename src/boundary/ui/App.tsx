@@ -583,9 +583,11 @@ export function App() {
     // 칩 → 프리셋 → (현재 band 필터) 확정 묶음. 프리셋 없거나 band 매칭 없으면 [] (자동 겨냥 없음·과소청구·원칙3).
     const resolve = (pick: SetupPick): { domain: Domain; targetIds: readonly StandardId[]; coverMode: '등원형' | '숙제형' } => {
       const preset = pick.presetType ? presetByType(pick.presetType) : undefined
+      // 커버 방식: 셋업 '숙제 있어요?' 토글(pick.coverMode)이 우선, 없으면 프리셋 기본값.
+      const coverMode = pick.coverMode ?? preset?.coverMode ?? '숙제형'
       return preset
-        ? { domain: preset.domain, targetIds: suggestedTargets(preset, bandClusterIds), coverMode: preset.coverMode }
-        : { domain: pick.domain, targetIds: [], coverMode: '숙제형' }
+        ? { domain: preset.domain, targetIds: suggestedTargets(preset, bandClusterIds), coverMode }
+        : { domain: pick.domain, targetIds: [], coverMode }
     }
 
     // S2 학원 = 등원 엔티티. 커버 방식(T8·SSOT §5):

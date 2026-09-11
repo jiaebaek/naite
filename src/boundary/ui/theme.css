@@ -528,3 +528,21 @@ body {
 .sc-msg { font-size: 12.5px; color: var(--pine); text-align: center; margin: 0 2px 12px; font-weight: 700; }
 .sc-actions { display: flex; gap: 10px; }
 .sc-actions .btn-soft, .sc-actions .btn-primary { flex: 1; width: auto; }
+
+/* ── T9 과목별 온보딩 카드 (§06-A) ── */
+.subj-card { border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin: 12px 0; background: var(--surface); }
+.subj-head { font-family: var(--serif); font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+.subj-q { font-size: 12.5px; font-weight: 700; color: var(--muted); margin: 10px 0 6px; }
+.hw-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-soft); margin-top: 10px; cursor: pointer; }
+.hw-toggle .opt { color: var(--muted); font-size: 12px; }
+
+/* ── T8 생활·마음 안심 레인 (§05) ── */
+.lane-life { margin-top: 22px; }
+.domain.calm { border-style: dashed; opacity: .95; }
+.domain.calm .pill { background: var(--pine-soft); color: var(--pine); }
+
+/* ── T7 묶음 근거 상세 (§05) ── */
+.ms-list { display: flex; flex-direction: column; gap: 10px; }
+.evidence { margin-top: 8px; font-size: 12.5px; }
+.evidence > summary { color: var(--muted); cursor: pointer; list-style: revert; }
+.ev-list { margin: 6px 0 2px; padding-left: 18px; color: var(--ink-soft); display: flex; flex-direction: column; gap: 3px; }

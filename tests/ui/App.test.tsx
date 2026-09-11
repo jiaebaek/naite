@@ -55,8 +55,7 @@ describe('⭐ 첫 실행 셋업 (§06-A · 온보딩 직후)', () => {
     localStorage.setItem(ONBOARD_KEY, '1') // 온보딩만 완료, 셋업은 아직
     render(<App />)
     expect(await screen.findByTestId('setup')).toBeInTheDocument()
-    // S1 다음 → S2 다음 → S3 시작하기 (3스텝)
-    fireEvent.click(screen.getByRole('button', { name: '다음' }))
+    // S1 다음 → S2(과목별) 시작하기 (2스텝 · §06-A)
     fireEvent.click(screen.getByRole('button', { name: '다음' }))
     fireEvent.click(screen.getByRole('button', { name: /나이테 시작하기/ }))
     await screen.findByTestId('view-today')
@@ -81,26 +80,24 @@ describe('⭐ 빈 상태로 시작 + 셋업이 실제 데이터를 만든다 (�
     expect(screen.queryByText('한글 학원 숙제')).not.toBeInTheDocument()
   })
 
-  it('⭐ S2 과목 칩(학원)을 누르면 그 영역이 챙김으로 채워진다', async () => {
+  it('⭐ S2 과목 학원 칩(미술=등원형)을 누르면 예체능이 챙김으로 채워진다', async () => {
     localStorage.setItem(ONBOARD_KEY, '1') // 셋업 대기
     render(<App />)
     await screen.findByTestId('setup')
-    fireEvent.click(screen.getByRole('button', { name: '다음' })) // S1 → S2
-    fireEvent.click(screen.getByRole('button', { name: '미술' })) // 예체능 학원
-    fireEvent.click(screen.getByRole('button', { name: '다음' })) // S2 → S3
+    fireEvent.click(screen.getByRole('button', { name: '다음' })) // S1 → S2(과목 카드)
+    fireEvent.click(screen.getByRole('button', { name: '미술' })) // 예체능 학원(등원형)
     fireEvent.click(screen.getByRole('button', { name: /나이테 시작하기/ }))
     await screen.findByTestId('view-today')
-    // 예체능이 등원 커버로 챙김 처리 → 안도 배너가 "벌써 1곳"
+    // 미술=등원형 → 등원 커버로 예체능 묶음 챙김 → 안도 배너 "벌써 1곳"
     expect(screen.getByText(/벌써 1곳을 챙기고 있어요/)).toBeInTheDocument()
   })
 
-  it('⭐ S3 집 활동 칩을 누르면 그 영역이 챙김 + 오늘 할 일에 뜬다', async () => {
+  it('⭐ S2 집 활동 칩을 누르면 그 영역이 챙김 + 오늘 할 일에 뜬다', async () => {
     localStorage.setItem(ONBOARD_KEY, '1')
     render(<App />)
     await screen.findByTestId('setup')
-    fireEvent.click(screen.getByRole('button', { name: '다음' })) // → S2
-    fireEvent.click(screen.getByRole('button', { name: '다음' })) // → S3 (학원 건너뜀)
-    fireEvent.click(screen.getByRole('button', { name: '그림책 읽기' })) // 국어 집활동(해석→누리 원문 챙김)
+    fireEvent.click(screen.getByRole('button', { name: '다음' })) // → S2(과목 카드)
+    fireEvent.click(screen.getByRole('button', { name: '그림책 읽기' })) // 국어 집활동 → 묶음 챙김
     fireEvent.click(screen.getByRole('button', { name: /나이테 시작하기/ }))
     await screen.findByTestId('view-today')
     expect(screen.getByText(/벌써 1곳을 챙기고 있어요/)).toBeInTheDocument()

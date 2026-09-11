@@ -26,36 +26,42 @@ describe('S1 아이 정보', () => {
   })
 })
 
-describe('S2·S3 칩 탭', () => {
-  it('⭐ 과목 칩을 누르면 "다니는 학원" 목록에 쌓이고 영역 챙김을 예고한다', async () => {
+describe('S2 과목별 학습 칩 탭 (§06-A)', () => {
+  it('⭐ 과목 카드의 학원 칩을 누르면 선택된다', async () => {
     const { next } = setup()
     await next() // S1 → S2
-    await userEvent.click(screen.getByRole('button', { name: '한글·독서' }))
-    expect(screen.getByText(/다니는 학원 1개/)).toBeInTheDocument()
-    expect(screen.getByText(/국어 챙김/)).toBeInTheDocument()
+    const chip = screen.getByRole('button', { name: '한글·독서' })
+    await userEvent.click(chip)
+    expect(chip).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('⭐ 3스텝을 지나며 고른 학원·활동이 onComplete 로 온다', async () => {
+  it('⭐ 학원 칩을 누르면 그 과목에 "숙제 있어요?" 토글이 뜬다', async () => {
+    const { next } = setup()
+    await next()
+    expect(screen.queryByText(/집에서 하는 숙제가 있어요/)).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: '한글·독서' }))
+    expect(screen.getByText(/집에서 하는 숙제가 있어요/)).toBeInTheDocument()
+  })
+
+  it('⭐ 고른 학원·집활동이 coverMode 와 함께 onComplete 로 온다', async () => {
     const { result, next } = setup()
-    await next() // → S2
-    await userEvent.click(screen.getByRole('button', { name: '한글·독서' })) // 국어 학원
-    await userEvent.click(screen.getByRole('button', { name: '태권도' }))   // 예체능 학원(프리셋 기준)
-    await next() // → S3
+    await next() // → S2 (과목 카드, 한 화면)
+    await userEvent.click(screen.getByRole('button', { name: '한글·독서' })) // 국어 학원(숙제형 기본)
+    await userEvent.click(screen.getByRole('button', { name: '태권도' }))   // 예체능 학원(등원형 기본)
     await userEvent.click(screen.getByRole('button', { name: '엄마표 영어' })) // 영어 집활동
     await userEvent.click(screen.getByRole('button', { name: /나이테 시작하기/ }))
 
     const r = result()
-    // 칩은 활동유형 프리셋 type 을 함께 넘긴다(App 이 이걸로 겨냥 목표를 확정). 태권도 영역=예체능(프리셋 원천).
     expect(r.academies).toEqual([
-      { name: '한글·독서', domain: '국어', presetType: '한글' },
-      { name: '태권도', domain: '예체능', presetType: '태권도' },
+      { name: '한글·독서', domain: '국어', presetType: '한글', coverMode: '숙제형' },
+      { name: '태권도', domain: '예체능', presetType: '태권도', coverMode: '등원형' },
     ])
     expect(r.homeActivities).toEqual([{ name: '엄마표 영어', domain: '영어', presetType: '영어' }])
   })
 
-  it('칩을 안 고르면 빈 배열로 완료된다', async () => {
+  it('아무 칩도 안 고르면 빈 배열로 완료된다', async () => {
     const { result, next } = setup()
-    await next(); await next() // S2, S3 그냥 통과
+    await next()
     await userEvent.click(screen.getByRole('button', { name: /나이테 시작하기/ }))
     expect(result().academies).toEqual([])
     expect(result().homeActivities).toEqual([])
@@ -73,16 +79,16 @@ describe('S2·S3 칩 탭', () => {
     await userEvent.click(screen.getByRole('button', { name: '국어' }))
     await userEvent.click(screen.getByRole('button', { name: '수학' }))
     expect(screen.getByRole('button', { name: '과학·탐구' })).toBeDisabled() // 최대 2개
-    await next(); await next()
+    await next()
     await userEvent.click(screen.getByRole('button', { name: /나이테 시작하기/ }))
     expect(result().priorityDomains).toEqual(['국어', '수학'])
   })
 
-  it('학원/활동 선택은 칩 탭만 — 자유 입력 칸이 없다 (원칙 8)', async () => {
+  it('학원/활동 선택은 칩 탭만 — 아무것도 안 골랐을 땐 자유 입력 칸이 없다 (원칙 8)', async () => {
     const { next } = setup()
     await next() // S2 (현재 활성 스텝)
     const activeStep = document.querySelector('.setup-step.active')!
-    expect(activeStep.querySelectorAll('input')).toHaveLength(0) // S2엔 입력칸 없음
+    expect(activeStep.querySelectorAll('input[type="text"]')).toHaveLength(0)
     expect(screen.getByRole('button', { name: '한글·독서' })).toBeInTheDocument()
   })
 })
