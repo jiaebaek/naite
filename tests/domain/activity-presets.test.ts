@@ -1,112 +1,121 @@
 /**
- * 활동유형 프리셋 무결성 + 부풀리기 가드레일 (T2 · SSOT §5).
- * 큐레이션 원본: docs/10-프리셋-활동목표-큐레이션.md.
+ * 활동유형 → 묶음 프리셋 무결성 + 부풀리기 가드레일 (T7 · SSOT §5 · docs/11 §4).
  */
 import { describe, it, expect } from 'vitest'
-import { ACTIVITY_PRESETS, presetGuardrailViolations } from '../../src/domain/standards/activityPresets'
+import {
+  ACTIVITY_PRESETS,
+  presetByType,
+  suggestedTargets,
+  presetGuardrailViolations,
+} from '../../src/domain/standards/activityPresets'
 import type { ActivityPreset } from '../../src/domain/standards/activityPresets'
-import { STANDARDS_2021 } from '../../src/domain/standards/child2021'
-import type { Standard } from '../../src/domain/types'
+import { CLUSTERS } from '../../src/domain/standards/clusters'
 
-const byId = new Map(STANDARDS_2021.map((s) => [s.id, s]))
+const clById = new Map(CLUSTERS.map((c) => [c.id, c]))
 
-describe('프리셋 데이터 무결성', () => {
+describe('프리셋 데이터 무결성 (묶음)', () => {
   it('type 이 중복되지 않는다', () => {
     const types = ACTIVITY_PRESETS.map((p) => p.type)
     expect(new Set(types).size).toBe(types.length)
   })
 
-  it('primary·secondary 의 nuri-* 목표는 모두 존재하고 영역이 맞는다', () => {
+  it('primary·primaryElem 의 묶음 id 는 모두 존재하고 영역이 preset.domain 과 맞는다', () => {
     for (const p of ACTIVITY_PRESETS) {
-      for (const id of [...p.primary, ...(p.secondary ?? [])]) {
-        const s = byId.get(id)
-        expect(s, `${p.type} → 없는 목표 ${id}`).toBeDefined()
-      }
-      // primary 는 반드시 주 영역 소속(정의상)
-      for (const id of p.primary) {
-        expect(byId.get(id)!.domain, `${p.type} → ${id}`).toBe(p.domain)
+      for (const id of [...p.primary, ...(p.primaryElem ?? [])]) {
+        const c = clById.get(id)
+        expect(c, `${p.type} → 없는 묶음 ${id}`).toBeDefined()
+        expect(c!.domain, `${p.type} → ${id}`).toBe(p.domain)
       }
     }
   })
 
-  it('⭐ 영어는 공교육 매핑 0 — 자체목표로만 연결(가짜 근거 금지)', () => {
+  it('⭐ 영어는 공교육 매핑 0 (두 band 모두) — 자체목표로만 연결', () => {
     const en = ACTIVITY_PRESETS.find((p) => p.type === '영어')!
     expect(en.primary).toEqual([])
+    expect(en.primaryElem ?? []).toEqual([])
     expect(en.domain).toBe('영어')
   })
 
-  it('모든 프리셋이 why(매핑 이유) 한 줄을 가진다 — 연결 시트 근거 노출(신뢰 ②)', () => {
+  it('모든 프리셋이 why(매핑 이유) 한 줄을 가진다', () => {
     for (const p of ACTIVITY_PRESETS) {
       expect(p.why.trim().length, `${p.type}`).toBeGreaterThan(0)
     }
   })
-
-  it('MVP: primaryElem(초1~2 std-*)은 아직 미큐레이션 — 비어 있다', () => {
-    for (const p of ACTIVITY_PRESETS) {
-      expect(p.primaryElem ?? [], `${p.type}`).toEqual([])
-    }
-  })
 })
 
-describe('⭐ 부풀리기 가드레일 — 주 매핑은 1영역·목표 ≤2 (SSOT §5)', () => {
+describe('⭐ 부풀리기 가드레일 — 각 band 자동제안 ≤2묶음·1영역 (SSOT §5)', () => {
   it('모든 프리셋이 가드레일을 통과한다', () => {
     for (const p of ACTIVITY_PRESETS) {
-      expect(presetGuardrailViolations(p, STANDARDS_2021), `${p.type}`).toEqual([])
+      expect(presetGuardrailViolations(p), `${p.type}`).toEqual([])
     }
   })
 
-  it('태권도 = 예체능 1영역 2목표(phy-3,4). 인성·규칙은 부수(opt-in)', () => {
+  it('태권도 = 예체능 신체활동 묶음 (nuri=pe-body / elem=pe-body)', () => {
     const t = ACTIVITY_PRESETS.find((p) => p.type === '태권도')!
-    expect(t.primary).toEqual(['nuri-phy-3', 'nuri-phy-4'])
-    expect(t.secondary).toContain('nuri-soc-9') // 규칙 = 부수
+    expect(t.primary).toEqual(['cl-nuri-pe-body'])
+    expect(t.primaryElem).toEqual(['cl-el-pe-body'])
   })
 
-  it('⭐ 3목표면 가드레일이 실패로 잡는다', () => {
-    const bad: ActivityPreset = { type: 'X', domain: '예체능', primary: ['nuri-phy-3', 'nuri-phy-4', 'nuri-art-6'], why: 'x' }
-    expect(presetGuardrailViolations(bad, STANDARDS_2021).length).toBeGreaterThan(0)
+  it('⭐ 3묶음이면 가드레일이 실패로 잡는다', () => {
+    const bad: ActivityPreset = { type: 'X', domain: '국어', why: 'x', primary: ['cl-nuri-ko-listen', 'cl-nuri-ko-literacy', 'cl-nuri-ko-book'] }
+    expect(presetGuardrailViolations(bad).length).toBeGreaterThan(0)
   })
 
   it('⭐ 2영역에 걸치면 가드레일이 실패로 잡는다', () => {
-    const bad: ActivityPreset = { type: 'X', domain: '예체능', primary: ['nuri-phy-3', 'nuri-com-1'], why: 'x' }
-    const v = presetGuardrailViolations(bad, STANDARDS_2021)
-    expect(v.some((m) => m.includes('영역'))).toBe(true)
+    const bad: ActivityPreset = { type: 'X', domain: '국어', why: 'x', primary: ['cl-nuri-ko-listen', 'cl-nuri-ma-explore'] }
+    expect(presetGuardrailViolations(bad).some((m) => m.includes('영역'))).toBe(true)
   })
 
-  it('없는 목표를 가리키면 잡는다', () => {
-    const bad: ActivityPreset = { type: 'X', domain: '국어', primary: ['nuri-없음'], why: 'x' }
-    expect(presetGuardrailViolations(bad, STANDARDS_2021).length).toBeGreaterThan(0)
+  it('없는 묶음을 가리키면 잡는다', () => {
+    const bad: ActivityPreset = { type: 'X', domain: '국어', why: 'x', primary: ['cl-없음'] }
+    expect(presetGuardrailViolations(bad).length).toBeGreaterThan(0)
   })
 
-  it('⭐ primaryElem(초1~2 band)도 각 band별로 3목표면 잡는다', () => {
-    const bad: ActivityPreset = {
-      type: 'X', domain: '국어', primary: [], why: 'x',
-      primaryElem: ['std-a', 'std-b', 'std-c'],
-    }
-    const v = presetGuardrailViolations(bad, STANDARDS_2021)
-    expect(v.some((m) => m.includes('primaryElem'))).toBe(true)
+  it('⭐ primaryElem(초1~2 band)도 각 band별로 3묶음이면 잡는다', () => {
+    const bad: ActivityPreset = { type: 'X', domain: '수학', why: 'x', primary: [], primaryElem: ['cl-el-ma-num', 'cl-el-ma-pattern', 'cl-el-ma-shape'] }
+    expect(presetGuardrailViolations(bad).some((m) => m.includes('primaryElem'))).toBe(true)
+  })
+})
+
+describe('⭐ suggestedTargets — 현재 band 묶음만 제안 (원칙3)', () => {
+  it('취학 전 band 집합이면 primary(nuri) 묶음만', () => {
+    const 한글 = presetByType('한글')!
+    const nuriIds = new Set(CLUSTERS.filter((c) => c.band === 'nuri').map((c) => c.id))
+    expect(suggestedTargets(한글, nuriIds)).toEqual(['cl-nuri-ko-literacy'])
+  })
+
+  it('초1~2 band 집합이면 primaryElem(elem) 묶음만', () => {
+    const 한글 = presetByType('한글')!
+    const elemIds = new Set(CLUSTERS.filter((c) => c.band === 'elem').map((c) => c.id))
+    expect(suggestedTargets(한글, elemIds)).toEqual(['cl-el-ko-hangul', 'cl-el-ko-read'])
+  })
+
+  it('band 매칭이 없으면 빈 배열 (억지 매핑 금지)', () => {
+    const 연산 = presetByType('연산')! // primaryElem 만 있음
+    const nuriIds = new Set(CLUSTERS.filter((c) => c.band === 'nuri').map((c) => c.id))
+    expect(suggestedTargets(연산, nuriIds)).toEqual([])
   })
 })
 
 describe('⭐ INV — 매핑은 "챙기는 중"만 만든다. "이룸"은 만들지 않는다 (SSOT §2, 2축)', () => {
-  // 프리셋/활동 매핑은 이룸을 낳을 수 없다. 이룸은 언제나 부모의 별도 관찰(achieved).
-  const 예체능목표: Standard = {
-    id: 'nuri-phy-3', domain: '예체능', baselinePeriod: { start: '2024-03', end: '2028-02' },
-    statement: '기초 운동', source: { document: '누리' }, origin: '공교육',
+  const 예체능묶음 = {
+    id: 'cl-nuri-pe-body', domain: '예체능' as const, baselinePeriod: { start: '2024-03', end: '2028-02' },
+    statement: '신체활동', source: { document: '누리', code: 'cl-nuri-pe-body' }, origin: '공교육' as const,
   }
 
   it('아무리 많은 활동이 겨냥해도 achieved 가 없으면 절대 됨이 아니다', async () => {
     const { publicGoalStatusOf } = await import('../../src/domain/coverage')
     const acts = ['a', 'b', 'c'].map((id) => ({
       id, name: id, domain: '예체능' as const, track: '학원' as const,
-      targetIds: ['nuri-phy-3'], cadence: { kind: '매일' as const }, owner: '엄마' as const, active: true,
+      targetIds: ['cl-nuri-pe-body'], cadence: { kind: '매일' as const }, owner: '엄마' as const, active: true,
     }))
-    const status = publicGoalStatusOf('nuri-phy-3', [], acts, [예체능목표])
+    const status = publicGoalStatusOf('cl-nuri-pe-body', [], acts, [예체능묶음])
     expect(status).toBe('챙기는중')
     expect(status).not.toBe('됨')
   })
 
   it('이룸은 부모가 achieved 로 표시할 때만', async () => {
     const { publicGoalStatusOf } = await import('../../src/domain/coverage')
-    expect(publicGoalStatusOf('nuri-phy-3', ['nuri-phy-3'], [], [예체능목표])).toBe('됨')
+    expect(publicGoalStatusOf('cl-nuri-pe-body', ['cl-nuri-pe-body'], [], [예체능묶음])).toBe('됨')
   })
 })

@@ -7,7 +7,6 @@
  *   - 챙김이 하나라도 있는 범주는 펼치고, 빈 범주는 접어 요약만 보인다(넌지시).
  * 이룸(됨)은 활동 연결과 무관하게 언제나 토글 가능. 선행 UI 없음(원칙 5).
  */
-import { useState } from 'react'
 import type { DomainVM, MilestoneVM, RecommendVM } from './vm'
 import { IconBack } from './icons'
 
@@ -44,15 +43,7 @@ function CheckSm() {
     </svg>
   )
 }
-function Chevron({ open }: { open: boolean }) {
-  return (
-    <svg className={`chev${open ? ' open' : ''}`} width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} aria-hidden="true">
-      <path d="M6 9l6 6 6-6" />
-    </svg>
-  )
-}
-
-/** 범주 안 정렬: 챙기는 중 → 이룸 → 비어있음(뒤로). 안도-우선. */
+/** 정렬: 챙기는 중 → 이룸 → 비어있음(뒤로). 안도-우선. */
 const rank = (m: MilestoneVM) => (m.status === '챙기는중' ? 0 : m.status === '됨' ? 1 : 2)
 const pipClass = (m: MilestoneVM) => (m.status === '됨' ? 'on' : m.status === '챙기는중' ? 'prog' : 'gap')
 
@@ -75,7 +66,20 @@ function Suggest({ r }: { r: RecommendVM }) {
   )
 }
 
-/** 원문 목표 한 장 — 상태별 액션. */
+/** 묶음의 근거 상세 — 속한 개별 성취기준 문장(공교육 원문). 탭하면 보인다(docs/11 §5). */
+function Evidence({ items }: { items: readonly string[] }) {
+  if (items.length === 0) return null
+  return (
+    <details className="evidence">
+      <summary>근거 {items.length}개 · 공교육 성취기준</summary>
+      <ul className="ev-list">
+        {items.map((s, i) => <li key={i}>{s}</li>)}
+      </ul>
+    </details>
+  )
+}
+
+/** 묶음 한 장 — 상태별 액션 + 근거 상세. 커버리지 단위 = 묶음(docs/11 §5). */
 function GoalCard({ m, onOpenLink, onToggleAchieved, onRemoveGoal }: {
   m: MilestoneVM; onOpenLink: (m: MilestoneVM) => void; onToggleAchieved: (id: string) => void
   onRemoveGoal?: ((id: string) => void) | undefined
@@ -83,6 +87,7 @@ function GoalCard({ m, onOpenLink, onToggleAchieved, onRemoveGoal }: {
   const removeBtn = m.removable && onRemoveGoal
     ? <button className="btn-sm ghost" onClick={() => onRemoveGoal(m.standardId)}>삭제</button>
     : null
+  const evidence = m.evidence ? <Evidence items={m.evidence} /> : null
   if (m.status === '활동필요') {
     return (
       <div className="ms empty" data-testid={`ms-${m.standardId}`}>
@@ -94,6 +99,7 @@ function GoalCard({ m, onOpenLink, onToggleAchieved, onRemoveGoal }: {
           <button className="btn-sm" onClick={() => onToggleAchieved(m.standardId)}>이뤘어요</button>
           {removeBtn}
         </div>
+        {evidence}
       </div>
     )
   }
@@ -106,6 +112,7 @@ function GoalCard({ m, onOpenLink, onToggleAchieved, onRemoveGoal }: {
           <button className="btn-sm" onClick={() => onToggleAchieved(m.standardId)}>이뤘어요</button>
           {removeBtn}
         </div>
+        {evidence}
       </div>
     )
   }
@@ -118,35 +125,18 @@ function GoalCard({ m, onOpenLink, onToggleAchieved, onRemoveGoal }: {
         <button className="btn-sm" onClick={() => onToggleAchieved(m.standardId)}>이룸 해제</button>
         {removeBtn}
       </div>
+      {evidence}
     </div>
   )
 }
 
-/** 내용범주 순서를 원문 데이터 순서대로 보존해 묶는다. */
-const catOf = (m: MilestoneVM) => m.category ?? '목표'
-function groupByCategory(milestones: readonly MilestoneVM[]): { label: string; items: MilestoneVM[] }[] {
-  const labels = milestones.reduce<readonly string[]>(
-    (acc, m) => (acc.includes(catOf(m)) ? acc : [...acc, catOf(m)]),
-    [],
-  )
-  return labels.map((label) => ({
-    label,
-    items: milestones.filter((m) => catOf(m) === label).slice().sort((a, b) => rank(a) - rank(b)),
-  }))
+/** 묶음 정렬: 챙기는 중 → 이룸 → 비어있음(뒤로). 안도-우선. */
+function sortedMilestones(milestones: readonly MilestoneVM[]): readonly MilestoneVM[] {
+  return milestones.slice().sort((a, b) => rank(a) - rank(b))
 }
 
 export function DetailScreen({ vm, onBack, onOpenLink, onToggleAchieved, onAddGoal, onRemoveGoal }: DetailScreenProps) {
-  const groups = groupByCategory(vm.milestones)
-  // 챙김(챙기는중·됨)이 하나라도 있는 범주는 펼친다. 하나도 없으면 첫 범주만.
-  const [open, setOpen] = useState<ReadonlySet<string>>(() => {
-    const tended = groups.filter((g) => g.items.some((m) => m.status !== '활동필요')).map((g) => g.label)
-    return new Set(tended.length > 0 ? tended : groups.slice(0, 1).map((g) => g.label))
-  })
-  const toggle = (label: string) => setOpen((prev) => {
-    const next = new Set(prev)
-    if (next.has(label)) next.delete(label); else next.add(label)
-    return next
-  })
+  const milestones = sortedMilestones(vm.milestones)
 
   const pill = vm.group === 'empty' ? '비어있음' : vm.group === 'full' ? '완료' : '채우는 중'
 
@@ -160,9 +150,9 @@ export function DetailScreen({ vm, onBack, onOpenLink, onToggleAchieved, onAddGo
         </div>
 
         <div className="det-summary">
-          <div className="eyebrow">이 시기 챙길 목표 · 공교육 원문 그대로</div>
+          <div className="eyebrow">이 시기 챙길 묶음 · 공교육 교육과정 그대로</div>
           <div className="det-cover">
-            목표 {vm.total}곳 · 이룸 {vm.done} · 챙기는 중 {vm.prog} · {vm.gap > 0
+            묶음 {vm.total}곳 · 이룸 {vm.done} · 챙기는 중 {vm.prog} · {vm.gap > 0
               ? <b>비어있음 {vm.gap}곳</b>
               : <b style={{ color: 'var(--pine)' }}>비어있음 없음</b>}
           </div>
@@ -184,35 +174,11 @@ export function DetailScreen({ vm, onBack, onOpenLink, onToggleAchieved, onAddGo
           </div>
         )}
 
-        {groups.map((g) => {
-          // 범주가 하나뿐이면 늘 펼친다 — 접을 다른 범주가 없고, 방금 추가한 목표를 숨기지 않는다
-          const isOpen = groups.length === 1 || open.has(g.label)
-          const prog = g.items.filter((m) => m.status === '챙기는중').length
-          const done = g.items.filter((m) => m.status === '됨').length
-          const gap = g.items.filter((m) => m.status === '활동필요').length
-          const summary = gap === 0
-            ? (done === g.items.length ? '다 이뤘어요' : '다 챙기는 중')
-            : `챙기는 중 ${prog + done} · 비어있음 ${gap}`
-          return (
-            <div key={g.label} className={`catbox${gap === 0 ? ' good' : ''}`} data-testid={`cat-${g.label}`}>
-              <button className="cat-head" aria-expanded={isOpen} onClick={() => toggle(g.label)}>
-                <span className="cat-name">{g.label}</span>
-                <span className="ring-row sm" aria-hidden="true">
-                  {g.items.map((m, i) => <span key={i} className={`pip ${pipClass(m)}`} />)}
-                </span>
-                <span className="cat-sum">{g.items.length}곳 · {summary}</span>
-                <Chevron open={isOpen} />
-              </button>
-              {isOpen && (
-                <div className="cat-body">
-                  {g.items.map((m) => (
-                    <GoalCard key={m.standardId} m={m} onOpenLink={onOpenLink} onToggleAchieved={onToggleAchieved} onRemoveGoal={onRemoveGoal} />
-                  ))}
-                </div>
-              )}
-            </div>
-          )
-        })}
+        <div className="ms-list">
+          {milestones.map((m) => (
+            <GoalCard key={m.standardId} m={m} onOpenLink={onOpenLink} onToggleAchieved={onToggleAchieved} onRemoveGoal={onRemoveGoal} />
+          ))}
+        </div>
       </div>
     </section>
   )

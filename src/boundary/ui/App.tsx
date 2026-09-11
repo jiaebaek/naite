@@ -11,7 +11,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { deriveTodayTasks, weekRangeOf } from '../../domain/today'
 import { weeklyReport } from '../../domain/report'
 import { findCompletion, toggleCompletion } from '../../domain/completion'
-import { currentPublicGoals, cohortAlignedMonth } from '../../domain/pace'
+import { cohortAlignedMonth } from '../../domain/pace'
+import { currentClusterStandards, currentClusterIds, clusterById, bandOfMonth } from '../../domain/standards/clusters'
 import { publicGoalStatusOf, coveringActivities } from '../../domain/coverage'
 import { categoryOf } from '../../domain/category'
 import { recommendForGap } from '../../domain/recommend'
@@ -193,11 +194,14 @@ export function App() {
   const [care, setCare] = useState<CareState>(INITIAL_CARE)
   // 공교육 기준이 없는 영역(영어 등)의 목표는 부모가 직접 입력한다 — 코드가 아니라 데이터.
   const [customGoals, setCustomGoals] = useState<readonly Standard[]>([])
-  // 지식 기반(누리·성취기준 원문) + 부모가 입력한 자체 목표를 합친 전체 기준
-  const standards = useMemo(
-    () => (customGoals.length > 0 ? [...REFERENCE_STANDARDS, ...customGoals] : REFERENCE_STANDARDS),
-    [customGoals],
-  )
+  // ⭐ T7: 화면 목표 단위 = 교육과정 **묶음(cluster)**. 시기는 입력받은 아이 나이로 고른다.
+  //    아이를 기준 코호트(CHILD_BIRTH_YM)에 정렬해 현재 band 묶음을 산출한다(초1~2면 초1~2 묶음).
+  const month = cohortAlignedMonth(date.slice(0, 7), childBirthYm, CHILD_BIRTH_YM)
+  const clusterGoals = useMemo(() => currentClusterStandards(month), [month])
+  // 커버리지·할 일·검증이 다루는 목표 = 현재 band 묶음 + 부모가 입력한 자체목표(영어 등).
+  const standards = useMemo(() => [...clusterGoals, ...customGoals], [clusterGoals, customGoals])
+  // 개별 성취기준 문장 → 묶음 근거 상세용 조회.
+  const stmtById = useMemo(() => new Map(REFERENCE_STANDARDS.map((s) => [s.id, s.statement])), [])
 
   // 저장 계층
   const store = useMemo(() => getStore(), [])
@@ -258,14 +262,10 @@ export function App() {
 
   const activeActivities = useMemo(() => activities.filter((a) => a.active), [activities])
 
-  // ── 지금 시기 목표 + 커버리지 (선행 제거: 오프셋 [] = 적기 그대로) ──
-  // B′: 화면 목표 = 공교육 원문(publicGoals).
-  // ⭐ 시기는 시스템 달력이 아니라 **입력받은 아이 나이**로 고른다(onboarding 생년월 기준).
-  //    기준 데이터 코호트(CHILD_BIRTH_YM)에 아이를 정렬해, 초1~2 아이면 지금 초1~2 목표가 뜬다.
-  const month = cohortAlignedMonth(date.slice(0, 7), childBirthYm, CHILD_BIRTH_YM)
-  const publicGoals = useMemo(() => currentPublicGoals(standards, month), [standards, month])
-  // 커버리지는 활동이 명시적으로 겨냥한 목표(targetIds)로만 판정한다(2026-09 결정 · docs/10 배선).
+  // ── 커버리지 (묶음 단위) ──
+  // 커버리지는 활동이 명시적으로 겨냥한 묶음(targetIds)으로만 판정한다(모델 A · docs/11 §5).
   // 등원(coversDomains)은 커버리지에 넣지 않는다 — 표시 전용. 학원 챙김은 그 학원의 숙제 활동이 낸다.
+  const publicGoals = standards
   const coverageActivities = activeActivities
 
   const domainVMs: readonly DomainVM[] = useMemo(() => {
@@ -274,12 +274,17 @@ export function App() {
     return DOMAINS.map((domain) => {
       const dts = publicGoals.filter((t) => t.domain === domain)
       const milestones: MilestoneVM[] = dts.map((std) => {
-        // 원문 목표는 refines 해석(또는 직접 겨냥)을 통해 챙겨진다
+        // 묶음(또는 자체목표)을 겨냥한 활동으로 챙겨진다(커버리지 단위 = 묶음)
         const covering = coveringActivities(std.id, coverageActivities, standards)
         const status = publicGoalStatusOf(std.id, achieved, coverageActivities, standards)
         const badge = badgeOf(provenanceOf(std, standards))
         // 갭일 때만, 근거 있는 라이브러리에서 결정적으로 하나 뽑는다(없으면 추천 없음 · 원칙3)
         const rec = status === '활동필요' ? recommendForGap(std.id, ACTIVITY_LIBRARY, { familyPlaces }) : null
+        // 묶음의 근거 상세 = 속한 개별 성취기준 문장(탭하면 보임 · docs/11 §5)
+        const cl = clusterById(std.id)
+        const evidence = cl
+          ? cl.memberIds.map((id) => stmtById.get(id)).filter((s): s is string => Boolean(s))
+          : undefined
         return {
           standardId: std.id,
           statement: std.statement,
@@ -287,10 +292,10 @@ export function App() {
           badgeCls: badge.cls,
           badgeLabel: badge.label,
           status,
-          // 활동이 이 목표를 겨냥하는지 — 됨이어도 유지('활동으로 이룸' 부제·관리 tending 용)
           coveredBy: covering[0]?.name ?? null,
           done: status === '됨',
           removable: std.origin === '자체',
+          ...(evidence && evidence.length > 0 ? { evidence } : {}),
           ...(rec ? { recommend: recommendVM(rec) } : {}),
         }
       })
@@ -563,12 +568,15 @@ export function App() {
     // 아이 현재 band(입력 생년월)의 지금 목표 — 프리셋 primary 를 이 band 로 걸러 겨냥 목표로 확정한다.
     // (미리 체크된 제안을 '시작하기'로 넘기면 = 봤고 끌 수 있었으니 확정으로 간주 · docs/10 배선 rule3)
     const setupMonth = cohortAlignedMonth(date.slice(0, 7), r.birthYm, CHILD_BIRTH_YM)
-    const bandIds = new Set(currentPublicGoals(standards, setupMonth).map((g) => g.id))
-    // 칩 → 프리셋 → (현재 band 필터) 확정 목표. 프리셋 없거나 band 매칭 없으면 [] (자동 겨냥 없음·과소청구·원칙3).
+    const bandClusterIds = currentClusterIds(setupMonth)
+    // ⚠️ childBirthYm state 는 아직 갱신 전(이 클로저의 standards 는 옛 band)이라, 검증은
+    //    입력받은 생년월의 band 묶음으로 한다 — 안 그러면 elem 묶음 겨냥이 stale nuri 로 검증돼 튕긴다.
+    const setupStandards = [...currentClusterStandards(setupMonth), ...customGoals]
+    // 칩 → 프리셋 → (현재 band 필터) 확정 묶음. 프리셋 없거나 band 매칭 없으면 [] (자동 겨냥 없음·과소청구·원칙3).
     const resolve = (pick: SetupPick): { domain: Domain; targetIds: readonly StandardId[] } => {
       const preset = pick.presetType ? presetByType(pick.presetType) : undefined
       return preset
-        ? { domain: preset.domain, targetIds: suggestedTargets(preset, bandIds) }
+        ? { domain: preset.domain, targetIds: suggestedTargets(preset, bandClusterIds) }
         : { domain: pick.domain, targetIds: [] }
     }
 
@@ -579,7 +587,7 @@ export function App() {
       const homework = createActivity({
         name: `${a.name} 숙제`, domain, track: '학원', targetIds,
         cadence: { kind: '주N회', times: 2 }, owner: '엄마', academyId: academy.id,
-      }, standards, newId)
+      }, setupStandards, newId)
       return { academy, homework }
     })
     // S3 집 활동 = 실제 체크하는 활동. 프리셋이 있으면 확정 목표를 겨냥(챙기는중), 없으면 자유.
@@ -588,7 +596,7 @@ export function App() {
       return createActivity({
         name: h.name, domain, track: '집', targetIds,
         cadence: { kind: '주N회', times: 3 }, owner: '엄마',
-      }, standards, newId)
+      }, setupStandards, newId)
     })
     const newAcademies = s2.map((x) => x.academy)
     const newActivities = [...s2.map((x) => x.homework), ...s3]
@@ -774,6 +782,7 @@ export function App() {
           initialName={childName}
           initialBirthYm={childBirthYm}
           ageLabelOf={(ym) => ageLabelOf(ym, date)}
+          bandOf={(ym) => bandOfMonth(cohortAlignedMonth(date.slice(0, 7), ym, CHILD_BIRTH_YM)) ?? 'nuri'}
           onComplete={completeSetup}
         />
       )}

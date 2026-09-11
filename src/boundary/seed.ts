@@ -4,10 +4,9 @@
  * ⚠️ 앱은 더 이상 이걸 기본값으로 쓰지 않는다 — 빈 상태로 시작하고, 데이터는 사용자가
  *    온보딩 셋업(§06-A)·관리에서 직접 입력한다. 이 파일은 이제 **테스트 픽스처/예시**다.
  *
- * ⭐ 커버리지는 활동이 명시적으로 겨냥한 특정 목표(targetIds)로만 잡힌다(2026-09 결정 · docs/10 배선).
- *    등원(coversDomains)은 이제 커버리지에 쓰지 않는다 — 그래서 학원마다 **숙제 활동**을 두고
- *    그 활동이 프리셋 목표(nuri-*)를 겨냥한다(셋업이 자동 생성하는 것과 같은 모양).
- *    목표는 취학 전(nuri-*) 현재 시기 것으로 겨냥한다.
+ * ⭐ 커버리지는 활동이 명시적으로 겨냥한 **묶음(cluster) id**로만 잡힌다(T7 모델 A · docs/11 §5).
+ *    등원(coversDomains)은 커버리지에 쓰지 않는다 — 학원마다 **숙제 활동**을 두고 그 활동이
+ *    프리셋 묶음(취학 전 cl-nuri-*)을 겨냥한다(셋업이 자동 생성하는 것과 같은 모양).
  *
  * 이 가족의 그림: 국어·수학·예체능·영어는 챙기는 중, **과학·탐구·사회·인성·건강·안전은 갭**이다.
  *   (유아체육은 예체능 신체활동을 챙기지만 '안전하게 생활하기'(건강·안전)까지 챙기진 않는다 —
@@ -32,8 +31,8 @@ export const SEED_ACTIVITIES: readonly Activity[] = [
     name: '한글 학원 숙제',
     domain: '국어',
     track: '학원',
-    // 프리셋 '한글' — 글자 읽기에 관심(해득 아님). 현재 시기 누리 목표.
-    targetIds: ['nuri-com-8'],
+    // 프리셋 '한글' → 취학 전 묶음 '읽기·쓰기 관심'(글자 읽기 관심, 해득 아님).
+    targetIds: ['cl-nuri-ko-literacy'],
     cadence: { kind: '주N회', times: 1 },
     owner: '아빠',
     active: true,
@@ -44,8 +43,8 @@ export const SEED_ACTIVITIES: readonly Activity[] = [
     name: '팩토 숙제',
     domain: '수학',
     track: '학원',
-    // 프리셋 '사고력수학' — 규칙 찾기(취학 전 누리엔 연산 없음).
-    targetIds: ['nuri-nat-8'],
+    // 프리셋 '사고력수학' → 취학 전 묶음 '생활 속 수·규칙·공간'.
+    targetIds: ['cl-nuri-ma-explore'],
     cadence: { kind: '주N회', times: 1 },
     owner: '아빠',
     active: true,
@@ -56,8 +55,8 @@ export const SEED_ACTIVITIES: readonly Activity[] = [
     name: '미술 학원 숙제',
     domain: '예체능',
     track: '학원',
-    // 프리셋 '미술' — 재료·도구로 표현.
-    targetIds: ['nuri-art-6'],
+    // 프리셋 '미술' → 취학 전 묶음 '예술 경험'.
+    targetIds: ['cl-nuri-pe-art'],
     cadence: { kind: '주N회', times: 1 },
     owner: '엄마',
     active: true,
@@ -68,8 +67,8 @@ export const SEED_ACTIVITIES: readonly Activity[] = [
     name: '유아체육 숙제',
     domain: '예체능',
     track: '학원',
-    // 프리셋 '유아체육' — 이동·제자리·도구 운동 + 자발적 참여.
-    targetIds: ['nuri-phy-3', 'nuri-phy-4'],
+    // 프리셋 '유아체육' → 취학 전 묶음 '신체활동'.
+    targetIds: ['cl-nuri-pe-body'],
     cadence: { kind: '주N회', times: 1 },
     owner: '엄마',
     active: true,
@@ -82,8 +81,8 @@ export const SEED_ACTIVITIES: readonly Activity[] = [
     name: '수학 보드게임',
     domain: '수학',
     track: '집',
-    // 프리셋 '보드게임'→사고력수학 — 위치·방향·모양.
-    targetIds: ['nuri-nat-6'],
+    // 프리셋 '보드게임' → 취학 전 묶음 '생활 속 수·규칙·공간'.
+    targetIds: ['cl-nuri-ma-explore'],
     cadence: { kind: '주N회', times: 2 },
     owner: '엄마',
     active: true,

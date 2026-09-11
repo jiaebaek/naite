@@ -75,8 +75,10 @@ export interface MilestoneVM {
   readonly badgeCls: 'gov' | 'own' | 'free'
   readonly badgeLabel: string
   readonly status: GoalStatus // 됨 · 챙기는중 · 활동필요
-  /** B′ 내용범주(교육과정 구조) — 상세 화면 아코디언 묶음 라벨 */
+  /** 교육과정 구조 라벨(내용범주/성취영역) — 참고용 */
   readonly category?: string
+  /** 묶음의 근거 상세 — 속한 개별 성취기준 문장(공교육 원문). 탭하면 보인다(docs/11 §5). */
+  readonly evidence?: readonly string[]
   /** 챙기는 중이면 그 활동 이름(또는 '이미 하고 있어요') */
   readonly coveredBy: string | null
   /** 됨(직접 처리)인가 — 관리 토글 상태 */

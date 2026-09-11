@@ -10,7 +10,7 @@ import { SetupFlow } from '../../src/boundary/ui/SetupFlow'
 const setup = () => {
   const onComplete = vi.fn()
   render(
-    <SetupFlow initialName="첫째" initialBirthYm="2021-01" ageLabelOf={() => '만 5세 8개월'} onComplete={onComplete} />,
+    <SetupFlow initialName="첫째" initialBirthYm="2021-01" ageLabelOf={() => '만 5세 8개월'} bandOf={() => 'nuri'} onComplete={onComplete} />,
   )
   const result = () => onComplete.mock.calls[0]![0]
   const next = () => userEvent.click(screen.getByRole('button', { name: '다음' }))

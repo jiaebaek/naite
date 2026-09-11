@@ -9,11 +9,12 @@ import { ManageSheet } from '../../src/boundary/ui/ManageSheet'
 import type { TargetOption } from '../../src/boundary/ui/ManageSheet'
 import type { Academy, Activity } from '../../src/domain/types'
 
-// 유형 프리셋('한글')은 그 활동유형의 primary(nuri-com-8·7)만 미리 체크한다 →
-// 폼의 겨냥 목표 옵션(이 시기 목표)에 그 id 가 있어야 체크된다. 실제 id 로 픽스처를 맞춘다.
+// T7: 겨냥 목표 옵션 = 묶음(cluster). 유형 프리셋('한글')은 그 활동유형의 primary 묶음만 미리 체크한다 →
+// 옵션에 그 묶음 id 가 있어야 체크된다. (개별 std 문장 두 개는 다른 테스트의 클릭 대상으로 유지)
 const TARGETS: readonly TargetOption[] = [
   { id: 'nuri-com-8', statement: '아는 글자를 찾아낸다', domain: '국어' },
   { id: 'nuri-com-7', statement: '책을 끝까지 듣는다', domain: '국어' },
+  { id: 'cl-nuri-ko-literacy', statement: '읽기·쓰기 관심', domain: '국어' },
   { id: 'nuri-nat-8', statement: '10까지 센다', domain: '수학' },
 ]
 const ACADEMIES = [{ id: 'ac1', name: '더하다사고력' }]
@@ -94,8 +95,8 @@ describe('활동 추가 폼', () => {
     await userEvent.click(screen.getByRole('button', { name: '추가' }))
     const input = h.onSaveActivity.mock.calls[0]![0]
     expect(input).toMatchObject({ name: '한글 학원 숙제', domain: '국어', track: '학원' })
-    // 영역 전체가 아니라 활동유형 프리셋('한글')의 primary 만 미리 체크된다.
-    expect(input.targetIds).toEqual(['nuri-com-8', 'nuri-com-7'])
+    // 영역 전체가 아니라 활동유형 프리셋('한글')의 primary 묶음만 미리 체크된다(취학 전 band).
+    expect(input.targetIds).toEqual(['cl-nuri-ko-literacy'])
   })
 
   it('편집 폼엔 유형 프리셋이 없다', () => {
