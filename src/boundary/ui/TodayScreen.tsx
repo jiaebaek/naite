@@ -8,9 +8,14 @@ import { IconArrow, IconCheck, Sprout } from './icons'
 
 export interface GapBanner {
   readonly gapCount: number
+  /** 학습 레인 챙김 영역 수 */
   readonly onCount: number
+  /** 학습 레인 챙김 묶음 수 (안도 카드 = 묶음 기준 · 명세 §07-A) */
+  readonly onClusters: number
   readonly totalDomains: number
   readonly gapNames: readonly string[]
+  /** 챙김의 근거(학원·활동 이름) — 사교육 안도 톤 "○○로 챙기고 있어요" */
+  readonly sources: readonly string[]
   readonly clear: boolean
   readonly segs: readonly ('on' | 'gap')[]
 }
@@ -25,6 +30,14 @@ export interface TodayScreenProps {
   readonly onGoArea: () => void
   /** 안도 공유 카드 열기(§07-A) */
   readonly onShare: () => void
+}
+
+/** '로/으로' 조사 — 받침 없거나 ㄹ 받침이면 '로', 그 외 '으로'. (한글 종성 판정) */
+function ro(word: string): string {
+  const c = word.charCodeAt(word.length - 1)
+  if (c < 0xac00 || c > 0xd7a3) return `${word}로`
+  const jong = (c - 0xac00) % 28
+  return word + (jong === 0 || jong === 8 ? '로' : '으로')
 }
 
 export function TodayScreen({ dateLabel, banner, progress, schedule, groups, onToggle, onGoArea, onShare }: TodayScreenProps) {
@@ -57,9 +70,13 @@ export function TodayScreen({ dateLabel, banner, progress, schedule, groups, onT
             </>
           ) : (
             <>
-              {/* 안도 먼저: 이미 챙기고 있는 것 */}
+              {/* 안도 먼저: 이미 챙기고 있는 것 — 사교육 기반 톤(○○로 N묶음), 학교 챙김 배지 없음 */}
               <div className="gap-head">
-                {banner.onCount > 0 ? `벌써 ${banner.onCount}곳을 챙기고 있어요` : '지금 나이에 챙길 곳을 준비했어요'}
+                {banner.sources.length > 0
+                  ? `${ro(banner.sources.slice(0, 3).join('·'))} ${banner.onClusters}묶음 챙기고 있어요`
+                  : banner.onClusters > 0
+                    ? `벌써 ${banner.onClusters}묶음 챙기고 있어요`
+                    : '지금 나이에 챙길 곳을 준비했어요'}
               </div>
               {/* 갭은 넌지시 */}
               <p className="gap-sub">

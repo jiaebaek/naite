@@ -10,12 +10,12 @@ import type { GapBanner } from '../../src/boundary/ui/TodayScreen'
 import type { TaskVM } from '../../src/boundary/ui/vm'
 
 const GAP_BANNER: GapBanner = {
-  gapCount: 2, onCount: 5, totalDomains: 7,
-  gapNames: ['과학·탐구', '사회·인성'], clear: false,
+  gapCount: 2, onCount: 5, onClusters: 8, totalDomains: 7,
+  gapNames: ['과학·탐구', '사회·인성'], sources: ['한글학원', '유아체육'], clear: false,
   segs: ['on', 'on', 'gap', 'on', 'gap', 'on', 'on'],
 }
 const CLEAR_BANNER: GapBanner = {
-  gapCount: 0, onCount: 7, totalDomains: 7, gapNames: [], clear: true,
+  gapCount: 0, onCount: 7, onClusters: 12, totalDomains: 7, gapNames: [], sources: ['한글학원'], clear: true,
   segs: ['on', 'on', 'on', 'on', 'on', 'on', 'on'],
 }
 
@@ -51,12 +51,13 @@ const setup = (over: Partial<Parameters<typeof TodayScreen>[0]> = {}) => {
 }
 
 describe('현황 배너 — 안도 먼저, 갭은 넌지시 (원칙 6)', () => {
-  it('⭐ 헤드라인은 안도로 시작한다 ("벌써 N곳") — "비어있어요"로 문 열지 않는다', () => {
+  it('⭐ 헤드라인은 안도 + 사교육 톤(○○로 N묶음 챙기고 있어요) — "비어있어요"로 문 열지 않는다', () => {
     setup()
-    const head = screen.getByText(/벌써 5곳을 챙기고 있어요/)
+    const head = screen.getByText(/8묶음 챙기고 있어요/)
     expect(head).toBeInTheDocument()
-    // 배너 헤드가 갭 문구로 시작하지 않음
+    expect(head.textContent).toContain('한글학원') // 근거(학원) 이름을 사교육 안도 톤으로
     expect(head.textContent).not.toMatch(/비어있어요/)
+    expect(head.textContent).not.toContain('학교') // 학교가 챙긴다 배지 없음
   })
 
   it('갭은 서브에서 넌지시 + 갭 영역 칩', () => {

@@ -26,8 +26,7 @@ const setup = () => {
       ageLabel="5세"
       onCount={5}
       doneCount={1}
-      totalDomains={7}
-      code="N5·2C5"
+      totalDomains={14}
       areas={AREAS}
       onClose={onClose}
     />,
@@ -36,12 +35,18 @@ const setup = () => {
 }
 
 describe('공유 카드', () => {
-  it('좌표 아트 + 아이 라벨 + 안도 요약 + 코드가 보인다', () => {
+  it('좌표 아트 + 아이 라벨 + 안도 요약(묶음 기준)이 보인다', () => {
     setup()
     expect(screen.getByTestId('coord-art')).toBeInTheDocument()
     expect(screen.getByText('봄이 · 만 5세 8개월')).toBeInTheDocument()
-    expect(screen.getByText(/7곳 중/)).toBeInTheDocument()
-    expect(screen.getByText(/좌표 N5·2C5/)).toBeInTheDocument()
+    expect(screen.getByText(/14묶음 중/)).toBeInTheDocument()
+  })
+
+  it('⭐ 좌표 코드(N5·3C7 류)를 표기하지 않는다 (명세 §07-A · 암호처럼 보여 신뢰 저하)', () => {
+    setup()
+    const text = document.body.textContent ?? ''
+    expect(text).not.toContain('좌표 N')
+    expect(text).not.toMatch(/N\d+·\d+C\d+/)
   })
 
   it('⭐ 톤은 안도 — "앞서요/상위" 같은 비교 문구가 없다', () => {

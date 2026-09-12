@@ -82,6 +82,8 @@ export interface MilestoneVM {
   readonly evidence?: readonly string[]
   /** 챙기는 중이면 그 활동 이름(또는 '이미 하고 있어요') */
   readonly coveredBy: string | null
+  /** 챙김 방식(T8 · SSOT §5) — 등원(다니면서) / 숙제(숙제로) / 집(엄마표). 라벨 문구용. */
+  readonly coverKind?: '등원' | '숙제' | '집'
   /** 됨(직접 처리)인가 — 관리 토글 상태 */
   readonly done: boolean
   /** 추천 활동 (근거 있는 라이브러리 항목이 있을 때만) */

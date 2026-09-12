@@ -11,19 +11,20 @@ import { IconX } from './icons'
 export interface ShareSheetProps {
   readonly childLabel: string
   readonly ageLabel: string
+  /** 학습 레인 챙김 묶음 수 (SSOT §5 · 명세 §07-A) */
   readonly onCount: number
   readonly doneCount: number
+  /** 학습 레인 묶음 총수 */
   readonly totalDomains: number
-  readonly code: string
   readonly areas: readonly CoordArea[]
   readonly onClose: () => void
 }
 
-export function ShareSheet({ childLabel, ageLabel, onCount, doneCount, totalDomains, code, areas, onClose }: ShareSheetProps) {
+export function ShareSheet({ childLabel, ageLabel, onCount, doneCount, totalDomains, areas, onClose }: ShareSheetProps) {
   const [msg, setMsg] = useState<string | null>(null)
 
   const share = async () => {
-    const text = `${childLabel} — ${totalDomains}곳 중 ${onCount}곳 챙기는 중. 나이테 좌표`
+    const text = `${childLabel} — ${totalDomains}묶음 중 ${onCount}묶음 챙기는 중. 나이테 좌표`
     try {
       if (navigator.share) { await navigator.share({ title: '나이테 좌표', text }); return }
       await navigator.clipboard.writeText(text)
@@ -48,10 +49,9 @@ export function ShareSheet({ childLabel, ageLabel, onCount, doneCount, totalDoma
             <div className="sc-eyebrow">우리 아이 나이테 좌표</div>
             <NaiteCoordArt areas={areas} ageLabel={ageLabel} />
             <div className="sc-title">{childLabel}</div>
-            <div className="sc-sub">{totalDomains}곳 중 <b>{onCount}곳</b> 챙기는 중 · 이룸 {doneCount}</div>
+            <div className="sc-sub">{totalDomains}묶음 중 <b>{onCount}묶음</b> 챙기는 중 · 이룸 {doneCount}</div>
             <div className="sc-foot">
               <span className="sc-mark">나이테</span>
-              <span className="sc-code">좌표 {code}</span>
             </div>
           </div>
           <p className="sc-note">모양은 아이마다 달라요 — 우리 아이만의 좌표. 이름은 기본으로 가려지고(애칭·이니셜), 자랑이 아니라 잘 챙기고 있다는 안도예요.</p>

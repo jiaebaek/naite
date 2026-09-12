@@ -88,8 +88,8 @@ describe('⭐ 빈 상태로 시작 + 셋업이 실제 데이터를 만든다 (�
     fireEvent.click(screen.getByRole('button', { name: '미술' })) // 예체능 학원(등원형)
     fireEvent.click(screen.getByRole('button', { name: /나이테 시작하기/ }))
     await screen.findByTestId('view-today')
-    // 미술=등원형 → 등원 커버로 예체능 묶음 챙김 → 안도 배너 "벌써 1곳"
-    expect(screen.getByText(/벌써 1곳을 챙기고 있어요/)).toBeInTheDocument()
+    // 미술=등원형 → 등원 커버로 예체능 묶음 챙김 → 안도 배너(사교육 톤, 묶음 기준)
+    expect(screen.getByText(/1묶음 챙기고 있어요/)).toBeInTheDocument()
   })
 
   it('⭐ S2 집 활동 칩을 누르면 그 영역이 챙김 + 오늘 할 일에 뜬다', async () => {
@@ -100,7 +100,7 @@ describe('⭐ 빈 상태로 시작 + 셋업이 실제 데이터를 만든다 (�
     fireEvent.click(screen.getByRole('button', { name: '그림책 읽기' })) // 국어 집활동 → 묶음 챙김
     fireEvent.click(screen.getByRole('button', { name: /나이테 시작하기/ }))
     await screen.findByTestId('view-today')
-    expect(screen.getByText(/벌써 1곳을 챙기고 있어요/)).toBeInTheDocument()
+    expect(screen.getByText(/1묶음 챙기고 있어요/)).toBeInTheDocument()
     // 집 활동은 오늘 할 일 카드로도 뜬다(등원과 달리 체크 대상)
     expect(screen.getByText('그림책 읽기')).toBeInTheDocument()
   })
@@ -147,17 +147,18 @@ describe('⭐ 안도 공유 카드 (§07-A)', () => {
 describe('⭐ 현황 배너 — 안도 먼저 (원칙 6 · 회귀 방지)', () => {
   beforeEach(readySeeded)
 
-  it('시드로 안도 먼저: "벌써 4곳을 챙기고 있어요"로 문을 연다', async () => {
-    // 국어·수학·예체능·영어 = 4곳 챙김(명시적 겨냥 목표 기준). 등원 통째 커버 폐기 후 회귀 방지.
+  it('시드로 안도 먼저: 사교육 톤 "○○로 N묶음 챙기고 있어요"로 문을 연다', async () => {
+    // 학습 레인 묶음 기준(§07-A): 국어1·수학1·예체능2·영어2 = 6묶음. 안도 톤, 사교육 근거 이름 노출.
     render(<App />)
-    expect(await screen.findByText(/벌써 4곳을 챙기고 있어요/)).toBeInTheDocument()
+    const head = await screen.findByText(/6묶음 챙기고 있어요/)
+    expect(head.textContent).not.toMatch(/비어있어요/)
   })
 
   it('갭은 학습 레인만 — 과학·탐구 1곳(생활·마음은 배너 갭에서 제외)', async () => {
     // T8: 배너(안도 카드)는 학습 레인만 센다. 사회·인성·건강·안전(생활·마음)은 갭 알람 안 함(SSOT §5).
     render(<App />)
     await screen.findByTestId('view-today')
-    const banner = screen.getByText(/벌써 4곳을 챙기고 있어요/).closest('.gapcard')!
+    const banner = screen.getByText(/6묶음 챙기고 있어요/).closest('.gapcard')!
     expect(banner.textContent).toContain('1곳만 더 보면')
     expect(banner.textContent).toContain('과학·탐구')
     expect(banner.textContent).not.toContain('사회·인성')

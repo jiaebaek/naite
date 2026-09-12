@@ -66,6 +66,14 @@ function Suggest({ r }: { r: RecommendVM }) {
   )
 }
 
+/** 챙김 방식별 문구(T8·SSOT §5): 등원=다니면서 / 숙제=숙제로 / 집=엄마표. */
+function coverLabel(m: MilestoneVM): string {
+  if (!m.coveredBy) return '챙기는 중'
+  if (m.coverKind === '등원') return `${m.coveredBy.replace(/\s*등원$/, '')} 다니면서 챙겨져요`
+  if (m.coverKind === '숙제') return `${m.coveredBy.replace(/\s*숙제$/, '')} 숙제로 챙겨져요`
+  return `${m.coveredBy}로 챙기는 중`
+}
+
 /** 묶음의 근거 상세 — 속한 개별 성취기준 문장(공교육 원문). 탭하면 보인다(docs/11 §5). */
 function Evidence({ items }: { items: readonly string[] }) {
   if (items.length === 0) return null
@@ -107,7 +115,7 @@ function GoalCard({ m, onOpenLink, onToggleAchieved, onRemoveGoal }: {
     return (
       <div className="ms prog" data-testid={`ms-${m.standardId}`}>
         <div className="ms-top"><span className="ms-name">{m.statement}</span><span className={`badge ${m.badgeCls}`}>{m.badgeLabel}</span></div>
-        <div className="ms-meta"><Circle />{m.coveredBy ? `${m.coveredBy}로 챙기는 중` : '챙기는 중'}</div>
+        <div className="ms-meta"><Circle />{coverLabel(m)}</div>
         <div className="ms-act">
           <button className="btn-sm" onClick={() => onToggleAchieved(m.standardId)}>이뤘어요</button>
           {removeBtn}

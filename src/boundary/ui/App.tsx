@@ -297,6 +297,8 @@ export function App() {
         const evidence = cl
           ? cl.memberIds.map((id) => stmtById.get(id)).filter((s): s is string => Boolean(s))
           : undefined
+        const cov = covering[0]
+        const coverKind = cov ? (cov.id.startsWith('att-') ? '등원' : cov.academyId ? '숙제' : '집') : undefined
         return {
           standardId: std.id,
           statement: std.statement,
@@ -304,7 +306,8 @@ export function App() {
           badgeCls: badge.cls,
           badgeLabel: badge.label,
           status,
-          coveredBy: covering[0]?.name ?? null,
+          coveredBy: cov?.name ?? null,
+          ...(coverKind ? { coverKind } : {}),
           done: status === '됨',
           removable: std.origin === '자체',
           ...(evidence && evidence.length > 0 ? { evidence } : {}),
@@ -335,11 +338,18 @@ export function App() {
     const gapDomains = assessable.filter((d) => d.group === 'empty')
     // 부모 우선 분야를 갭 칩 맨 앞으로 (중요도 = 부모가 정함)
     const gapNames = [...gapDomains].sort((a, b) => Number(b.priority) - Number(a.priority)).map((d) => d.domain)
+    // 사교육 안도 톤: 챙김의 근거(학원·활동) 이름. "○○ 숙제"·"○○ 등원" 접미사는 떼어 학원명만.
+    const cleanName = (n: string) => n.replace(/\s*(숙제|등원)$/, '')
+    const sources = [...new Set(
+      assessable.flatMap((d) => d.milestones.filter((m) => m.status !== '활동필요' && m.coveredBy).map((m) => cleanName(m.coveredBy!))),
+    )]
     return {
       gapCount: gapDomains.length,
       onCount: assessable.length - gapDomains.length,
+      onClusters: assessable.reduce((s, d) => s + d.on, 0),
       totalDomains: assessable.length,
       gapNames,
+      sources,
       clear: gapDomains.length === 0,
       segs: assessable.map((d) => (d.group === 'empty' ? 'gap' : 'on')),
     }
@@ -643,7 +653,7 @@ export function App() {
     try { window.location.reload() } catch { /* noop */ }
   }
 
-  // 안도 공유 카드 데이터(§07-A) — 영역별 챙김 정도로 좌표 실루엣 생성
+  // 안도 공유 카드 데이터(§07-A) — 영역별 챙김 정도로 좌표 실루엣 생성(부드러운 동심 단면)
   const coordAreas: readonly CoordArea[] = useMemo(
     () => domainVMs.map((d) => ({
       name: d.domain,
@@ -652,10 +662,12 @@ export function App() {
     })),
     [domainVMs],
   )
-  const shareOnCount = useMemo(() => domainVMs.filter((d) => d.group !== 'empty').length, [domainVMs])
-  const shareDoneCount = useMemo(() => domainVMs.filter((d) => d.total > 0 && d.done === d.total).length, [domainVMs])
+  // 공유·안도 카운트는 **학습 레인 묶음 기준**(생활·마음 분리 · 명세 §07-A). 좌표 코드는 표기하지 않는다.
+  const learnVMs = useMemo(() => domainVMs.filter((d) => d.lane === '학습' && !(d.noPublic && d.total === 0)), [domainVMs])
+  const shareTotal = useMemo(() => learnVMs.reduce((s, d) => s + d.total, 0), [learnVMs])
+  const shareOnCount = useMemo(() => learnVMs.reduce((s, d) => s + d.on, 0), [learnVMs])
+  const shareDoneCount = useMemo(() => learnVMs.reduce((s, d) => s + d.done, 0), [learnVMs])
   const ageYears = Math.floor(ageMonths(childBirthYm, date) / 12)
-  const shareCode = `N${ageYears}·${domainVMs.filter((d) => d.group === 'empty').length}C${shareOnCount}`
 
   const detailVM = detailDomain ? domainVMs.find((d) => d.domain === detailDomain) ?? null : null
   const linkStd = linkTarget ? standards.find((s) => s.id === linkTarget.standardId) : undefined
@@ -796,8 +808,7 @@ export function App() {
           ageLabel={`${ageYears}세`}
           onCount={shareOnCount}
           doneCount={shareDoneCount}
-          totalDomains={domainVMs.length}
-          code={shareCode}
+          totalDomains={shareTotal}
           areas={coordAreas}
           onClose={() => setShowShare(false)}
         />
