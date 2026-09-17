@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>나이테 · 나머지 화면 개선안</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EFF1EA; --card:#FCFCF8; --border:#DDE3D6;
+    --ink:#23291F; --secondary:#565E4E; --muted:#8B9182;
+    --sage:#4F9A72; --sage-bg:#EAF3EC; --sage-ink:#2E6B4E;
+    --honey:#C99A5B; --honey-bg:#F7EEE3; --honey-ink:#7A4520; --honey-muted:#9A6A3C;
+    --pine:#245648; --track:#E4E7DE;
+    --rose:#B4553F; --rose-bg:#F6E9E4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--paper);font-family:'Noto Sans KR',system-ui,sans-serif;color:var(--ink);
+    padding:28px 16px 70px;line-height:1.5}
+  .serif{font-family:'Gowun Batang',serif}
+  .wrap{max-width:920px;margin:0 auto}
+  h1{font-size:22px;font-weight:700;color:var(--pine);margin-bottom:4px}
+  .lede{font-size:13px;color:var(--secondary);margin-bottom:8px}
+  .legend-top{font-size:11.5px;color:var(--muted);margin-bottom:26px}
+  .legend-top b.n{color:var(--rose)} .legend-top b.p{color:var(--sage-ink)}
+
+  section.blk{margin:0 0 40px;padding-top:22px;border-top:1px solid var(--border)}
+  .blk-hd{margin-bottom:14px}
+  .blk-hd .k{font-size:10.5px;font-weight:700;letter-spacing:.05em;color:var(--muted);text-transform:uppercase}
+  .blk-hd h2{font-size:18px;color:var(--pine);margin:2px 0 6px}
+  .blk-hd .why{font-size:12.5px;color:var(--secondary);max-width:640px}
+  .blk-hd .why b{color:var(--ink)}
+
+  .pair{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+  .unit{display:flex;flex-direction:column;align-items:center}
+  .cap{font-size:10.5px;font-weight:700;letter-spacing:.03em;padding:2px 9px;border-radius:999px;margin-bottom:8px}
+  .cap.now{background:var(--rose-bg);color:var(--rose)}
+  .cap.next{background:var(--sage-bg);color:var(--sage-ink)}
+
+  .frame{background:#e7e9e1;border-radius:18px;padding:8px;width:290px}
+  .screen{background:var(--card);border:0.5px solid var(--border);border-radius:12px;overflow:hidden}
+  .pad{padding:12px 13px 14px}
+
+  /* generic */
+  .eyebrow{font-size:9.5px;letter-spacing:.06em;color:var(--muted);text-transform:uppercase;margin-bottom:5px}
+  .bar{height:6px;background:var(--track);border-radius:99px;overflow:hidden}
+  .bar>i{display:block;height:100%;background:var(--sage)}
+  .coverbar{display:flex;gap:3px}
+  .coverbar .seg{flex:1;height:8px;border-radius:3px}
+  .seg.on{background:var(--sage)} .seg.prog{background:color-mix(in srgb,var(--sage) 45%,transparent)} .seg.gap{background:var(--track)}
+  .seg.gaph{background:var(--honey-bg);border:0.5px solid var(--honey)}
+  .datestrip{font-size:11px;color:var(--muted);margin-bottom:9px}
+  .pill{font-size:10px;padding:2px 8px;border-radius:999px;background:var(--sage-bg);color:var(--sage-ink)}
+  .pill.empty{background:var(--honey-bg);color:var(--honey-ink)}
+  .pill.calm{background:#EEF0EA;color:var(--muted)}
+  .btn-sm{font-size:11px;padding:5px 9px;border-radius:7px;border:0.5px solid var(--border);background:transparent;color:var(--secondary)}
+  .btn-sm.fill{background:var(--sage);color:#fff;border-color:var(--sage)}
+  .nav{display:flex;border-top:0.5px solid var(--border)}
+  .nav div{flex:1;text-align:center;padding:7px 0;font-size:10px;color:var(--muted)}
+  .nav div.on{color:var(--pine)}
+
+  /* onboarding */
+  .ob{padding:20px 16px;text-align:center;min-height:330px;display:flex;flex-direction:column;justify-content:center}
+  .ob .art{margin:0 auto 18px}
+  .ob .eyebrow{margin-bottom:8px}
+  .ob h3{font-size:19px;line-height:1.35;margin-bottom:9px}
+  .ob p{font-size:12.5px;color:var(--secondary)}
+  .ob p b{color:var(--ink)}
+  .ob-mock{background:#F4F5F0;border-radius:10px;padding:12px;text-align:left;width:170px;margin:0 auto}
+  .ob-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-top:7px}
+  .dots{display:flex;gap:5px;justify-content:center;margin-top:16px}
+  .dots i{width:6px;height:6px;border-radius:99px;background:var(--track)} .dots i.on{background:var(--pine);width:16px;border-radius:99px}
+
+  /* area */
+  .ov{background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:11px 12px;margin-bottom:11px}
+  .ov .num{font-size:13px;margin:2px 0 8px} .ov .num b{color:var(--pine)}
+  .trust-chip{margin-top:9px;display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--sage-ink);background:var(--sage-bg);border-radius:999px;padding:3px 9px}
+  .trust-chip .q{width:12px;height:12px;border-radius:99px;border:1px solid var(--sage-ink);font-size:8px;display:inline-flex;align-items:center;justify-content:center}
+  .dgrp{font-size:10.5px;color:var(--muted);margin:12px 0 6px}
+  .dom{background:var(--card);border:0.5px solid var(--border);border-radius:9px;padding:10px 11px;margin-bottom:7px}
+  .dom.invite{border-style:dashed;border-color:#CDD5C4;background:#FBFCF8}
+  .dom.calm{background:#F6F8F3}
+  .d-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .d-nm{font-size:13px;font-weight:500}
+  .ring-row{display:flex;gap:4px;margin:2px 0 6px}
+  .pip{width:9px;height:9px;border-radius:99px;background:var(--track)} .pip.on{background:var(--sage)} .pip.prog{background:color-mix(in srgb,var(--sage) 45%,transparent)}
+  .d-st{font-size:11px;color:var(--secondary)} .d-st b{color:var(--ink)}
+  .d-st.invite{color:var(--muted)}
+
+  /* detail */
+  .detbar{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .detbar .bk{width:22px;height:22px;border-radius:6px;border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--secondary);font-size:13px}
+  .detbar .nm{font-size:15px;font-weight:500}
+  .ms{border:0.5px solid var(--border);border-radius:9px;padding:10px 11px;margin-bottom:8px;background:var(--card)}
+  .ms.prog{border-left:3px solid var(--sage)}
+  .ms.gap{border-left:3px solid var(--honey)}
+  .ms-nm{font-size:12.5px;line-height:1.4}
+  .ms-meta{font-size:11px;color:var(--sage-ink);margin-top:6px;display:flex;align-items:center;gap:5px}
+  .ms-meta.gap{color:var(--honey-ink)}
+  .why-line{margin-top:8px;font-size:10.5px;color:var(--muted);background:#F4F5F0;border-radius:6px;padding:5px 8px;display:flex;align-items:center;gap:5px;cursor:pointer}
+  .why-line .q{width:12px;height:12px;border-radius:99px;border:1px solid var(--muted);font-size:8px;display:inline-flex;align-items:center;justify-content:center;flex:none}
+  .badge{font-size:9px;padding:1px 6px;border-radius:999px;background:#EDE3D4;color:var(--honey-ink)}
+  .old-ev{margin-top:8px;font-size:10.5px;color:var(--muted);border-top:0.5px dashed var(--border);padding-top:6px}
+
+  /* log */
+  .rec-hero{text-align:center;padding:6px 0 12px}
+  .rec-hero h3{font-size:16px;margin-bottom:4px}
+  .rec-hero p{font-size:11px;color:var(--secondary)}
+  .week{display:flex;gap:5px;justify-content:space-between;margin:10px 0 6px}
+  .wd{flex:1;text-align:center;background:#F4F5F0;border-radius:7px;padding:6px 0;font-size:10px;color:var(--muted)}
+  .wd.fill{background:var(--sage-bg);color:var(--sage-ink)} .wd.today{outline:1.5px solid var(--sage)}
+  .wd b{display:block;font-size:12px;color:var(--ink);margin-top:2px}
+  .rec-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:12px}
+  .rec-item .sub{font-size:10px;color:var(--muted)}
+  .rec-auto{font-size:10.5px;color:var(--sage-ink);background:var(--sage-bg);border-radius:7px;padding:7px 9px;margin:8px 0}
+
+  /* obs */
+  .obs-q{margin-top:10px}
+  .obs-q .t{font-size:12px;margin-bottom:5px}
+  .obs-opts{display:flex;gap:5px}
+  .obs-opt{flex:1;font-size:11px;padding:5px 0;text-align:center;border:0.5px solid var(--border);border-radius:7px;color:var(--secondary)}
+  .obs-opt.on{background:var(--sage);color:#fff;border-color:var(--sage)}
+
+  /* share */
+  .sharecard{background:linear-gradient(160deg,#FBFCF7,#F1F4EC);border:0.5px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+  .sc-eyebrow{font-size:10px;color:var(--muted);letter-spacing:.05em}
+  .sc-title{font-size:15px;font-weight:500;margin-top:8px}
+  .sc-sub{font-size:11.5px;color:var(--secondary);margin-top:3px}
+  .sc-trust{margin-top:8px;font-size:10px;color:var(--sage-ink);background:var(--sage-bg);border-radius:999px;padding:3px 9px;display:inline-block}
+  .sc-mark{font-size:11px;color:var(--pine);margin-top:10px}
+
+  /* annotation */
+  .anno{background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;flex:1;min-width:250px;align-self:stretch}
+  .anno .r{font-size:12px;margin-bottom:9px;padding-left:16px;position:relative}
+  .anno .r:before{content:"→";position:absolute;left:0;color:var(--sage-ink);font-weight:700}
+  .anno .r b{color:var(--ink)}
+  .anno .tag{font-size:10px;color:var(--muted)}
+  .keep{background:var(--sage-bg);color:var(--sage-ink);font-size:11.5px;border-radius:8px;padding:9px 11px;margin-top:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="serif">나이테 · 나머지 화면 개선안</h1>
+  <p class="lede">오늘 화면에 이어, 온보딩·영역·상세·기록·관찰·공유. 피드백(doc13) 4원칙 = ①안도-먼저 ②신뢰는 사람/전문가 ③노동 최소 ④시기의 창.</p>
+  <p class="legend-top"><b class="n">■ 현재</b> = 지금 앱에 살아있는 화면 · <b class="p">■ 개선</b> = 제안. 경미 보강 화면은 개선안만 표시.</p>
+
+  <!-- ========== 1. 온보딩 ========== -->
+  <section class="blk">
+    <div class="blk-hd">
+      <div class="k">1 · 온보딩 (3장 중 2번째)</div>
+      <h2 class="serif">"비어있는 곳 찾기" → "어디쯤인지 안심시키기"</h2>
+      <p class="why">2번 슬라이드가 앱의 정체성을 "갭 사냥꾼"으로 못박고, <b>"누리과정·성취기준 국가 교육과정"</b>이라는 문서 라벨을 전면에 내세워요. 피드백: 갭-먼저는 불안을 키우고("복잡"), 문서 라벨은 전문성으로 안 읽힘("공교육이라 전문성 없어 보인다"). 안도-먼저 + 사람-권위로 뒤집습니다.</p>
+    </div>
+    <div class="pair">
+      <div class="unit">
+        <span class="cap now">현재</span>
+        <div class="frame"><div class="screen"><div class="ob">
+          <div class="eyebrow">이 앱이 하는 일</div>
+          <div class="ob-mock">
+            <div class="coverbar"><span class="seg on"></span><span class="seg on"></span><span class="seg on"></span><span class="seg on"></span><span class="seg on"></span><span class="seg gap"></span><span class="seg gap"></span></div>
+            <div class="ob-row"><span>국어</span><span class="pill">챙기는 중</span></div>
+            <div class="ob-row"><span>과학·탐구</span><span class="pill empty">비어있음</span></div>
+            <div class="ob-row"><span>사회·인성</span><span class="pill empty">비어있음</span></div>
+          </div>
+          <h3 class="serif" style="margin-top:16px">무엇이 비어있는지<br>찾아드려요</h3>
+          <p><b>누리과정·성취기준</b> 등 국가 교육과정에 맞춰, 비어있는 곳을 콕 집어줘요.</p>
+        </div></div></div>
+      </div>
+      <div class="unit">
+        <span class="cap next">개선</span>
+        <div class="frame"><div class="screen"><div class="ob">
+          <div class="eyebrow">이 앱이 하는 일</div>
+          <div class="ob-mock">
+            <div style="text-align:center;margin-bottom:10px">
+              <svg width="70" height="70" viewBox="0 0 80 80"><circle cx="40" cy="40" r="30" fill="none" stroke="#E4E7DE" stroke-width="9"/><circle cx="40" cy="40" r="30" fill="none" stroke="#4F9A72" stroke-width="9" stroke-linecap="round" stroke-dasharray="150 39" transform="rotate(-90 40 40)"/></svg>
+            </div>
+            <div class="ob-row"><span>지금 시기</span><span class="pill">대부분 챙김</span></div>
+            <div class="ob-row"><span>딱 한 곳</span><span class="pill calm">천천히 봐요</span></div>
+          </div>
+          <h3 class="serif" style="margin-top:16px">우리 애가 지금<br>어디쯤인지 알려줘요</h3>
+          <p><b>아이 발달·교육 전문가가 세운 기준</b>으로, 지금 잘 되고 있는 것부터 보여드려요. 놓친 곳은 넌지시.</p>
+        </div></div></div>
+      </div>
+      <div class="anno">
+        <div class="r"><b>표제 전환</b>: "무엇이 비어있는지 찾아드려요" → "어디쯤인지 알려줘요". 갭이 아니라 좌표. <span class="tag">안도-먼저</span></div>
+        <div class="r"><b>목업 이미지</b>: 갭 2칸 강조 리스트 → 대부분 찬 링. 첫인상이 안심. <span class="tag">안도-먼저</span></div>
+        <div class="r"><b>권위 카피</b>: "누리과정·성취기준 국가 교육과정" → "전문가가 세운 기준". "공교육" 단어 제거. <span class="tag">신뢰=사람</span></div>
+        <div class="r"><b>3번 슬라이드(별도)</b>: "매일 오늘 화면만" 유지하되 "유치원 다니면 대부분 저절로 채워져요" 한 줄 추가 → 입력 노동 기대 낮춤. <span class="tag">노동 최소</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 2. 영역 ========== -->
+  <section class="blk">
+    <div class="blk-hd">
+      <div class="k">2 · 영역 탭</div>
+      <h2 class="serif">학습 빈칸을 "경보"가 아니라 "초대"로</h2>
+      <p class="why">통찰-먼저 셋업에선 부모가 학습을 입력 안 한 게 <b>기본 상태</b>예요. 그런데 지금 영역 화면은 그걸 <b>"비어있음 N곳"</b> 허니색 경보 + "먼저 챙기면 좋아요"로 맨 위에 띄웁니다. 입력도 안 했는데 다 빨간불 → 불안. 미입력 학습은 경보가 아니라 "알려주면 채워져요" 초대로.</p>
+    </div>
+    <div class="pair">
+      <div class="unit">
+        <span class="cap now">현재</span>
+        <div class="frame"><div class="screen"><div class="pad">
+          <p class="datestrip">2026년 9월 17일</p>
+          <div class="ov">
+            <div class="eyebrow">학습 — 이 나이에 챙길 영역</div>
+            <div class="num">4개 영역 중 <b>0곳</b> 챙기고 있어요 · <b>비어있는 곳 4</b></div>
+            <div class="coverbar"><span class="seg gap"></span><span class="seg gap"></span><span class="seg gap"></span><span class="seg gap"></span></div>
+          </div>
+          <div class="dgrp">먼저 챙기면 좋아요</div>
+          <div class="dom">
+            <div class="d-top"><span class="d-nm">국어</span><span class="pill empty">비어있음</span></div>
+            <div class="ring-row"><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+            <div class="d-st">지금 시기 목표 <b>3곳이 모두 비어있어요</b> · 활동이 아직 없어요</div>
+          </div>
+          <div class="dom">
+            <div class="d-top"><span class="d-nm">수학</span><span class="pill empty">비어있음</span></div>
+            <div class="ring-row"><span class="pip"></span><span class="pip"></span></div>
+            <div class="d-st">지금 시기 목표 <b>2곳이 모두 비어있어요</b> · 활동이 아직 없어요</div>
+          </div>
+        </div></div></div>
+      </div>
+      <div class="unit">
+        <span class="cap next">개선</span>
+        <div class="frame"><div class="screen"><div class="pad">
+          <p class="datestrip">2026년 9월 17일</p>
+          <div class="ov">
+            <div class="eyebrow">학습 — 이 나이에 챙길 영역</div>
+            <div class="num">아직 학원·집공부를 안 알려주셨어요</div>
+            <div class="coverbar"><span class="seg gap"></span><span class="seg gap"></span><span class="seg gap"></span><span class="seg gap"></span></div>
+            <div class="trust-chip"><span class="q">?</span>전문가가 세운 기준으로 정리</div>
+          </div>
+          <div class="dgrp">알려주면 여기가 채워져요</div>
+          <div class="dom invite">
+            <div class="d-top"><span class="d-nm">국어</span><span class="pill calm">알려주기</span></div>
+            <div class="ring-row"><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+            <div class="d-st invite">한글·독서 학원이나 집공부를 더하면 이 시기 목표 3곳이 챙김으로 채워져요.</div>
+          </div>
+          <div class="dom invite">
+            <div class="d-top"><span class="d-nm">수학</span><span class="pill calm">알려주기</span></div>
+            <div class="ring-row"><span class="pip"></span><span class="pip"></span></div>
+            <div class="d-st invite">연산·놀이수학을 더하면 2곳이 채워져요. 급하지 않아요.</div>
+          </div>
+        </div></div></div>
+      </div>
+      <div class="anno">
+        <div class="r"><b>미입력 학습 = 초대 카드</b>: "비어있음 N곳"(허니 경보) → "알려주면 채워져요"(점선·중립). 아직 안 한 게 실패가 아님. <span class="tag">안도-먼저</span></div>
+        <div class="r"><b>요약 문구</b>: "0곳 챙김 · 비어있음 4" → "아직 안 알려주셨어요". 0/4를 실패로 안 읽히게. <span class="tag">안도-먼저</span></div>
+        <div class="r"><b>신뢰 칩</b> 추가: 탭하면 왜 이 목표들인지(전문가 국가기준) 설명. <span class="tag">신뢰=사람</span></div>
+        <div class="keep">✓ 유지: 생활·마음 calm 레인 + "🌱 3분 우리 애 체크" 진입 — 이미 안도 톤이라 그대로.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 3. 영역 상세 ========== -->
+  <section class="blk">
+    <div class="blk-hd">
+      <div class="k">3 · 영역 상세 (신뢰의 심장)</div>
+      <h2 class="serif">진짜 신뢰 장치를 수면 위로</h2>
+      <p class="why">이 화면엔 앱의 <b>가장 강력한 신뢰 근거</b>(공교육 성취기준 원문)가 있는데, 작은 <b>"근거 N개" 접힌 아코디언</b>에 묻혀 있어요. 게다가 "공교육 교육과정 그대로"라는 표현 — 바로 "전문성 없어 보인다"던 그 단어. 근거를 <b>보이는 신뢰 한 줄</b>로 올리고, "공교육"→"전문가가 세운 국가 기준"으로.</p>
+    </div>
+    <div class="pair">
+      <div class="unit">
+        <span class="cap now">현재</span>
+        <div class="frame"><div class="screen"><div class="pad">
+          <div class="detbar"><span class="bk">‹</span><span class="nm">국어</span><span class="pill" style="margin-left:auto">채우는 중</span></div>
+          <div class="eyebrow">이 시기 챙길 묶음 · 공교육 교육과정 그대로</div>
+          <div class="ms prog" style="margin-top:8px">
+            <div class="ms-nm">글자의 짜임을 알고 낱말을 바르게 읽고 쓴다 <span class="badge">누리</span></div>
+            <div class="ms-meta">○ 한글학원 다니면서 챙겨져요</div>
+            <div class="old-ev">▸ 근거 2개 · 공교육 성취기준</div>
+          </div>
+          <div class="ms gap">
+            <div class="ms-nm">주변에서 자주 접하는 글자에 흥미를 갖는다 <span class="badge">누리</span></div>
+            <div class="ms-meta gap">ⓘ 아직 챙기는 활동이 없어요</div>
+            <div class="old-ev">▸ 근거 1개 · 공교육 성취기준</div>
+          </div>
+        </div></div></div>
+      </div>
+      <div class="unit">
+        <span class="cap next">개선</span>
+        <div class="frame"><div class="screen"><div class="pad">
+          <div class="detbar"><span class="bk">‹</span><span class="nm">국어</span><span class="pill" style="margin-left:auto">채우는 중</span></div>
+          <div class="eyebrow">이 시기 챙길 묶음 · 전문가가 세운 국가 기준 원문</div>
+          <div class="ms prog" style="margin-top:8px">
+            <div class="ms-nm">글자의 짜임을 알고 낱말을 바르게 읽고 쓴다 <span class="badge">누리</span></div>
+            <div class="ms-meta">○ 한글학원 다니면서 챙겨져요</div>
+            <div class="why-line"><span class="q">?</span>왜 이 목표? · 발달·교육 전문가가 세운 국가 기준 (근거 2개)</div>
+          </div>
+          <div class="ms gap">
+            <div class="ms-nm">주변에서 자주 접하는 글자에 흥미를 갖는다 <span class="badge">누리</span></div>
+            <div class="ms-meta gap">ⓘ 아직 챙기는 활동이 없어요 · 급하지 않아요</div>
+            <div class="why-line"><span class="q">?</span>왜 이 목표? · 전문가가 세운 국가 기준 (근거 1개)</div>
+          </div>
+        </div></div></div>
+      </div>
+      <div class="anno">
+        <div class="r"><b>"공교육" 단어 제거</b>: 헤더·근거 라벨 모두 "전문가가 세운 국가 기준"으로. 실체(누리·성취기준)는 그대로. <span class="tag">신뢰=사람</span></div>
+        <div class="r"><b>근거를 보이는 한 줄로</b>: 묻힌 "근거 N개" → "왜 이 목표? · 전문가 국가기준" 탭 가능 한 줄. 탭하면 원문 펼침(유지). <span class="tag">신뢰=사람</span></div>
+        <div class="r"><b>빈 목표 톤 완화</b>: "아직 활동 없어요"에 "급하지 않아요" 덧붙여 경보감 제거. <span class="tag">시기의 창</span></div>
+        <div class="keep">✓ 유지: 성취기준 <b>원문 그대로</b>(의역 없음) — 외부 배포 대비 신뢰의 근본. 2축(챙김/이룸) 분리도 유지.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 4~6. 경미 보강 ========== -->
+  <section class="blk">
+    <div class="blk-hd">
+      <div class="k">4~6 · 이미 브랜드 결에 맞는 화면 (경미 보강)</div>
+      <h2 class="serif">기록 · 관찰 체크 · 공유 카드</h2>
+      <p class="why">이 셋은 이미 안도 톤이 잘 잡혀 있어 <b>큰 수술 불필요</b>. 피드백을 살짝 태우는 정도만.</p>
+    </div>
+    <div class="pair">
+      <!-- 기록 -->
+      <div class="unit">
+        <span class="cap next">기록 · 개선</span>
+        <div class="frame"><div class="screen"><div class="pad">
+          <div class="rec-hero">
+            <h3 class="serif">한 겹씩 쌓이는 중</h3>
+            <p>앞서가지 않아도, 매년 한 겹씩.</p>
+            <svg width="86" height="86" viewBox="0 0 80 80" style="margin:8px auto 0;display:block"><circle cx="40" cy="40" r="31" fill="none" stroke="#E4E7DE" stroke-width="7"/><circle cx="40" cy="40" r="31" fill="none" stroke="#4F9A72" stroke-width="7" stroke-linecap="round" stroke-dasharray="140 55" transform="rotate(-90 40 40)"/><circle cx="40" cy="40" r="17" fill="none" stroke="#245648" stroke-width="6" opacity=".55"/></svg>
+          </div>
+          <div class="rec-auto">🏫 유치원·일상에서 챙겨지는 것도 이 겹에 함께 쌓여요</div>
+          <div class="week">
+            <div class="wd">월<b>·</b></div><div class="wd fill">화<b>2</b></div><div class="wd fill today">수<b>1</b></div><div class="wd">목<b>·</b></div><div class="wd">금<b>·</b></div>
+          </div>
+          <div class="rec-item"><span>한글 받아쓰기<div class="sub">국어</div></span><span class="pill">2/3회</span></div>
+        </div></div></div>
+      </div>
+      <div class="anno">
+        <div class="tag" style="font-weight:700;color:var(--sage-ink);margin-bottom:6px">기록 탭</div>
+        <div class="r"><b>자동커버 한 줄 추가</b>: "유치원·일상에서 챙겨지는 것도 이 겹에 쌓여요" → 기록이 수동 체크만 세는 <b>할일앱</b>으로 안 읽히게. <span class="tag">노동 최소</span></div>
+        <div class="keep">✓ 유지: 나이테 링·"못 채운 날은 그냥 비어 있을 뿐" — 완벽한 안도 톤.</div>
+      </div>
+    </div>
+
+    <div class="pair" style="margin-top:18px">
+      <!-- 관찰 -->
+      <div class="unit">
+        <span class="cap next">관찰 체크 · 개선</span>
+        <div class="frame"><div class="screen"><div class="pad">
+          <div class="eyebrow" style="text-align:center;margin-bottom:10px">3분 우리 애 체크</div>
+          <div class="obs-q">
+            <div class="t">친구와 순서를 지켜 놀이하나요?</div>
+            <div class="obs-opts"><span class="obs-opt on">예</span><span class="obs-opt">아직</span><span class="obs-opt">모름</span></div>
+          </div>
+          <div class="obs-q">
+            <div class="t">위험한 것을 스스로 조심하나요?</div>
+            <div class="obs-opts"><span class="obs-opt">예</span><span class="obs-opt on">아직</span><span class="obs-opt">모름</span></div>
+          </div>
+          <div class="rec-auto" style="margin-top:14px">✓ 답하면 생활·마음 레인에 바로 반영돼요 — 메인이 더 정확해져요</div>
+        </div></div></div>
+      </div>
+      <div class="anno">
+        <div class="tag" style="font-weight:700;color:var(--sage-ink);margin-bottom:6px">관찰 체크 (§06-B)</div>
+        <div class="r"><b>결과-메인 연결 문구</b>: "답하면 생활·마음 레인에 반영 → 메인이 정확해져요" → 3분 투자의 보상을 즉시 보여줌. <span class="tag">노동 최소</span></div>
+        <div class="keep">✓ 유지: 예/아직/모름 3택, "못 하는 게 아니라 아직" — 평가 아닌 관찰 톤 완벽.</div>
+      </div>
+    </div>
+
+    <div class="pair" style="margin-top:18px">
+      <!-- 공유 -->
+      <div class="unit">
+        <span class="cap next">공유 카드 · 개선</span>
+        <div class="frame"><div class="screen"><div class="pad">
+          <div class="sharecard">
+            <div class="sc-eyebrow">우리 아이 나이테 좌표</div>
+            <svg width="96" height="96" viewBox="0 0 96 96" style="margin:8px auto 0;display:block">
+              <circle cx="48" cy="48" r="38" fill="none" stroke="#E4E7DE" stroke-width="2"/>
+              <circle cx="48" cy="48" r="30" fill="none" stroke="#B7C7AE" stroke-width="2"/>
+              <circle cx="48" cy="48" r="22" fill="none" stroke="#4F9A72" stroke-width="2.5"/>
+              <circle cx="48" cy="18" r="3" fill="#4F9A72"/><circle cx="74" cy="42" r="3" fill="#4F9A72"/><circle cx="60" cy="72" r="3" fill="#B7C7AE"/><circle cx="26" cy="66" r="3" fill="#4F9A72"/><circle cx="20" cy="34" r="3" fill="#4F9A72"/>
+            </svg>
+            <div class="sc-title">우리 지호 · 만 5세</div>
+            <div class="sc-sub">6묶음 중 <b>5묶음</b> 챙기는 중</div>
+            <div class="sc-trust">🏅 전문가가 세운 기준으로 정리</div>
+            <div class="sc-mark serif">나이테</div>
+          </div>
+          <p style="font-size:10.5px;color:var(--muted);text-align:center;margin-top:9px">자랑이 아니라, 잘 챙기고 있다는 안도예요.</p>
+        </div></div></div>
+      </div>
+      <div class="anno">
+        <div class="tag" style="font-weight:700;color:var(--sage-ink);margin-bottom:6px">공유 카드 (§07-A)</div>
+        <div class="r"><b>신뢰 마크 추가</b>: 카드에 "전문가가 세운 기준으로 정리" 배지 → 리퍼럴 때 신뢰가 <b>함께 전파</b>(친구가 받는 순간 권위 신호). <span class="tag">신뢰=사람</span></div>
+        <div class="r"><b>정직 유지</b>: "챙기는 중"만(이룸과 분리), 이름 가림, 자랑 아닌 안도 톤. <span class="tag">안도-먼저</span></div>
+        <div class="keep">✓ 유지: 아이마다 다른 좌표 데이터-아트 — 스샷 유발 훅. 그대로.</div>
+      </div>
+    </div>
+  </section>
+
+  <div style="font-size:11.5px;color:var(--muted);border-top:1px solid var(--border);padding-top:16px">
+    이 시안들은 방향 제안입니다 — 구현은 §09 백로그 지시서(T11 등)로 남기는 게 맞고, 문서 반영은 전략 세션에서. 다음: 온보딩 2번·영역·상세 3개가 큰 변화라 불안 부모 1~2명에게 이 시안으로 반응 확인 추천.
+  </div>
+</div>
+</body>
+</html>
