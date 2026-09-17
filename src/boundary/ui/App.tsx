@@ -204,6 +204,8 @@ export function App() {
   //    아이를 기준 코호트(CHILD_BIRTH_YM)에 정렬해 현재 band 묶음을 산출한다(초1~2면 초1~2 묶음).
   const month = cohortAlignedMonth(date.slice(0, 7), childBirthYm, CHILD_BIRTH_YM)
   const clusterGoals = useMemo(() => currentClusterStandards(month), [month])
+  // 지원 범위(만 3세~초2) 밖이면 band 가 없다 — 거짓 "다 챙김" 대신 명시적 예외처리(피드백 #6).
+  const outOfRange = useMemo(() => bandOfMonth(month) === null, [month])
   // 커버리지·할 일·검증이 다루는 목표 = 현재 band 묶음 + 부모가 입력한 자체목표(영어 등).
   const standards = useMemo(() => [...clusterGoals, ...customGoals], [clusterGoals, customGoals])
   // 개별 성취기준 문장 → 묶음 근거 상세용 조회.
@@ -351,9 +353,10 @@ export function App() {
       gapNames,
       sources,
       clear: gapDomains.length === 0,
+      outOfRange,
       segs: assessable.map((d) => (d.group === 'empty' ? 'gap' : 'on')),
     }
-  }, [domainVMs])
+  }, [domainVMs, outOfRange])
 
   // ── 오늘 할 일 (이번 주 이미 채운 주N회는 숨김 — 피드백) ──
   const tasks = useMemo(
@@ -828,7 +831,7 @@ export function App() {
           initialName={childName}
           initialBirthYm={childBirthYm}
           ageLabelOf={(ym) => ageLabelOf(ym, date)}
-          bandOf={(ym) => bandOfMonth(cohortAlignedMonth(date.slice(0, 7), ym, CHILD_BIRTH_YM)) ?? 'nuri'}
+          bandOf={(ym) => bandOfMonth(cohortAlignedMonth(date.slice(0, 7), ym, CHILD_BIRTH_YM))}
           onComplete={completeSetup}
         />
       )}

@@ -66,12 +66,20 @@ function Suggest({ r }: { r: RecommendVM }) {
   )
 }
 
+/** '로/으로' 조사 — 받침 없거나 ㄹ 받침이면 '로', 그 외 '으로'. */
+function ro(word: string): string {
+  const c = word.charCodeAt(word.length - 1)
+  if (c < 0xac00 || c > 0xd7a3) return `${word}로`
+  const jong = (c - 0xac00) % 28
+  return word + (jong === 0 || jong === 8 ? '로' : '으로')
+}
+
 /** 챙김 방식별 문구(T8·SSOT §5): 등원=다니면서 / 숙제=숙제로 / 집=엄마표. */
 function coverLabel(m: MilestoneVM): string {
   if (!m.coveredBy) return '챙기는 중'
   if (m.coverKind === '등원') return `${m.coveredBy.replace(/\s*등원$/, '')} 다니면서 챙겨져요`
   if (m.coverKind === '숙제') return `${m.coveredBy.replace(/\s*숙제$/, '')} 숙제로 챙겨져요`
-  return `${m.coveredBy}로 챙기는 중`
+  return `${ro(m.coveredBy)} 챙기는 중`
 }
 
 /** 묶음의 근거 상세 — 속한 개별 성취기준 문장(공교육 원문). 탭하면 보인다(docs/11 §5). */

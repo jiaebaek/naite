@@ -17,6 +17,8 @@ export interface GapBanner {
   /** 챙김의 근거(학원·활동 이름) — 사교육 안도 톤 "○○로 챙기고 있어요" */
   readonly sources: readonly string[]
   readonly clear: boolean
+  /** 지원 범위(만 3세~초2) 밖 — 거짓 안도 대신 예외 안내(피드백 #6) */
+  readonly outOfRange: boolean
   readonly segs: readonly ('on' | 'gap')[]
 }
 
@@ -60,7 +62,12 @@ export function TodayScreen({ dateLabel, banner, progress, schedule, groups, onT
         {/* 현황 배너 — 안도 먼저, 갭은 넌지시 (원칙 6) */}
         <div className="gapcard">
           <div className="eyebrow">이번 시기 현황</div>
-          {banner.clear ? (
+          {banner.outOfRange ? (
+            <>
+              <div className="gap-head">아직 이 나이는 준비 중이에요</div>
+              <p className="gap-sub">나이테는 지금 <b>미취학(만 3세)~초등 2학년</b>까지 공교육 기준을 담고 있어요. 그 위 학년은 기준 데이터를 확보하는 대로 열어갈게요.</p>
+            </>
+          ) : banner.clear ? (
             <>
               <div className="gap-head">지금은 놓친 곳이 없어요</div>
               <p className="gap-sub">{banner.totalDomains}개 영역을 모두 챙기고 있어요. 잘하고 있어요.</p>

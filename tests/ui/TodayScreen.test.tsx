@@ -11,11 +11,11 @@ import type { TaskVM } from '../../src/boundary/ui/vm'
 
 const GAP_BANNER: GapBanner = {
   gapCount: 2, onCount: 5, onClusters: 8, totalDomains: 7,
-  gapNames: ['과학·탐구', '사회·인성'], sources: ['한글학원', '유아체육'], clear: false,
+  gapNames: ['과학·탐구', '사회·인성'], sources: ['한글학원', '유아체육'], clear: false, outOfRange: false,
   segs: ['on', 'on', 'gap', 'on', 'gap', 'on', 'on'],
 }
 const CLEAR_BANNER: GapBanner = {
-  gapCount: 0, onCount: 7, onClusters: 12, totalDomains: 7, gapNames: [], sources: ['한글학원'], clear: true,
+  gapCount: 0, onCount: 7, onClusters: 12, totalDomains: 7, gapNames: [], sources: ['한글학원'], clear: true, outOfRange: false,
   segs: ['on', 'on', 'on', 'on', 'on', 'on', 'on'],
 }
 
