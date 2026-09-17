@@ -40,7 +40,7 @@ function DomainCard({ d, onOpen, calm = false }: { d: DomainVM; onOpen: () => vo
     return (
       <div className="domain nopublic" data-testid={`domain-${d.domain}`}>
         <div className="d-top"><span className="d-name">{d.domain}{d.priority && <span className="d-star" title="부모가 정한 우선 분야">중요</span>}</span><span className="pill">우리 목표</span></div>
-        <div className="d-status">공교육 기준이 없는 영역이에요 · <b>우리 집 목표를 직접 정해볼까요?</b></div>
+        <div className="d-status">정규 기준이 없는 영역이에요 · <b>우리 집 목표를 직접 정해볼까요?</b></div>
         <div className="d-actions"><button className="btn-sm fill" onClick={onOpen}>목표 정하기</button></div>
       </div>
     )
@@ -81,7 +81,7 @@ function DomainCard({ d, onOpen, calm = false }: { d: DomainVM; onOpen: () => vo
       {pips(d)}
       <div className="d-status good">
         목표 {d.total}곳 모두 {allDone ? '이뤘어요' : '챙기는 중'}{d.total > 0 ? ' · ' : ''}<b>잘하고 있어요</b>
-        {d.noPublic && <><br /><span style={{ color: 'var(--muted)', fontSize: 12 }}>공교육 기준이 없어 선행 개념이 없어요</span></>}
+        {d.noPublic && <><br /><span style={{ color: 'var(--muted)', fontSize: 12 }}>정규 기준이 없어 선행 개념이 없어요</span></>}
       </div>
       <div className="d-actions"><button className="btn-sm" onClick={onOpen}>자세히</button></div>
     </div>

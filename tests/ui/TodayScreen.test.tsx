@@ -22,7 +22,7 @@ const CLEAR_BANNER: GapBanner = {
 const GROUPS: { domain: TaskVM['domain']; tasks: TaskVM[] }[] = [
   {
     domain: '국어',
-    tasks: [{ activityId: 'hw-hangul', name: '한글 학원 숙제', domain: '국어', badgeCls: 'gov', badgeLabel: '공교육·성취기준', aim: '자음·모음의 소릿값을 안다', done: false }],
+    tasks: [{ activityId: 'hw-hangul', name: '한글 학원 숙제', domain: '국어', badgeCls: 'gov', badgeLabel: '성취기준', aim: '자음·모음의 소릿값을 안다', done: false }],
   },
   {
     domain: '영어',
@@ -102,7 +102,7 @@ describe('오늘 할 일 — 영역별, 한 번 탭', () => {
 
   it('출처 배지 라벨이 텍스트로 있다 (색만으로 전달하지 않음)', () => {
     setup()
-    expect(within(screen.getByTestId('task-hw-hangul')).getByText('공교육·성취기준')).toBeInTheDocument()
+    expect(within(screen.getByTestId('task-hw-hangul')).getByText('성취기준')).toBeInTheDocument()
     expect(within(screen.getByTestId('task-en-book')).getByText('자체 목표')).toBeInTheDocument()
   })
 

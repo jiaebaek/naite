@@ -10,7 +10,7 @@ import type { TaskVM } from '../../src/boundary/ui/vm'
 
 const TASKS: readonly TaskVM[] = [
   { activityId: 'en-book', name: '영어 원서 1권', domain: '영어', badgeCls: 'own', badgeLabel: '자체 목표', aim: '영어 그림책 한 권을 끝까지 듣는다', done: true },
-  { activityId: 'hangul', name: '한글 학원 숙제', domain: '국어', badgeCls: 'gov', badgeLabel: '공교육·누리과정', aim: '아는 글자를 찾아낸다', done: false },
+  { activityId: 'hangul', name: '한글 학원 숙제', domain: '국어', badgeCls: 'gov', badgeLabel: '누리과정', aim: '아는 글자를 찾아낸다', done: false },
 ]
 
 const setup = (over: Partial<React.ComponentProps<typeof DaySheet>> = {}) => {

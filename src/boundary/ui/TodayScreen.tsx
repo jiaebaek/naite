@@ -65,7 +65,7 @@ export function TodayScreen({ dateLabel, banner, progress, schedule, groups, onT
           {banner.outOfRange ? (
             <>
               <div className="gap-head">아직 이 나이는 준비 중이에요</div>
-              <p className="gap-sub">나이테는 지금 <b>미취학(만 3세)~초등 2학년</b>까지 공교육 기준을 담고 있어요. 그 위 학년은 기준 데이터를 확보하는 대로 열어갈게요.</p>
+              <p className="gap-sub">나이테는 지금 <b>미취학(만 3세)~초등 2학년</b>까지 전문가가 세운 국가 기준을 담고 있어요. 그 위 학년은 기준 데이터를 확보하는 대로 열어갈게요.</p>
             </>
           ) : banner.clear ? (
             <>

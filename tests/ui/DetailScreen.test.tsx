@@ -10,17 +10,17 @@ import type { DomainVM, MilestoneVM } from '../../src/boundary/ui/vm'
 
 const EMPTY: MilestoneVM = {
   standardId: 'int-ko-find-letters', statement: '간판·과자봉지에서 아는 글자를 찾아낸다',
-  badgeCls: 'gov', badgeLabel: '공교육·누리과정', status: '활동필요', coveredBy: null, done: false,
+  badgeCls: 'gov', badgeLabel: '누리과정', status: '활동필요', coveredBy: null, done: false,
   // 추천은 근거 있는 라이브러리 항목이 있을 때만 채워진다(§10-A) — 화면 렌더 확인용 픽스처
-  recommend: { title: '그림책 속 글자 손가락으로 짚기', badgeCls: 'gov', sourceLabel: '공교육·누리과정', effortMin: 5, placeLabel: '집', cost: 'free' },
+  recommend: { title: '그림책 속 글자 손가락으로 짚기', badgeCls: 'gov', sourceLabel: '누리과정', effortMin: 5, placeLabel: '집', cost: 'free' },
 }
 const PROG: MilestoneVM = {
   standardId: 'int-ko-sounds', statement: '자음·모음의 소릿값을 안다',
-  badgeCls: 'gov', badgeLabel: '공교육·성취기준', status: '챙기는중', coveredBy: '한글 학원 숙제', done: false,
+  badgeCls: 'gov', badgeLabel: '성취기준', status: '챙기는중', coveredBy: '한글 학원 숙제', done: false,
 }
 const DONE: MilestoneVM = {
   standardId: 'int-ko-name', statement: '자기 이름을 쓴다',
-  badgeCls: 'gov', badgeLabel: '공교육·성취기준', status: '됨', coveredBy: null, done: true,
+  badgeCls: 'gov', badgeLabel: '성취기준', status: '됨', coveredBy: null, done: true,
 }
 const VM: DomainVM = {
   domain: '국어', milestones: [EMPTY, PROG, DONE], total: 3, on: 2, done: 1, prog: 1, gap: 1, group: 'partial', lane: '학습', noPublic: false, priority: false,
@@ -106,7 +106,7 @@ describe('⭐ 원칙 5 — 상세에도 선행 UI 가 없다', () => {
 
 describe('⭐ T7 — 묶음 목록 + 근거 상세 (개별 성취기준)', () => {
   const cl = (id: string, statement: string, status: MilestoneVM['status'], evidence: readonly string[]): MilestoneVM => ({
-    standardId: id, statement, badgeCls: 'gov', badgeLabel: '공교육·누리과정', status,
+    standardId: id, statement, badgeCls: 'gov', badgeLabel: '누리과정', status,
     coveredBy: status === '챙기는중' ? '그림책 읽기' : null, done: status === '됨', evidence,
   })
   const clVM: DomainVM = {

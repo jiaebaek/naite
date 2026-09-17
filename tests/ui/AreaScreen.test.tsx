@@ -11,7 +11,7 @@ import type { Domain } from '../../src/domain/types'
 import { laneOf } from '../../src/domain/lanes'
 
 const ms = (status: MilestoneVM['status']): MilestoneVM => ({
-  standardId: `s-${Math.random()}`, statement: '목표', badgeCls: 'gov', badgeLabel: '공교육·누리과정',
+  standardId: `s-${Math.random()}`, statement: '목표', badgeCls: 'gov', badgeLabel: '누리과정',
   status, coveredBy: status === '챙기는중' ? '활동' : null, done: status === '됨',
 })
 const dom = (domain: Domain, statuses: MilestoneVM['status'][], noPublic = false): DomainVM => {

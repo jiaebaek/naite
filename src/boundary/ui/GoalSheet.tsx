@@ -34,7 +34,7 @@ export function GoalSheet({ domain, onAdd, onClose }: GoalSheetProps) {
         </div>
         <div className="target">
           <span className="badge own">{domain}</span>
-          <span className="tg-name">공교육 기준이 없는 영역이라, 우리 집 목표를 직접 정해요.</span>
+          <span className="tg-name">정규 기준이 없는 영역이라, 우리 집 목표를 직접 정해요.</span>
         </div>
         <div className="sheet-body">
           {suggestions.length > 0 && (

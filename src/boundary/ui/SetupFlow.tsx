@@ -194,7 +194,7 @@ export function SetupFlow({ initialName, initialBirthYm, ageLabelOf, bandOf, onC
             <div className="eyebrow">2 / 2 · 지금 하는 학습</div>
             <h2 className="setup-h">과목별로<br />지금 하는 것만</h2>
             {band === null ? (
-              <p className="setup-p">이 나이는 아직 지원하지 않아요. <b>미취학(만 3세)~초2</b>까지 공교육 기준을 담고 있어요. 나중에 다시 만나요.</p>
+              <p className="setup-p">이 나이는 아직 지원하지 않아요. <b>미취학(만 3세)~초2</b>까지 전문가가 세운 국가 기준을 담고 있어요. 나중에 다시 만나요.</p>
             ) : (
               <>
                 <p className="setup-p"><b>지금 하는 것만 빠르게</b> 눌러요. 안 하는 과목은 그냥 넘겨도 괜찮아요. 생활·마음은 나중에 따로 봐요.</p>

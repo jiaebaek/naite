@@ -87,7 +87,7 @@ function Evidence({ items }: { items: readonly string[] }) {
   if (items.length === 0) return null
   return (
     <details className="evidence">
-      <summary>근거 {items.length}개 · 공교육 성취기준</summary>
+      <summary>근거 {items.length}개 · 전문가가 세운 국가 기준</summary>
       <ul className="ev-list">
         {items.map((s, i) => <li key={i}>{s}</li>)}
       </ul>
@@ -166,7 +166,7 @@ export function DetailScreen({ vm, onBack, onOpenLink, onToggleAchieved, onAddGo
         </div>
 
         <div className="det-summary">
-          <div className="eyebrow">이 시기 챙길 묶음 · 공교육 교육과정 그대로</div>
+          <div className="eyebrow">이 시기 챙길 묶음 · 전문가가 세운 국가 기준 원문</div>
           <div className="det-cover">
             묶음 {vm.total}곳 · 이룸 {vm.done} · 챙기는 중 {vm.prog} · {vm.gap > 0
               ? <b>비어있음 {vm.gap}곳</b>
@@ -175,7 +175,7 @@ export function DetailScreen({ vm, onBack, onOpenLink, onToggleAchieved, onAddGo
           <div className="ring-row" aria-hidden="true">
             {vm.milestones.map((m, i) => <span key={i} className={`pip ${pipClass(m)}`} />)}
           </div>
-          {vm.noPublic && <div className="ms-sub" style={{ marginTop: 8 }}>공교육 기준이 없는 영역이라 선행 개념이 없어요 · 우리 목표로 챙겨요</div>}
+          {vm.noPublic && <div className="ms-sub" style={{ marginTop: 8 }}>정규 기준이 없는 영역이라 선행 개념이 없어요 · 우리 목표로 챙겨요</div>}
         </div>
 
         {onAddGoal && (
