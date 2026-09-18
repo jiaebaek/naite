@@ -72,6 +72,7 @@ export function LogScreen({ pct, weekDoneDays, weekDays, rows, onDayClick }: Log
           <p className="rec-sub">해온 것들이 나이테처럼 쌓여요. 앞서가지 않아도, 매년 한 겹씩.</p>
           <NaiteRingBig pct={pct} />
           <p className="rc-caption">바깥 겹 = 지금 시기 ({pctLabel}% 채움) · 안쪽 = 지난 시기</p>
+          <div className="rec-auto">🏫 유치원·일상에서 챙겨지는 것도 이 겹에 함께 쌓여요</div>
         </div>
 
         <div className="sec">

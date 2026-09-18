@@ -87,7 +87,7 @@ function Evidence({ items }: { items: readonly string[] }) {
   if (items.length === 0) return null
   return (
     <details className="evidence">
-      <summary>근거 {items.length}개 · 전문가가 세운 국가 기준</summary>
+      <summary className="ev-why">왜 이 목표? · 발달·교육 전문가가 세운 국가 기준 (근거 {items.length}개)</summary>
       <ul className="ev-list">
         {items.map((s, i) => <li key={i}>{s}</li>)}
       </ul>
@@ -108,7 +108,7 @@ function GoalCard({ m, onOpenLink, onToggleAchieved, onRemoveGoal }: {
     return (
       <div className="ms empty" data-testid={`ms-${m.standardId}`}>
         <div className="ms-top"><span className="ms-name">{m.statement}</span><span className={`badge ${m.badgeCls}`}>{m.badgeLabel}</span></div>
-        <div className="ms-meta"><InfoDot />아직 챙기는 활동이 없어요</div>
+        <div className="ms-meta"><InfoDot />아직 챙기는 활동이 없어요 · 급하지 않아요</div>
         {m.recommend && <Suggest r={m.recommend} />}
         <div className="ms-act">
           <button className="btn-sm fill" onClick={() => onOpenLink(m)}>활동 연결</button>

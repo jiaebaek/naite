@@ -50,6 +50,7 @@ export function ShareSheet({ childLabel, ageLabel, onCount, doneCount, totalDoma
             <NaiteCoordArt areas={areas} ageLabel={ageLabel} />
             <div className="sc-title">{childLabel}</div>
             <div className="sc-sub">{totalDomains}묶음 중 <b>{onCount}묶음</b> 챙기는 중 · 이룸 {doneCount}</div>
+            <div className="sc-trust">🏅 전문가가 세운 기준으로 정리</div>
             <div className="sc-foot">
               <span className="sc-mark">나이테</span>
             </div>

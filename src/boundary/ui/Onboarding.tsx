@@ -28,18 +28,17 @@ export function Onboarding({ onClose }: { onClose: () => void }) {
             <div className="ob-mock">
               <div className="coverbar" style={{ marginBottom: 16 }} aria-hidden="true">
                 <span className="seg on" /><span className="seg on" /><span className="seg on" />
-                <span className="seg on" /><span className="seg on" />
-                <span className="seg gap" /><span className="seg gap" />
+                <span className="seg on" /><span className="seg on" /><span className="seg on" />
+                <span className="seg gap" />
               </div>
-              <div className="ob-domrow"><span className="nm">국어</span><span className="pill on">챙기는 중</span></div>
-              <div className="ob-domrow gap"><span className="nm">과학·탐구</span><span className="pill empty">비어있음</span></div>
-              <div className="ob-domrow gap"><span className="nm">사회·인성</span><span className="pill empty">비어있음</span></div>
+              <div className="ob-domrow"><span className="nm">지금 시기</span><span className="pill on">대부분 챙김</span></div>
+              <div className="ob-domrow"><span className="nm">딱 한 곳</span><span className="pill calm">천천히 봐요</span></div>
             </div>
           </div>
           <div className="ob-text">
             <div className="eyebrow">이 앱이 하는 일</div>
-            <h2 className="ob-h">무엇이 비어있는지<br />찾아드려요</h2>
-            <p className="ob-p"><b>누리과정·성취기준</b> 등 국가 교육과정에 맞춰, 이 시기에 챙길 영역 중 비어있는 곳을 콕 집어줘요.</p>
+            <h2 className="ob-h">우리 애가 지금<br />어디쯤인지 알려줘요</h2>
+            <p className="ob-p"><b>아이 발달·교육 전문가가 세운 기준</b>으로, 지금 잘 되고 있는 것부터 보여드려요. 놓친 곳은 넌지시.</p>
           </div>
         </div>
         {/* 3. 일상 루프 */}
@@ -66,7 +65,7 @@ export function Onboarding({ onClose }: { onClose: () => void }) {
           <div className="ob-text">
             <div className="eyebrow">매일 이렇게</div>
             <h2 className="ob-h">오늘 하나씩,<br />한 겹씩</h2>
-            <p className="ob-p">매일 <b>'오늘' 화면</b>만 열면 돼요. 오늘 할 일을 체크하면 나이테가 자라고, 비어있는 곳은 알아서 알려드려요.</p>
+            <p className="ob-p">매일 <b>'오늘' 화면</b>만 열면 돼요. <b>유치원 다니면 대부분 저절로 채워지고</b>, 오늘 할 일을 체크하면 나이테가 자라요.</p>
           </div>
         </div>
       </div>

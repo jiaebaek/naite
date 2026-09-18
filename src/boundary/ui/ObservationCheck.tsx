@@ -68,6 +68,7 @@ export function ObservationCheck({ checks, onClose, onComplete }: ObservationChe
                 </div>
               ))}
             </div>
+            <p className="obs-reward">✓ 답하면 생활·마음 레인에 바로 반영돼요 — 메인이 더 정확해져요</p>
             <div className="sheet-foot">
               <button className="btn-primary" onClick={save}>다 봤어요</button>
             </div>

@@ -41,7 +41,7 @@ const setup = () => {
 describe('갭 우선 정렬', () => {
   it('세 그룹 라벨이 모두 있다', () => {
     setup()
-    expect(screen.getByText('먼저 챙기면 좋아요')).toBeInTheDocument()
+    expect(screen.getByText('알려주면 여기가 채워져요')).toBeInTheDocument()
     expect(screen.getByText('채우는 중')).toBeInTheDocument()
     expect(screen.getByText('비어있는 곳 없어요')).toBeInTheDocument()
   })
@@ -57,7 +57,7 @@ describe('개요 — 몇 곳이 비어있는가', () => {
   it('챙김/비어있음 수가 요약된다', () => {
     setup()
     expect(screen.getByText(/3개 영역 중 2곳 챙기고 있어요/)).toBeInTheDocument()
-    expect(screen.getByText(/비어있는 곳 1/)).toBeInTheDocument()
+    expect(screen.getByText(/알려주면 1곳 더 채워져요/)).toBeInTheDocument()
   })
 })
 
