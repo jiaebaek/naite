@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>나이테 · 영역 탭 단순화 (before/after)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EFF1EA; --card:#FCFCF8; --border:#DDE3D6;
+    --ink:#23291F; --secondary:#565E4E; --muted:#8B9182;
+    --sage:#4F9A72; --sage-bg:#EAF3EC; --sage-ink:#2E6B4E;
+    --honey-bg:#F7EEE3; --honey-ink:#7A4520;
+    --pine:#245648; --track:#E4E7DE;
+    --rose:#B4553F; --rose-bg:#F6E9E4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--paper);font-family:'Noto Sans KR',system-ui,sans-serif;color:var(--ink);line-height:1.5;padding:28px 16px 60px}
+  .wrap{max-width:820px;margin:0 auto}
+  h1{font-family:'Gowun Batang',serif;font-size:22px;color:var(--pine);margin-bottom:4px}
+  .lede{font-size:13px;color:var(--secondary);margin-bottom:24px}
+  .pair{display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start}
+  .col{flex:1;min-width:280px}
+  .cap{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;display:inline-block;margin-bottom:8px}
+  .cap.now{background:var(--rose-bg);color:var(--rose)}
+  .cap.next{background:var(--sage-bg);color:var(--sage-ink)}
+  .frame{background:#e7e9e1;border-radius:18px;padding:8px}
+  .screen{background:var(--card);border:0.5px solid var(--border);border-radius:12px;padding:12px 13px}
+  .date{font-size:11px;color:var(--muted);margin-bottom:10px}
+  .serif{font-family:'Gowun Batang',serif}
+  .ov{border:0.5px solid var(--border);border-radius:9px;padding:10px 11px;margin-bottom:10px}
+  .ov .eb{font-size:9.5px;color:var(--muted);margin-bottom:4px}
+  .ov .num{font-size:13px;margin-bottom:7px} .ov .num b{color:var(--pine)}
+  .cbar{display:flex;gap:3px} .cbar span{flex:1;height:8px;border-radius:3px}
+  .grp{font-size:10.5px;color:var(--muted);margin:2px 0 6px}
+  .dom{border:0.5px solid var(--border);border-radius:9px;padding:9px 11px;margin-bottom:7px}
+  .d-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .d-nm{font-size:13px;font-weight:500}
+  .pill{font-size:10px;padding:2px 8px;border-radius:999px}
+  .pill.empty{background:var(--honey-bg);color:var(--honey-ink)}
+  .pill.prog{background:var(--sage-bg);color:var(--sage-ink)}
+  .pips{display:flex;gap:4px;margin-bottom:6px}
+  .pip{width:9px;height:9px;border-radius:99px;background:var(--track)}
+  .pip.on{background:var(--sage)}
+  .d-st{font-size:11px;color:var(--secondary)}
+  /* after */
+  .relief{font-family:'Gowun Batang',serif;font-size:17px;color:var(--pine);margin-bottom:3px}
+  .relief-sub{font-size:11.5px;color:var(--secondary);margin-bottom:14px}
+  .folded{display:flex;justify-content:space-between;align-items:center;background:var(--sage-bg);border-radius:9px;padding:10px 12px;margin-bottom:14px}
+  .folded span.t{font-size:12.5px;color:var(--sage-ink)} .folded span.c{font-size:15px;color:var(--muted)}
+  .look{font-size:11px;color:var(--muted);margin-bottom:7px}
+  .invite{border:0.5px dashed #CDD5C4;background:#FBFCF8;border-radius:10px;padding:11px 12px;margin-bottom:16px}
+  .invite .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+  .invite .top b{font-size:13.5px;font-weight:500}
+  .invite .tag{font-size:11px;color:var(--sage);border:0.5px solid var(--sage);border-radius:7px;padding:4px 10px}
+  .invite .d{font-size:11.5px;color:var(--secondary)} .invite .d .m{color:var(--muted)}
+  .life{border-top:0.5px solid var(--border);padding-top:12px}
+  .life .h{font-size:12.5px;color:var(--sage-ink);margin-bottom:8px}
+  .life .chk{font-size:11.5px;color:var(--secondary);background:#F6F8F3;border-radius:8px;padding:9px 11px}
+  .life .chk b{color:var(--pine)}
+  .anno{margin-top:12px;font-size:12px;color:var(--secondary)}
+  .anno .r{padding-left:15px;position:relative;margin-bottom:5px} .anno .r:before{content:"→";position:absolute;left:0;color:var(--sage-ink);font-weight:700}
+  .anno .r b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>영역 탭 단순화</h1>
+  <p class="lede">피드백 "영역 탭 복잡" → progressive disclosure. 잘한 건 접고, 살펴볼 것만 펼친다.</p>
+
+  <div class="pair">
+    <!-- BEFORE -->
+    <div class="col">
+      <span class="cap now">현재 · 복잡 (7카드 대시보드 느낌)</span>
+      <div class="frame"><div class="screen">
+        <div class="date">2026년 9월 18일</div>
+        <div class="ov">
+          <div class="eb">학습 — 이 나이에 챙길 영역</div>
+          <div class="num">4개 영역 중 <b>2곳</b> 챙김 · <b>비어있는 곳 2</b></div>
+          <div class="cbar"><span style="background:var(--sage)"></span><span style="background:var(--sage)"></span><span style="background:var(--track)"></span><span style="background:var(--track)"></span></div>
+        </div>
+        <div class="grp">먼저 챙기면 좋아요</div>
+        <div class="dom">
+          <div class="d-top"><span class="d-nm">국어</span><span class="pill empty">비어있음</span></div>
+          <div class="pips"><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+          <div class="d-st">지금 시기 목표 3곳이 모두 비어있어요 · 활동이 아직 없어요</div>
+        </div>
+        <div class="dom">
+          <div class="d-top"><span class="d-nm">수학</span><span class="pill empty">비어있음</span></div>
+          <div class="pips"><span class="pip"></span><span class="pip"></span></div>
+          <div class="d-st">지금 시기 목표 2곳이 모두 비어있어요 · 활동이 아직 없어요</div>
+        </div>
+        <div class="grp">채우는 중</div>
+        <div class="dom">
+          <div class="d-top"><span class="d-nm">영어</span><span class="pill prog">채우는 중</span></div>
+          <div class="pips"><span class="pip on"></span><span class="pip"></span></div>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- AFTER -->
+    <div class="col">
+      <span class="cap next">개선 · 단순 (안심 + 살펴볼 것 하나)</span>
+      <div class="frame"><div class="screen">
+        <div class="date">2026년 9월 18일</div>
+        <div class="relief">학습, 대부분 잘 되고 있어요</div>
+        <div class="relief-sub">전문가가 세운 기준으로 봤을 때</div>
+        <div class="folded"><span class="t">✓ 국어 · 영어 · 예체능 — 잘 되고 있어요</span><span class="c">›</span></div>
+        <div class="look">살펴볼 곳 하나</div>
+        <div class="invite">
+          <div class="top"><b>수학</b><span class="tag">알려주기</span></div>
+          <div class="d">연산·놀이수학을 알려주면 채워져요. <span class="m">급하지 않아요.</span></div>
+        </div>
+        <div class="life">
+          <div class="h">🌱 생활·마음 — 유치원·일상에서 챙겨지고 있어요</div>
+          <div class="chk">3분이면 우리 애가 어떤지 체크해볼 수 있어요 <b>›</b></div>
+        </div>
+      </div></div>
+      <div class="anno">
+        <div class="r"><b>잘한 영역</b>: 카드 3개 → 접힌 한 줄(탭하면 펼침)</div>
+        <div class="r"><b>부족한 곳</b>: 비어있음 경보 → 점선 초대 1개 "급하지 않아요"</div>
+        <div class="r"><b>pip·바·3그룹 제거</b> → 상태는 말로. 바·근거는 상세로</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
