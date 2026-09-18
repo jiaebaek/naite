@@ -71,11 +71,11 @@ describe('⭐ 첫 실행 셋업 (§06-A · 온보딩 직후)', () => {
 })
 
 describe('⭐ 빈 상태로 시작 + 셋업이 실제 데이터를 만든다 (제대로)', () => {
-  it('데이터가 없으면 배너가 "챙길 곳을 준비했어요"로 뜬다 (시드 없음)', async () => {
+  it('데이터가 없으면 통찰 히어로가 "준비했어요"로 뜬다 (시드 없음)', async () => {
     ready()
     render(<App />)
     await screen.findByTestId('view-today')
-    expect(screen.getByText(/챙길 곳을 준비했어요/)).toBeInTheDocument()
+    expect(screen.getByTestId('insight-hero').textContent).toContain('준비했어요')
     // 시드의 한글 학원 숙제 같은 하드코딩 활동이 없다
     expect(screen.queryByText('한글 학원 숙제')).not.toBeInTheDocument()
   })
@@ -92,8 +92,8 @@ describe('⭐ 빈 상태로 시작 + 셋업이 실제 데이터를 만든다 (�
     await screen.findByTestId('learn-picker')
     fireEvent.click(screen.getByRole('button', { name: '미술' }))
     fireEvent.click(screen.getByRole('button', { name: '추가 완료' }))
-    // 미술=등원형 → 등원 커버로 예체능 묶음 챙김 → 안도 배너(사교육 톤, 묶음 기준)
-    expect(screen.getByText(/1묶음 챙기고 있어요/)).toBeInTheDocument()
+    // 미술=등원형 → 예체능 묶음 챙김 → 학습 레인이 "우리 학원·집이 챙겨요"로 (미입력 초대 아님)
+    expect(screen.getByText(/우리 학원·집이 챙겨요/)).toBeInTheDocument()
   })
 
   it('⭐ §06-C 집 활동 칩을 누르면 그 영역이 챙김 + 오늘 할 일에 뜬다', async () => {
@@ -108,7 +108,7 @@ describe('⭐ 빈 상태로 시작 + 셋업이 실제 데이터를 만든다 (�
     fireEvent.click(screen.getByRole('button', { name: '그림책 읽기' })) // 국어 집활동 → 묶음 챙김
     fireEvent.click(screen.getByRole('button', { name: '추가 완료' }))
     await screen.findByTestId('view-today')
-    expect(screen.getByText(/1묶음 챙기고 있어요/)).toBeInTheDocument()
+    expect(screen.getByText(/우리 학원·집이 챙겨요/)).toBeInTheDocument()
     // 집 활동은 오늘 할 일 카드로도 뜬다(등원과 달리 체크 대상)
     expect(screen.getByText('그림책 읽기')).toBeInTheDocument()
   })
@@ -155,22 +155,22 @@ describe('⭐ 안도 공유 카드 (§07-A)', () => {
 describe('⭐ 현황 배너 — 안도 먼저 (원칙 6 · 회귀 방지)', () => {
   beforeEach(readySeeded)
 
-  it('시드로 안도 먼저: 사교육 톤 "○○로 N묶음 챙기고 있어요"로 문을 연다', async () => {
-    // 학습 레인 묶음 기준(§07-A): 국어1·수학1·예체능2·영어2 = 6묶음. 안도 톤, 사교육 근거 이름 노출.
-    render(<App />)
-    const head = await screen.findByText(/6묶음 챙기고 있어요/)
-    expect(head.textContent).not.toMatch(/비어있어요/)
-  })
-
-  it('갭은 학습 레인만 — 과학·탐구 1곳(생활·마음은 배너 갭에서 제외)', async () => {
-    // T8: 배너(안도 카드)는 학습 레인만 센다. 사회·인성·건강·안전(생활·마음)은 갭 알람 안 함(SSOT §5).
+  it('시드로 안도 먼저: 통찰 히어로가 "대부분 잘 되고 있어요"로 문을 연다', async () => {
     render(<App />)
     await screen.findByTestId('view-today')
-    const banner = screen.getByText(/6묶음 챙기고 있어요/).closest('.gapcard')!
-    expect(banner.textContent).toContain('1곳만 더 보면')
-    expect(banner.textContent).toContain('과학·탐구')
-    expect(banner.textContent).not.toContain('사회·인성')
-    expect(banner.textContent).not.toContain('건강·안전')
+    const hero = screen.getByTestId('insight-hero')
+    expect(hero.textContent).toContain('대부분 잘 되고 있어요')
+    expect(hero.textContent).not.toMatch(/비어있어요/)
+  })
+
+  it('넛지는 학습 레인 빈 묶음만 — 과학·탐구(생활·마음은 넛지에서 제외)', async () => {
+    // 통찰 메인의 넛지는 학습 레인만 센다. 사회·인성·건강·안전(생활·마음)은 갭 알람 안 함(SSOT §5).
+    render(<App />)
+    await screen.findByTestId('view-today')
+    const nudge = screen.getByTestId('nudge')
+    expect(nudge.textContent).toContain('과학·탐구')
+    expect(nudge.textContent).not.toContain('사회·인성')
+    expect(nudge.textContent).not.toContain('건강·안전')
   })
 })
 

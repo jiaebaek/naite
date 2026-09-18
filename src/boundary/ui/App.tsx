@@ -50,7 +50,7 @@ import { getStore } from '../store'
 import { SNAPSHOT_VERSION } from '../store/types'
 import type { AppSnapshot } from '../store/types'
 import { TodayScreen } from './TodayScreen'
-import type { GapBanner } from './TodayScreen'
+import type { InsightVM, Nudge } from './TodayScreen'
 import { AreaScreen } from './AreaScreen'
 import { DetailScreen } from './DetailScreen'
 import { ManageScreen } from './ManageScreen'
@@ -336,30 +336,33 @@ export function App() {
     })
   }, [publicGoals, achieved, coverageActivities, priorityDomains, standards])
 
-  // ── 갭 배너 ──
-  const banner: GapBanner = useMemo(() => {
-    // 배너(안도 카드)는 **학습 레인만** 센다 — 생활·마음(사회·인성·건강·안전)은 빈칸을 갭 알람으로
-    // 띄우지 않는다(SSOT §5 안심 레인). 공교육 기준 없이 목표 미정 영역(영어)도 제외.
-    const assessable = domainVMs.filter((d) => d.lane === '학습' && !(d.noPublic && d.total === 0))
-    const gapDomains = assessable.filter((d) => d.group === 'empty')
-    // 부모 우선 분야를 갭 칩 맨 앞으로 (중요도 = 부모가 정함)
-    const gapNames = [...gapDomains].sort((a, b) => Number(b.priority) - Number(a.priority)).map((d) => d.domain)
-    // 사교육 안도 톤: 챙김의 근거(학원·활동) 이름. "○○ 숙제"·"○○ 등원" 접미사는 떼어 학원명만.
-    const cleanName = (n: string) => n.replace(/\s*(숙제|등원)$/, '')
-    const sources = [...new Set(
-      assessable.flatMap((d) => d.milestones.filter((m) => m.status !== '활동필요' && m.coveredBy).map((m) => cleanName(m.coveredBy!))),
-    )]
-    return {
-      gapCount: gapDomains.length,
-      onCount: assessable.length - gapDomains.length,
-      onClusters: assessable.reduce((s, d) => s + d.on, 0),
-      totalDomains: assessable.length,
-      gapNames,
-      sources,
-      clear: gapDomains.length === 0,
-      outOfRange,
-      segs: assessable.map((d) => (d.group === 'empty' ? 'gap' : 'on')),
-    }
+  // ── 통찰 메인 요약 (§07 · T11) ──
+  // 학습 레인(국·영·수·과·예체능)과 생활·마음 레인(사회·인성·건강·안전)을 각각 묶음 단위로 요약.
+  // 학습 미입력은 가짜 %로 채우지 않는다(정직 가드 · doc13 A3): hasInput=false → 흐린 초대 바.
+  const insight: InsightVM = useMemo(() => {
+    const learnVMs = domainVMs.filter((d) => d.lane === '학습' && !(d.noPublic && d.total === 0))
+    const lifeVMs = domainVMs.filter((d) => d.lane === '생활·마음')
+    const laneSum = (vms: readonly DomainVM[]) => ({
+      total: vms.reduce((s, d) => s + d.total, 0),
+      on: vms.reduce((s, d) => s + d.on, 0),
+      hasInput: vms.some((d) => d.milestones.some((m) => Boolean(m.coveredBy))),
+    })
+    const learn = laneSum(learnVMs)
+    const life = laneSum(lifeVMs)
+    const totalClusters = learn.total + life.total
+    const onClusters = learn.on + life.on
+    const ringPct = totalClusters > 0 ? Math.round((onClusters / totalClusters) * 100) : 0
+    // 넛지: "딱 하나 더 본다면" — 아직 손 안 댄 학습 영역(fully-empty)을 먼저, 없으면 부분 갭.
+    //   부모 우선분야 먼저. 영역 안에선 추천 있는 빈 묶음을 고른다. 급하지 않은 톤.
+    const byPriority = (a: DomainVM, b: DomainVM) => Number(b.priority) - Number(a.priority)
+    const emptyLearn = learnVMs.filter((d) => d.group === 'empty').sort(byPriority)
+    const gapPool = emptyLearn.length > 0 ? emptyLearn : learnVMs.filter((d) => d.gap > 0).sort(byPriority)
+    const dPick = gapPool[0]
+    const mPick = dPick ? (dPick.milestones.find((m) => m.status === '활동필요' && m.recommend) ?? dPick.milestones.find((m) => m.status === '활동필요')) : undefined
+    const nudge: Nudge | null = dPick && mPick
+      ? { domain: dPick.domain, title: mPick.recommend?.title ?? mPick.statement, ...(mPick.recommend ? { effortMin: mPick.recommend.effortMin } : {}) }
+      : null
+    return { outOfRange, ringPct, onClusters, totalClusters, learn, life, nudge }
   }, [domainVMs, outOfRange])
 
   // ── 오늘 할 일 (이번 주 이미 채운 주N회는 숨김 — 피드백) ──
@@ -715,7 +718,7 @@ export function App() {
         {view === 'today' && (
           <TodayScreen
             dateLabel={formatDate(date)}
-            banner={banner}
+            insight={insight}
             progress={progress}
             schedule={schedule}
             groups={todayGroups}

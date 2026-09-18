@@ -1,22 +1,19 @@
 /**
- * TodayScreen (F1) — UX 리디자인 §07.
- * 갭 배너(최우선) → 오늘 할 일(+등원) → 펫(강등). App 이 계산한 VM 을 렌더만 한다.
+ * TodayScreen (F1) = 통찰-먼저 메인 — UX 리디자인 §07 (T11).
+ * 안심 히어로 → 2레인 바 → 넛지 1개 → 오늘 할 일(+등원) → 펫. App 이 계산한 InsightVM 을 렌더만 한다.
  */
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TodayScreen } from '../../src/boundary/ui/TodayScreen'
-import type { GapBanner } from '../../src/boundary/ui/TodayScreen'
+import type { InsightVM } from '../../src/boundary/ui/TodayScreen'
 import type { TaskVM } from '../../src/boundary/ui/vm'
 
-const GAP_BANNER: GapBanner = {
-  gapCount: 2, onCount: 5, onClusters: 8, totalDomains: 7,
-  gapNames: ['과학·탐구', '사회·인성'], sources: ['한글학원', '유아체육'], clear: false, outOfRange: false,
-  segs: ['on', 'on', 'gap', 'on', 'gap', 'on', 'on'],
-}
-const CLEAR_BANNER: GapBanner = {
-  gapCount: 0, onCount: 7, onClusters: 12, totalDomains: 7, gapNames: [], sources: ['한글학원'], clear: true, outOfRange: false,
-  segs: ['on', 'on', 'on', 'on', 'on', 'on', 'on'],
+const INSIGHT: InsightVM = {
+  outOfRange: false, ringPct: 87, onClusters: 13, totalClusters: 15,
+  learn: { total: 6, on: 4, hasInput: true },
+  life: { total: 9, on: 9, hasInput: true },
+  nudge: { domain: '과학·탐구', title: '산책하며 궁금해하기', effortMin: 5 },
 }
 
 const GROUPS: { domain: TaskVM['domain']; tasks: TaskVM[] }[] = [
@@ -37,7 +34,7 @@ const setup = (over: Partial<Parameters<typeof TodayScreen>[0]> = {}) => {
   const utils = render(
     <TodayScreen
       dateLabel="9월 3일 목요일"
-      banner={GAP_BANNER}
+      insight={INSIGHT}
       progress={{ done: 1, total: 2 }}
       schedule={[]}
       groups={GROUPS}
@@ -50,33 +47,69 @@ const setup = (over: Partial<Parameters<typeof TodayScreen>[0]> = {}) => {
   return { ...utils, onToggle, onGoArea, onShare }
 }
 
-describe('현황 배너 — 안도 먼저, 갭은 넌지시 (원칙 6)', () => {
-  it('⭐ 헤드라인은 안도 + 사교육 톤(○○로 N묶음 챙기고 있어요) — "비어있어요"로 문 열지 않는다', () => {
+describe('통찰-먼저 메인 — 안심 히어로 (원칙 6 · doc13 D3)', () => {
+  it('⭐ 안심 히어로가 안도로 문을 연다 — "비어있어요"로 시작하지 않는다', () => {
     setup()
-    const head = screen.getByText(/8묶음 챙기고 있어요/)
-    expect(head).toBeInTheDocument()
-    expect(head.textContent).toContain('한글학원') // 근거(학원) 이름을 사교육 안도 톤으로
-    expect(head.textContent).not.toMatch(/비어있어요/)
-    expect(head.textContent).not.toContain('학교') // 학교가 챙긴다 배지 없음
+    const hero = screen.getByTestId('insight-hero')
+    expect(hero.textContent).toContain('대부분 잘 되고 있어요')
+    expect(hero.textContent).not.toMatch(/비어있어요/)
   })
 
-  it('갭은 서브에서 넌지시 + 갭 영역 칩', () => {
+  it('권위 배지가 "전문가가 세운 기준"으로 (공교육 단어 없음)', () => {
     setup()
-    expect(screen.getByText(/2곳만 더 보면/)).toBeInTheDocument()
-    expect(screen.getByText('과학·탐구')).toBeInTheDocument()
-    expect(screen.getByText('사회·인성')).toBeInTheDocument()
+    const hero = screen.getByTestId('insight-hero')
+    expect(hero.textContent).toContain('전문가')
+    expect(hero.textContent).not.toContain('공교육')
   })
 
-  it('CTA "비어있는 곳 보기"를 누르면 영역으로 이동한다', async () => {
+  it('챙긴 게 없으면 히어로가 "준비했어요"로 뜬다', () => {
+    setup({ insight: { ...INSIGHT, onClusters: 0, learn: { total: 6, on: 0, hasInput: false }, life: { total: 9, on: 0, hasInput: false } } })
+    expect(screen.getByTestId('insight-hero').textContent).toContain('준비했어요')
+  })
+})
+
+describe('2레인 요약 바 — 학습/생활·마음 분리, 정직 가드', () => {
+  it('두 레인이 각각 뜬다', () => {
+    setup()
+    const lanes = screen.getByTestId('lanes2')
+    expect(lanes.textContent).toContain('학습 · 국·영·수·과')
+    expect(lanes.textContent).toContain('생활·마음')
+    expect(lanes.textContent).toContain('우리 학원·집이 챙겨요')
+    expect(lanes.textContent).toContain('유치원·일상에서')
+  })
+
+  it('⭐ 학습 미입력은 가짜 %가 아니라 "아직 안 알려주셨어요" 초대로 (정직 가드)', () => {
+    setup({ insight: { ...INSIGHT, learn: { total: 6, on: 0, hasInput: false } } })
+    expect(screen.getByText(/아직 학원·집공부를 안 알려주셨어요/)).toBeInTheDocument()
+  })
+})
+
+describe('넛지 1개 — 급하지 않은 톤', () => {
+  it('넛지가 영역·활동과 함께 뜬다', () => {
+    setup()
+    const nudge = screen.getByTestId('nudge')
+    expect(nudge.textContent).toContain('과학·탐구')
+    expect(nudge.textContent).toContain('산책하며 궁금해하기')
+    expect(nudge.textContent).toContain('급하지 않아요')
+  })
+
+  it('넛지를 누르면 영역으로 이동한다', async () => {
     const { onGoArea } = setup()
-    await userEvent.click(screen.getByRole('button', { name: /비어있는 곳 보기/ }))
+    await userEvent.click(screen.getByTestId('nudge'))
     expect(onGoArea).toHaveBeenCalledTimes(1)
   })
 
-  it('갭이 없으면 안심 문구가 뜨고 CTA 는 없다', () => {
-    setup({ banner: CLEAR_BANNER })
-    expect(screen.getByText(/놓친 곳이 없어요/)).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /비어있는 곳 보기/ })).not.toBeInTheDocument()
+  it('넛지가 없으면(빈칸 없음) 안 뜬다', () => {
+    setup({ insight: { ...INSIGHT, nudge: null } })
+    expect(screen.queryByTestId('nudge')).not.toBeInTheDocument()
+  })
+})
+
+describe('지원 범위 밖', () => {
+  it('band 밖이면 준비 중 안내가 뜨고 히어로는 없다', () => {
+    setup({ insight: { ...INSIGHT, outOfRange: true } })
+    expect(screen.getByText(/준비 중이에요/)).toBeInTheDocument()
+    expect(screen.queryByTestId('insight-hero')).not.toBeInTheDocument()
   })
 })
 
