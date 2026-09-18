@@ -28,6 +28,8 @@ import {
   editAcademy,
 } from '../../domain/academy'
 import { presetByType, suggestedTargets } from '../../domain/standards/activityPresets'
+import { areaGrowthProfile, nextExperienceOf } from '../../domain/growth'
+import { growthPointById } from '../../domain/standards/growthPoints'
 import { INITIAL_CARE, grantToken } from '../../domain/pet'
 import type { CareState } from '../../domain/pet'
 import { STANDARDS_2021 as REFERENCE_STANDARDS, CHILD_BIRTH_YM, SCHOOL_ENTRY_YM } from '../../domain/standards/child2021'
@@ -53,6 +55,7 @@ import { TodayScreen } from './TodayScreen'
 import type { InsightVM, Nudge } from './TodayScreen'
 import { AreaScreen } from './AreaScreen'
 import { DetailScreen } from './DetailScreen'
+import type { GrowthProfileVM } from './DetailScreen'
 import { ManageScreen } from './ManageScreen'
 import type { AchGroupVM } from './ManageScreen'
 import { LogScreen } from './LogScreen'
@@ -285,6 +288,39 @@ export function App() {
     () => [...activeActivities, ...attendanceActivities(academies)],
     [activeActivities, academies],
   )
+
+  // ── §9 성장 좌표 신호: 기존 커버리지·이룸(묶음 id)을 좌표 근거로 잇는다(갈아엎기 X) ──
+  const coveredClusterIds = useMemo(
+    () => new Set(coverageActivities.flatMap((a) => a.targetIds).filter((id) => Boolean(clusterById(id)))),
+    [coverageActivities],
+  )
+  const achievedClusterIds = useMemo(
+    () => new Set(achieved.filter((id) => Boolean(clusterById(id)))),
+    [achieved],
+  )
+  // 영역 상세용 GrowthPoint 프로필(취학전만 큐레이션 · 초1~2·영어는 null → 묶음 목록 폴백).
+  const detailGrowth: GrowthProfileVM | null = useMemo(() => {
+    if (!detailDomain) return null
+    const states = areaGrowthProfile(detailDomain, currentClusterIds(month), { coveredClusterIds, achievedClusterIds })
+    if (states.length === 0) return null
+    const points = states.map((st) => {
+      const gp = growthPointById(st.growthPointId)!
+      const evidence = gp.sourceRefs.map((id) => stmtById.get(id)).filter((s): s is string => Boolean(s))
+      return { id: gp.id, name: gp.name, blurb: gp.blurb, parentLabel: st.parentLabel, isStrength: st.isStrength, evidence }
+    })
+    // 다음 경험 = 가장 덜 보이는 좌표(🟡)의 다음 경험 하나(활동 Pull).
+    const lowest = [...states].reverse()
+      .map((st) => ({ ne: nextExperienceOf(growthPointById(st.growthPointId)!, st.observedOrder) }))
+      .find((x) => x.ne)
+    let next: GrowthProfileVM['next'] = null
+    if (lowest?.ne) {
+      const ne = lowest.ne
+      const act = ne.activityId ? ACTIVITY_LIBRARY.find((a) => a.id === ne.activityId) : undefined
+      const r = act ? recommendVM(act) : null
+      next = { text: ne.parentText, ...(r ? { activity: { title: r.title, effortMin: r.effortMin, placeLabel: r.placeLabel } } : {}) }
+    }
+    return { domain: detailDomain, points, next }
+  }, [detailDomain, month, coveredClusterIds, achievedClusterIds, stmtById])
 
   const domainVMs: readonly DomainVM[] = useMemo(() => {
     // 가족이 이미 하는 장소(§10-A 원칙: 가족 패턴에 맞는 추천을 앞세운다)
@@ -739,6 +775,7 @@ export function App() {
             onToggleAchieved={handleToggleAchieved}
             onAddGoal={detailVM.noPublic ? () => setGoalSheetDomain(detailVM.domain) : undefined}
             onRemoveGoal={handleRemoveGoal}
+            growth={detailGrowth ?? undefined}
           />
         )}
         {view === 'manage' && (

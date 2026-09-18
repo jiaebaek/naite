@@ -10,6 +10,29 @@
 import type { DomainVM, MilestoneVM, RecommendVM } from './vm'
 import { IconBack } from './icons'
 
+// ── 성장 좌표 프로필 VM (§9 · App 이 계산) ──
+export interface GrowthPointVM {
+  readonly id: string
+  readonly name: string
+  readonly blurb: string
+  /** 부모가 보는 서술("궁금하면 직접 알아봐요"). 숫자·단계 비노출. */
+  readonly parentLabel: string
+  /** 지금 보이는 모습(🟢 강점) vs 아직 덜 보임(🟡 다음 경험). */
+  readonly isStrength: boolean
+  /** 근거(성취기준 원문) — "왜 이 목표?" 뒤. */
+  readonly evidence: readonly string[]
+}
+export interface GrowthNextVM {
+  readonly text: string
+  readonly activity?: { readonly title: string; readonly effortMin: number; readonly placeLabel: string } | undefined
+}
+export interface GrowthProfileVM {
+  readonly domain: string
+  /** 🟢 강점 먼저 정렬된 GrowthPoint 들. */
+  readonly points: readonly GrowthPointVM[]
+  readonly next: GrowthNextVM | null
+}
+
 export interface DetailScreenProps {
   readonly vm: DomainVM
   readonly onBack: () => void
@@ -20,6 +43,8 @@ export interface DetailScreenProps {
   readonly onAddGoal?: (() => void) | undefined
   /** 부모가 만든 자체 목표 삭제 */
   readonly onRemoveGoal?: ((standardId: string) => void) | undefined
+  /** 성장 좌표 프로필(§9) — 있으면 GrowthPoint 프로필로 렌더(취학전). 없으면 묶음 목록(초1~2·영어). */
+  readonly growth?: GrowthProfileVM | undefined
 }
 
 function InfoDot() {
@@ -151,10 +176,52 @@ function sortedMilestones(milestones: readonly MilestoneVM[]): readonly Mileston
   return milestones.slice().sort((a, b) => rank(a) - rank(b))
 }
 
-export function DetailScreen({ vm, onBack, onOpenLink, onToggleAchieved, onAddGoal, onRemoveGoal }: DetailScreenProps) {
+export function DetailScreen({ vm, onBack, onOpenLink, onToggleAchieved, onAddGoal, onRemoveGoal, growth }: DetailScreenProps) {
   const milestones = sortedMilestones(vm.milestones)
 
   const pill = vm.group === 'empty' ? '비어있음' : vm.group === 'full' ? '완료' : '채우는 중'
+
+  // ── §9 성장 좌표 프로필 (취학전) — 🟢강점 먼저 · 🟡다음경험 · 숫자/또래 없음 ──
+  if (growth) {
+    return (
+      <section className="view" data-testid="view-detail">
+        <div className="screen-pad">
+          <div className="detbar">
+            <button className="back" onClick={onBack} aria-label="영역으로"><IconBack /></button>
+            <span className="dt-name">{vm.domain}</span>
+          </div>
+          <div className="eyebrow" style={{ marginBottom: 10 }}>요즘 우리 아이 모습</div>
+          <div className="gp-list">
+            {growth.points.map((p) => (
+              <div key={p.id} className="gp-row" data-testid={`gp-${p.id}`}>
+                <div className="gp-top">
+                  <span className={`gp-dot ${p.isStrength ? 'on' : 'next'}`} aria-hidden="true" />
+                  <span className="gp-name">{p.name}</span>
+                </div>
+                <div className="gp-label">{p.parentLabel}</div>
+                {p.evidence.length > 0 && (
+                  <details className="evidence">
+                    <summary className="ev-why">왜 이 목표? · 발달·교육 전문가가 세운 국가 기준</summary>
+                    <ul className="ev-list">{p.evidence.map((s, i) => <li key={i}>{s}</li>)}</ul>
+                  </details>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="gp-caption">이 아이만의 모양이에요 · 좋고 나쁜 모양은 없어요</div>
+          {growth.next && (
+            <div className="gp-next" data-testid="gp-next">
+              <div className="gpn-h">다음에 한번 볼까요?</div>
+              <div className="gpn-t">{growth.next.text}</div>
+              {growth.next.activity && (
+                <div className="gpn-act">{growth.next.activity.title} · {growth.next.activity.effortMin}분 · {growth.next.activity.placeLabel}</div>
+              )}
+            </div>
+          )}
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section className="view" data-testid="view-detail">

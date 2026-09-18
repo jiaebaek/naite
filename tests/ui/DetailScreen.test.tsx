@@ -7,6 +7,7 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { DetailScreen } from '../../src/boundary/ui/DetailScreen'
 import type { DomainVM, MilestoneVM } from '../../src/boundary/ui/vm'
+import type { GrowthProfileVM } from '../../src/boundary/ui/DetailScreen'
 
 const EMPTY: MilestoneVM = {
   standardId: 'int-ko-find-letters', statement: '간판·과자봉지에서 아는 글자를 찾아낸다',
@@ -135,5 +136,61 @@ describe('⭐ T7 — 묶음 목록 + 근거 상세 (개별 성취기준)', () =>
     setup(clVM)
     const cards = screen.getAllByTestId(/^ms-/)
     expect(cards[0]).toHaveAttribute('data-testid', 'ms-cl-nuri-ko-listen')
+  })
+})
+
+describe('§9 성장 좌표 프로필 (growth 모드 · SSOT §5-B)', () => {
+  const GROWTH: GrowthProfileVM = {
+    domain: '과학·탐구',
+    points: [
+      { id: 'sci-inquiry', name: '탐구하는 태도', blurb: '궁금한 걸 알아가는 힘.', parentLabel: '궁금하면 직접 알아보는 모습이 보여요', isStrength: true, evidence: ['자연과 사물에 관심을 갖고 탐색한다.'] },
+      { id: 'sci-things', name: '사물·도구 살펴보기', blurb: '도구를 알아가요.', parentLabel: '이 모습은 아직 덜 보여요 — 같이 해보면 나타나요', isStrength: false, evidence: [] },
+    ],
+    next: { text: '다음엔 여러 방법으로 알아보는 모습을 볼 수 있어요', activity: { title: '물에 뜰까 가라앉을까 맞혀보기', effortMin: 5, placeLabel: '집' } },
+  }
+  const renderGrowth = (over: Partial<GrowthProfileVM> = {}) => {
+    const onBack = vi.fn()
+    const utils = render(<DetailScreen vm={{ ...VM, domain: '과학·탐구' }} onBack={onBack} onOpenLink={vi.fn()} onToggleAchieved={vi.fn()} growth={{ ...GROWTH, ...over }} />)
+    return { ...utils, onBack }
+  }
+
+  it('⭐ "요즘 우리 아이 모습" + GrowthPoint 서술 + 고유모양 캡션', () => {
+    renderGrowth()
+    expect(screen.getByText('요즘 우리 아이 모습')).toBeInTheDocument()
+    expect(screen.getByText('탐구하는 태도')).toBeInTheDocument()
+    expect(screen.getByText('궁금하면 직접 알아보는 모습이 보여요')).toBeInTheDocument()
+    expect(screen.getByText(/이 아이만의 모양이에요/)).toBeInTheDocument()
+  })
+
+  it('강점(🟢)/덜 보임(🟡)이 dot 으로 구분된다', () => {
+    renderGrowth()
+    expect(screen.getByTestId('gp-sci-inquiry').querySelector('.gp-dot.on')).toBeTruthy()
+    expect(screen.getByTestId('gp-sci-things').querySelector('.gp-dot.next')).toBeTruthy()
+  })
+
+  it('다음 경험 1개 + 연결 활동', () => {
+    renderGrowth()
+    const nx = screen.getByTestId('gp-next')
+    expect(within(nx).getByText(/다음에 한번 볼까요/)).toBeInTheDocument()
+    expect(nx.textContent).toContain('물에 뜰까 가라앉을까 맞혀보기')
+  })
+
+  it('근거는 뒤 — "왜 이 목표?" 탭에 성취기준 원문', () => {
+    renderGrowth()
+    const strong = screen.getByTestId('gp-sci-inquiry')
+    expect(within(strong).getByText(/왜 이 목표/)).toBeInTheDocument()
+    expect(within(strong).getByText('자연과 사물에 관심을 갖고 탐색한다.')).toBeInTheDocument()
+  })
+
+  it('⛔ 프로필에 또래·등급·단계 표현 없음(서술만)', () => {
+    const { container } = renderGrowth({ next: null })
+    const text = container.textContent ?? ''
+    for (const w of ['또래', '정상', '지연', '등급', '점수', '단계', '백분위']) expect(text).not.toContain(w)
+  })
+
+  it('뒤로가기', async () => {
+    const { onBack } = renderGrowth()
+    await userEvent.click(screen.getByRole('button', { name: '영역으로' }))
+    expect(onBack).toHaveBeenCalled()
   })
 })
