@@ -558,10 +558,10 @@ export function App() {
     if (clusterIds.length > 0) setAchieved((prev) => [...new Set([...prev, ...clusterIds])])
   }
 
-  // 성장 좌표 영역별 관찰 체크(§10) 완료 — 답변을 통째로 갱신(다른 영역 답변은 initial 로 보존).
+  // 성장 좌표 영역별 관찰 체크(§10) — 답변만 저장(다른 영역 답변은 initial 로 보존).
+  //   시트는 안 닫는다: GrowthCheck 가 결과(안도) 화면을 띄우고, '좋아요'(onClose)로 닫는다.
   const handleGrowthCheck = (answers: Record<string, ObsAnswer>) => {
     setGrowthObs(answers)
-    setGrowthCheckDomain(null)
   }
 
   // 공교육 기준 없는 영역(영어 등)에 부모가 목표를 직접 추가한다 (자체 Standard, 항상 지금 목표).
