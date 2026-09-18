@@ -30,6 +30,8 @@ export interface AppSnapshot {
   readonly care?: CareState
   /** 공교육 기준이 없는 영역(영어 등)에 부모가 직접 입력한 자체 목표. 없으면 빈 것으로 시작 */
   readonly customGoals?: readonly Standard[]
+  /** 성장 좌표 관찰 답변(§10). key=`${gpId}#${order}` → 예/아직/모름. 없으면 관찰 없음. */
+  readonly growthObs?: Readonly<Record<string, 'yes' | 'not-yet' | 'unknown'>>
 }
 
 export interface AppStore {

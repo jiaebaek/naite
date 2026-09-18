@@ -45,6 +45,8 @@ export interface DetailScreenProps {
   readonly onRemoveGoal?: ((standardId: string) => void) | undefined
   /** 성장 좌표 프로필(§9) — 있으면 GrowthPoint 프로필로 렌더(취학전). 없으면 묶음 목록(초1~2·영어). */
   readonly growth?: GrowthProfileVM | undefined
+  /** 이 영역 관찰 체크(§10) 열기 — growth 프로필일 때만. */
+  readonly onCheck?: (() => void) | undefined
 }
 
 function InfoDot() {
@@ -176,7 +178,7 @@ function sortedMilestones(milestones: readonly MilestoneVM[]): readonly Mileston
   return milestones.slice().sort((a, b) => rank(a) - rank(b))
 }
 
-export function DetailScreen({ vm, onBack, onOpenLink, onToggleAchieved, onAddGoal, onRemoveGoal, growth }: DetailScreenProps) {
+export function DetailScreen({ vm, onBack, onOpenLink, onToggleAchieved, onAddGoal, onRemoveGoal, growth, onCheck }: DetailScreenProps) {
   const milestones = sortedMilestones(vm.milestones)
 
   const pill = vm.group === 'empty' ? '비어있음' : vm.group === 'full' ? '완료' : '채우는 중'
@@ -209,6 +211,11 @@ export function DetailScreen({ vm, onBack, onOpenLink, onToggleAchieved, onAddGo
             ))}
           </div>
           <div className="gp-caption">이 아이만의 모양이에요 · 좋고 나쁜 모양은 없어요</div>
+          {onCheck && (
+            <button className="btn-obs" onClick={onCheck} data-testid="gp-check">
+              🌱 우리 애 이 영역, 3분 체크해보기
+            </button>
+          )}
           {growth.next && (
             <div className="gp-next" data-testid="gp-next">
               <div className="gpn-h">다음에 한번 볼까요?</div>

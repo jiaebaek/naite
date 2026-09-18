@@ -28,7 +28,8 @@ import {
   editAcademy,
 } from '../../domain/academy'
 import { presetByType, suggestedTargets } from '../../domain/standards/activityPresets'
-import { areaGrowthProfile, nextExperienceOf } from '../../domain/growth'
+import { areaGrowthProfile, nextExperienceOf, observedOrdersFrom, growthPointsOfDomain } from '../../domain/growth'
+import type { ObsAnswer } from '../../domain/growth'
 import { growthPointById } from '../../domain/standards/growthPoints'
 import { INITIAL_CARE, grantToken } from '../../domain/pet'
 import type { CareState } from '../../domain/pet'
@@ -74,6 +75,7 @@ import { LinkSheet } from './LinkSheet'
 import type { LinkChoice } from './LinkSheet'
 import { GoalSheet } from './GoalSheet'
 import { ObservationCheck } from './ObservationCheck'
+import { GrowthCheck } from './GrowthCheck'
 import { badgeOf, recommendVM } from './vm'
 import type { DomainVM, MilestoneVM, TaskVM } from './vm'
 import { BrandMark, IconGear, TabIconArea, TabIconLog, TabIconToday } from './icons'
@@ -166,6 +168,7 @@ function serialize(s: AppSnapshot): string {
     academies: s.academies,
     care: s.care,
     customGoals: s.customGoals,
+    growthObs: s.growthObs,
   })
 }
 
@@ -207,6 +210,9 @@ export function App() {
   const [care, setCare] = useState<CareState>(INITIAL_CARE)
   // 공교육 기준이 없는 영역(영어 등)의 목표는 부모가 직접 입력한다 — 코드가 아니라 데이터.
   const [customGoals, setCustomGoals] = useState<readonly Standard[]>([])
+  // 성장 좌표 관찰 답변(§10) · 영역별 관찰 체크 시트가 열린 영역
+  const [growthObs, setGrowthObs] = useState<Readonly<Record<string, ObsAnswer>>>({})
+  const [growthCheckDomain, setGrowthCheckDomain] = useState<Domain | null>(null)
   // ⭐ T7: 화면 목표 단위 = 교육과정 **묶음(cluster)**. 시기는 입력받은 아이 나이로 고른다.
   //    아이를 기준 코호트(CHILD_BIRTH_YM)에 정렬해 현재 band 묶음을 산출한다(초1~2면 초1~2 묶음).
   const month = cohortAlignedMonth(date.slice(0, 7), childBirthYm, CHILD_BIRTH_YM)
@@ -232,6 +238,7 @@ export function App() {
     if (snap.academies) setAcademies(snap.academies)
     if (snap.care) setCare(snap.care)
     if (snap.customGoals) setCustomGoals(snap.customGoals)
+    if (snap.growthObs) setGrowthObs(snap.growthObs)
   }, [])
 
   useEffect(() => {
@@ -249,12 +256,12 @@ export function App() {
 
   useEffect(() => {
     if (!loaded.current) return
-    const snapshot: AppSnapshot = { version: SNAPSHOT_VERSION, completions, achieved, activities, academies, care, customGoals }
+    const snapshot: AppSnapshot = { version: SNAPSHOT_VERSION, completions, achieved, activities, academies, care, customGoals, growthObs }
     const s = serialize(snapshot)
     if (s === lastPersisted.current) return
     lastPersisted.current = s
     void store.save(snapshot)
-  }, [store, completions, achieved, activities, academies, care, customGoals])
+  }, [store, completions, achieved, activities, academies, care, customGoals, growthObs])
 
   useEffect(() => {
     const pull = store.pull?.bind(store)
@@ -298,10 +305,12 @@ export function App() {
     () => new Set(achieved.filter((id) => Boolean(clusterById(id)))),
     [achieved],
   )
+  // §10 관찰 답변 → GrowthPoint별 '예' order (좌표 해상도 입력).
+  const observedOrdersByGp = useMemo(() => observedOrdersFrom(growthObs), [growthObs])
   // 영역 상세용 GrowthPoint 프로필(취학전만 큐레이션 · 초1~2·영어는 null → 묶음 목록 폴백).
   const detailGrowth: GrowthProfileVM | null = useMemo(() => {
     if (!detailDomain) return null
-    const states = areaGrowthProfile(detailDomain, currentClusterIds(month), { coveredClusterIds, achievedClusterIds })
+    const states = areaGrowthProfile(detailDomain, currentClusterIds(month), { coveredClusterIds, achievedClusterIds, observedOrdersByGp })
     if (states.length === 0) return null
     const points = states.map((st) => {
       const gp = growthPointById(st.growthPointId)!
@@ -320,7 +329,7 @@ export function App() {
       next = { text: ne.parentText, ...(r ? { activity: { title: r.title, effortMin: r.effortMin, placeLabel: r.placeLabel } } : {}) }
     }
     return { domain: detailDomain, points, next }
-  }, [detailDomain, month, coveredClusterIds, achievedClusterIds, stmtById])
+  }, [detailDomain, month, coveredClusterIds, achievedClusterIds, observedOrdersByGp, stmtById])
 
   const domainVMs: readonly DomainVM[] = useMemo(() => {
     // 가족이 이미 하는 장소(§10-A 원칙: 가족 패턴에 맞는 추천을 앞세운다)
@@ -547,6 +556,12 @@ export function App() {
   // 생활·마음 관찰 체크 완료(§06-B): '예'로 이룸 처리된 묶음을 achieved 에 합친다(중복 제거).
   const handleObsComplete = (clusterIds: readonly string[]) => {
     if (clusterIds.length > 0) setAchieved((prev) => [...new Set([...prev, ...clusterIds])])
+  }
+
+  // 성장 좌표 영역별 관찰 체크(§10) 완료 — 답변을 통째로 갱신(다른 영역 답변은 initial 로 보존).
+  const handleGrowthCheck = (answers: Record<string, ObsAnswer>) => {
+    setGrowthObs(answers)
+    setGrowthCheckDomain(null)
   }
 
   // 공교육 기준 없는 영역(영어 등)에 부모가 목표를 직접 추가한다 (자체 Standard, 항상 지금 목표).
@@ -776,6 +791,7 @@ export function App() {
             onAddGoal={detailVM.noPublic ? () => setGoalSheetDomain(detailVM.domain) : undefined}
             onRemoveGoal={handleRemoveGoal}
             growth={detailGrowth ?? undefined}
+            onCheck={detailGrowth && detailDomain ? () => setGrowthCheckDomain(detailDomain) : undefined}
           />
         )}
         {view === 'manage' && (
@@ -877,6 +893,16 @@ export function App() {
           checks={obsChecks}
           onClose={() => setShowObs(false)}
           onComplete={handleObsComplete}
+        />
+      )}
+
+      {growthCheckDomain && (
+        <GrowthCheck
+          domain={growthCheckDomain}
+          points={growthPointsOfDomain(growthCheckDomain, currentClusterIds(month))}
+          initial={growthObs}
+          onComplete={handleGrowthCheck}
+          onClose={() => setGrowthCheckDomain(null)}
         />
       )}
 

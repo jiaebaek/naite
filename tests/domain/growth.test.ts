@@ -4,7 +4,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { GROWTH_POINTS, growthPointByCluster, growthPointsForClusters } from '../../src/domain/standards/growthPoints'
-import { growthStateOf, nextExperienceOf, areaGrowthProfile, signalsFor } from '../../src/domain/growth'
+import { growthStateOf, nextExperienceOf, areaGrowthProfile, signalsFor, observedOrdersFrom, growthPointsOfDomain } from '../../src/domain/growth'
 import { STANDARDS_2021 } from '../../src/domain/standards/child2021'
 import { CLUSTERS, clusterById } from '../../src/domain/standards/clusters'
 import { ACTIVITY_LIBRARY } from '../../src/domain/standards/activityLibrary'
@@ -140,5 +140,25 @@ describe('기존 데이터 연결', () => {
     })
     expect(s.covered).toBe(true)
     expect(s.achieved).toBe(false)
+  })
+})
+
+describe('§10 관찰 답변 → 좌표', () => {
+  it('observedOrdersFrom: "예" 답만 order 로 켜진다', () => {
+    const orders = observedOrdersFrom({ 'sci-inquiry#1': 'yes', 'sci-inquiry#3': 'yes', 'sci-inquiry#2': 'not-yet', 'sci-things#2': 'unknown' })
+    expect(orders['sci-inquiry']).toEqual(expect.arrayContaining([1, 3]))
+    expect(orders['sci-inquiry']).not.toContain(2)
+    expect(orders['sci-things']).toBeUndefined()
+  })
+
+  it('⭐ 관찰이 좌표 order 를 올린다(해상도↑)', () => {
+    const gp = GROWTH_POINTS.find((g) => g.id === 'sci-inquiry')!
+    const orders = observedOrdersFrom({ 'sci-inquiry#4': 'yes' })
+    expect(growthStateOf(gp, { observedOrders: orders['sci-inquiry'] ?? [] }).observedOrder).toBe(4)
+  })
+
+  it('growthPointsOfDomain: 과학·탐구는 3좌표(현재 band)', () => {
+    const ids = new Set(NURI_CLUSTERS.map((c) => c.id))
+    expect(growthPointsOfDomain('과학·탐구', ids).map((g) => g.id)).toEqual(['sci-inquiry', 'sci-things', 'sci-nature'])
   })
 })

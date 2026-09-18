@@ -90,3 +90,29 @@ export function areaGrowthProfile(
 export function allGrowthSourceRefs(): readonly string[] {
   return [...new Set(GROWTH_POINTS.flatMap((g) => [...g.sourceRefs, ...g.behaviors.map((b) => b.sourceRef)]))]
 }
+
+// ── §10 관찰 체크: 관찰행동(behavior) 답변 → 좌표 신호 ──
+export type ObsAnswer = 'yes' | 'not-yet' | 'unknown'
+
+/** 관찰 답변 키 = `${gpId}#${order}`. */
+export const behaviorKey = (gpId: string, order: number): string => `${gpId}#${order}`
+
+/** 관찰 답변에서 GrowthPoint별 '예'로 켜진 order 목록(좌표 계산 입력). */
+export function observedOrdersFrom(answers: Readonly<Record<string, ObsAnswer>>): Record<string, readonly number[]> {
+  const out: Record<string, number[]> = {}
+  for (const [key, ans] of Object.entries(answers)) {
+    if (ans !== 'yes') continue
+    const hash = key.lastIndexOf('#')
+    if (hash < 0) continue
+    const gpId = key.slice(0, hash)
+    const order = Number(key.slice(hash + 1))
+    if (!gpId || !Number.isFinite(order)) continue
+    ;(out[gpId] ??= []).push(order)
+  }
+  return out
+}
+
+/** 한 영역의 현재 band GrowthPoint 들(관찰 체크 UI 문항 소스). */
+export function growthPointsOfDomain(domain: string, clusterIds: ReadonlySet<string>): readonly GrowthPoint[] {
+  return growthPointsForClusters(clusterIds).filter((g) => g.domain === domain)
+}
