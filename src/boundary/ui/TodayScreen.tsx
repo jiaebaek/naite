@@ -32,6 +32,8 @@ export interface TodayScreenProps {
   readonly onGoArea: () => void
   /** 안도 공유 카드 열기(§07-A) */
   readonly onShare: () => void
+  /** 선택적 학습 정교화(§06-C) 열기 — 통찰 화면 "학원 추가" 진입 */
+  readonly onAddLearn?: (() => void) | undefined
 }
 
 /** '로/으로' 조사 — 받침 없거나 ㄹ 받침이면 '로', 그 외 '으로'. (한글 종성 판정) */
@@ -42,7 +44,7 @@ function ro(word: string): string {
   return word + (jong === 0 || jong === 8 ? '로' : '으로')
 }
 
-export function TodayScreen({ dateLabel, banner, progress, schedule, groups, onToggle, onGoArea, onShare }: TodayScreenProps) {
+export function TodayScreen({ dateLabel, banner, progress, schedule, groups, onToggle, onGoArea, onShare, onAddLearn }: TodayScreenProps) {
   const left = progress.total - progress.done
   const petTitle =
     progress.total === 0
@@ -112,6 +114,12 @@ export function TodayScreen({ dateLabel, banner, progress, schedule, groups, onT
             우리 아이 좌표 공유하기
           </button>
         </div>
+
+        {onAddLearn && (
+          <button className="add-learn" onClick={onAddLearn} data-testid="add-learn">
+            우리 애 학원 추가하면 더 정확해져요
+          </button>
+        )}
 
         {/* 오늘 할 일 */}
         <div className="sec">

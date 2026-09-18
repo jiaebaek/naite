@@ -80,25 +80,33 @@ describe('⭐ 빈 상태로 시작 + 셋업이 실제 데이터를 만든다 (�
     expect(screen.queryByText('한글 학원 숙제')).not.toBeInTheDocument()
   })
 
-  it('⭐ S2 과목 학원 칩(미술=등원형)을 누르면 예체능이 챙김으로 채워진다', async () => {
+  it('⭐ §06-C 학원 칩(미술=등원형)을 누르면 예체능이 챙김으로 채워진다', async () => {
     localStorage.setItem(ONBOARD_KEY, '1') // 셋업 대기
     render(<App />)
     await screen.findByTestId('setup')
-    fireEvent.click(screen.getByRole('button', { name: '다음' })) // S1 → S2(과목 카드)
-    fireEvent.click(screen.getByRole('button', { name: '미술' })) // 예체능 학원(등원형)
+    fireEvent.click(screen.getByRole('button', { name: '다음' })) // S1 → S2(기관 1탭)
     fireEvent.click(screen.getByRole('button', { name: /나이테 시작하기/ }))
     await screen.findByTestId('view-today')
+    // 통찰 화면에서 학습 정교화(§06-C) 진입 → 미술=등원형
+    fireEvent.click(screen.getByTestId('add-learn'))
+    await screen.findByTestId('learn-picker')
+    fireEvent.click(screen.getByRole('button', { name: '미술' }))
+    fireEvent.click(screen.getByRole('button', { name: '추가 완료' }))
     // 미술=등원형 → 등원 커버로 예체능 묶음 챙김 → 안도 배너(사교육 톤, 묶음 기준)
     expect(screen.getByText(/1묶음 챙기고 있어요/)).toBeInTheDocument()
   })
 
-  it('⭐ S2 집 활동 칩을 누르면 그 영역이 챙김 + 오늘 할 일에 뜬다', async () => {
+  it('⭐ §06-C 집 활동 칩을 누르면 그 영역이 챙김 + 오늘 할 일에 뜬다', async () => {
     localStorage.setItem(ONBOARD_KEY, '1')
     render(<App />)
     await screen.findByTestId('setup')
-    fireEvent.click(screen.getByRole('button', { name: '다음' })) // → S2(과목 카드)
-    fireEvent.click(screen.getByRole('button', { name: '그림책 읽기' })) // 국어 집활동 → 묶음 챙김
+    fireEvent.click(screen.getByRole('button', { name: '다음' })) // → S2(기관 1탭)
     fireEvent.click(screen.getByRole('button', { name: /나이테 시작하기/ }))
+    await screen.findByTestId('view-today')
+    fireEvent.click(screen.getByTestId('add-learn'))
+    await screen.findByTestId('learn-picker')
+    fireEvent.click(screen.getByRole('button', { name: '그림책 읽기' })) // 국어 집활동 → 묶음 챙김
+    fireEvent.click(screen.getByRole('button', { name: '추가 완료' }))
     await screen.findByTestId('view-today')
     expect(screen.getByText(/1묶음 챙기고 있어요/)).toBeInTheDocument()
     // 집 활동은 오늘 할 일 카드로도 뜬다(등원과 달리 체크 대상)

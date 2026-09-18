@@ -59,7 +59,9 @@ import { LogScreen } from './LogScreen'
 import type { WeekDayVM, RecordRowVM } from './LogScreen'
 import { Onboarding } from './Onboarding'
 import { SetupFlow } from './SetupFlow'
-import type { SetupResult, SetupPick } from './SetupFlow'
+import type { SetupResult } from './SetupFlow'
+import { LearnPicker } from './LearnPicker'
+import type { SetupPick, LearnPicks } from './LearnPicker'
 import { ShareSheet } from './ShareSheet'
 import type { CoordArea } from './NaiteCoordArt'
 import { DaySheet } from './DaySheet'
@@ -189,6 +191,8 @@ export function App() {
   const [showShare, setShowShare] = useState(false)
   // 생활·마음 관찰 체크 모듈(§06-B) — 온보딩 밖, 재방문 훅
   const [showObs, setShowObs] = useState(false)
+  // 선택적 학습 정교화 시트(§06-C) — 통찰 화면에서 학원 추가
+  const [showLearn, setShowLearn] = useState(false)
 
   const [date] = useState<IsoDate>(todayIso)
   // 빈 상태로 시작한다 — 데이터는 온보딩 셋업(§06-A)과 관리에서 사용자가 직접 입력한다.
@@ -597,27 +601,37 @@ export function App() {
     setChildBirthYm(r.birthYm); writeLS(CHILD_BIRTH_KEY, r.birthYm)
     setPriorityDomains(r.priorityDomains); writeLS(PRIORITY_KEY, JSON.stringify(r.priorityDomains))
 
-    // 아이 현재 band(입력 생년월)의 지금 목표 — 프리셋 primary 를 이 band 로 걸러 겨냥 목표로 확정한다.
-    // (미리 체크된 제안을 '시작하기'로 넘기면 = 봤고 끌 수 있었으니 확정으로 간주 · docs/10 배선 rule3)
-    const setupMonth = cohortAlignedMonth(date.slice(0, 7), r.birthYm, CHILD_BIRTH_YM)
-    const bandClusterIds = currentClusterIds(setupMonth)
-    // ⚠️ childBirthYm state 는 아직 갱신 전(이 클로저의 standards 는 옛 band)이라, 검증은
-    //    입력받은 생년월의 band 묶음으로 한다 — 안 그러면 elem 묶음 겨냥이 stale nuri 로 검증돼 튕긴다.
-    const setupStandards = [...currentClusterStandards(setupMonth), ...customGoals]
+    // 유치원/학교 등원 → 생활·마음 lane 묶음 자동커버(등원형 academy). 노동 0으로 첫 안도(§05·doc13 D2).
+    //    ⚠️ childBirthYm state 는 아직 갱신 전이라, 입력받은 생년월의 band 로 산출한다.
+    if (r.attendsInstitution) {
+      const setupMonth = cohortAlignedMonth(date.slice(0, 7), r.birthYm, CHILD_BIRTH_YM)
+      const lifeClusters = currentClusterStandards(setupMonth)
+        .filter((s) => laneOf(s.domain) === '생활·마음')
+        .map((s) => s.id)
+      if (lifeClusters.length > 0) {
+        const instName = bandOfMonth(setupMonth) === 'elem' ? '학교' : '유치원'
+        const inst = createAcademy({ name: instName, weekdays: [], coversClusters: lifeClusters }, newId)
+        setAcademies((prev) => [...prev, inst])
+      }
+    }
+    setShowSetup(false); writeLS(SETUP_KEY, '1')
+  }
+
+  // 선택적 학습 정교화(§06-C · T11): 통찰 화면에서 학원·집공부를 더하면 그 묶음이 커버된다.
+  //   온보딩과 달리 childBirthYm state 가 이미 갱신돼 있어 현재 band(month·standards)로 그대로 검증한다.
+  const applyLearnPicks = (picks: LearnPicks) => {
+    const bandClusterIds = currentClusterIds(month)
+    const setupStandards = standards
     // 칩 → 프리셋 → (현재 band 필터) 확정 묶음. 프리셋 없거나 band 매칭 없으면 [] (자동 겨냥 없음·과소청구·원칙3).
     const resolve = (pick: SetupPick): { domain: Domain; targetIds: readonly StandardId[]; coverMode: '등원형' | '숙제형' } => {
       const preset = pick.presetType ? presetByType(pick.presetType) : undefined
-      // 커버 방식: 셋업 '숙제 있어요?' 토글(pick.coverMode)이 우선, 없으면 프리셋 기본값.
       const coverMode = pick.coverMode ?? preset?.coverMode ?? '숙제형'
       return preset
         ? { domain: preset.domain, targetIds: suggestedTargets(preset, bandClusterIds), coverMode }
         : { domain: pick.domain, targetIds: [], coverMode }
     }
-
-    // S2 학원 = 등원 엔티티. 커버 방식(T8·SSOT §5):
-    //   등원형 → 등원 자체가 묶음 커버(coversClusters), 숙제 활동 없음(오늘=일정만).
-    //   숙제형 → 학원 + 숙제 활동(targetIds=묶음)이 커버(오늘=체크).
-    const s2 = r.academies.map((a) => {
+    // 학원 = 등원 엔티티(T8·SSOT §5): 등원형→coversClusters, 숙제형→학원+숙제 활동.
+    const acaResults = picks.academies.map((a) => {
       const { domain, targetIds, coverMode } = resolve(a)
       if (coverMode === '등원형') {
         const academy = createAcademy({ name: a.name, weekdays: [], coversClusters: targetIds }, newId)
@@ -630,19 +644,19 @@ export function App() {
       }, setupStandards, newId)
       return { academy, homework: homework as Activity | null }
     })
-    // S3 집 활동 = 실제 체크하는 활동. 프리셋이 있으면 확정 목표를 겨냥(챙기는중), 없으면 자유.
-    const s3 = r.homeActivities.map((h) => {
+    // 집 활동 = 실제 체크하는 활동.
+    const homeActs = picks.homeActivities.map((h) => {
       const { domain, targetIds } = resolve(h)
       return createActivity({
         name: h.name, domain, track: '집', targetIds,
         cadence: { kind: '주N회', times: 3 }, owner: '엄마',
       }, setupStandards, newId)
     })
-    const newAcademies = s2.map((x) => x.academy)
-    const newActivities = [...s2.map((x) => x.homework).filter((h): h is Activity => h !== null), ...s3]
+    const newAcademies = acaResults.map((x) => x.academy)
+    const newActivities = [...acaResults.map((x) => x.homework).filter((h): h is Activity => h !== null), ...homeActs]
     if (newAcademies.length > 0) setAcademies((prev) => [...prev, ...newAcademies])
     if (newActivities.length > 0) setActivities((prev) => [...prev, ...newActivities])
-    setShowSetup(false); writeLS(SETUP_KEY, '1')
+    setShowLearn(false)
   }
 
   // 처음부터 다시: 로컬 데이터(스냅샷·아이 정보·플래그) 전부 지우고 새로고침 → 온보딩부터
@@ -708,6 +722,7 @@ export function App() {
             onToggle={handleToggle}
             onGoArea={() => setView('area')}
             onShare={() => setShowShare(true)}
+            onAddLearn={() => setShowLearn(true)}
           />
         )}
         {view === 'area' && (
@@ -822,6 +837,14 @@ export function App() {
           checks={obsChecks}
           onClose={() => setShowObs(false)}
           onComplete={handleObsComplete}
+        />
+      )}
+
+      {showLearn && (
+        <LearnPicker
+          band={bandOfMonth(month) ?? 'nuri'}
+          onClose={() => setShowLearn(false)}
+          onComplete={applyLearnPicks}
         />
       )}
 
