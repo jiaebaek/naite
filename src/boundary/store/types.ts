@@ -32,6 +32,8 @@ export interface AppSnapshot {
   readonly customGoals?: readonly Standard[]
   /** 성장 좌표 관찰 답변(§10). key=`${gpId}#${order}` → 예/아직/모름. 없으면 관찰 없음. */
   readonly growthObs?: Readonly<Record<string, 'yes' | 'not-yet' | 'unknown'>>
+  /** 재방문 델타 기준선(§11): 지난번 본 GrowthPoint별 observedOrder. 없으면 첫 방문(기준선 잡음). */
+  readonly growthSeen?: Readonly<Record<string, number>>
 }
 
 export interface AppStore {

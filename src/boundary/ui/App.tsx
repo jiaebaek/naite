@@ -28,7 +28,7 @@ import {
   editAcademy,
 } from '../../domain/academy'
 import { presetByType, suggestedTargets } from '../../domain/standards/activityPresets'
-import { areaGrowthProfile, nextExperienceOf, observedOrdersFrom, growthPointsOfDomain } from '../../domain/growth'
+import { areaGrowthProfile, nextExperienceOf, observedOrdersFrom, growthPointsOfDomain, currentGrowthOrders, growthDelta } from '../../domain/growth'
 import type { ObsAnswer } from '../../domain/growth'
 import { growthPointById } from '../../domain/standards/growthPoints'
 import { INITIAL_CARE, grantToken } from '../../domain/pet'
@@ -169,6 +169,7 @@ function serialize(s: AppSnapshot): string {
     care: s.care,
     customGoals: s.customGoals,
     growthObs: s.growthObs,
+    growthSeen: s.growthSeen ?? undefined,
   })
 }
 
@@ -213,6 +214,8 @@ export function App() {
   // 성장 좌표 관찰 답변(§10) · 영역별 관찰 체크 시트가 열린 영역
   const [growthObs, setGrowthObs] = useState<Readonly<Record<string, ObsAnswer>>>({})
   const [growthCheckDomain, setGrowthCheckDomain] = useState<Domain | null>(null)
+  // 재방문 델타(§11): 지난번 본 좌표 기준선(null=아직 기준선 없음 → 기록 첫 방문에 잡는다).
+  const [growthSeen, setGrowthSeen] = useState<Readonly<Record<string, number>> | null>(null)
   // ⭐ T7: 화면 목표 단위 = 교육과정 **묶음(cluster)**. 시기는 입력받은 아이 나이로 고른다.
   //    아이를 기준 코호트(CHILD_BIRTH_YM)에 정렬해 현재 band 묶음을 산출한다(초1~2면 초1~2 묶음).
   const month = cohortAlignedMonth(date.slice(0, 7), childBirthYm, CHILD_BIRTH_YM)
@@ -239,6 +242,7 @@ export function App() {
     if (snap.care) setCare(snap.care)
     if (snap.customGoals) setCustomGoals(snap.customGoals)
     if (snap.growthObs) setGrowthObs(snap.growthObs)
+    if (snap.growthSeen) setGrowthSeen(snap.growthSeen)
   }, [])
 
   useEffect(() => {
@@ -256,12 +260,12 @@ export function App() {
 
   useEffect(() => {
     if (!loaded.current) return
-    const snapshot: AppSnapshot = { version: SNAPSHOT_VERSION, completions, achieved, activities, academies, care, customGoals, growthObs }
+    const snapshot: AppSnapshot = { version: SNAPSHOT_VERSION, completions, achieved, activities, academies, care, customGoals, growthObs, ...(growthSeen ? { growthSeen } : {}) }
     const s = serialize(snapshot)
     if (s === lastPersisted.current) return
     lastPersisted.current = s
     void store.save(snapshot)
-  }, [store, completions, achieved, activities, academies, care, customGoals, growthObs])
+  }, [store, completions, achieved, activities, academies, care, customGoals, growthObs, growthSeen])
 
   useEffect(() => {
     const pull = store.pull?.bind(store)
@@ -307,6 +311,20 @@ export function App() {
   )
   // §10 관찰 답변 → GrowthPoint별 '예' order (좌표 해상도 입력).
   const observedOrdersByGp = useMemo(() => observedOrdersFrom(growthObs), [growthObs])
+
+  // §11 재방문 델타: 현재 전 좌표 order → 지난번(growthSeen) 대비 오른 것 = "새로 나타난 모습".
+  const growthOpts = useMemo(
+    () => ({ coveredClusterIds, achievedClusterIds, observedOrdersByGp }),
+    [coveredClusterIds, achievedClusterIds, observedOrdersByGp],
+  )
+  const currentGrowthOrdersMap = useMemo(() => currentGrowthOrders(currentClusterIds(month), growthOpts), [month, growthOpts])
+  const growthDeltaItems = useMemo(() => (growthSeen ? growthDelta(growthSeen, currentGrowthOrdersMap) : []), [growthSeen, currentGrowthOrdersMap])
+
+  // 기록 탭 첫 방문에 현재 좌표를 기준선으로 잡는다(그때까진 델타 없음). 이후 변화가 "지난번보다".
+  useEffect(() => {
+    if (growthSeen !== null || view !== 'log') return
+    setGrowthSeen(currentGrowthOrdersMap)
+  }, [view, growthSeen, currentGrowthOrdersMap])
   // 영역 상세용 GrowthPoint 프로필(취학전만 큐레이션 · 초1~2·영어는 null → 묶음 목록 폴백).
   const detailGrowth: GrowthProfileVM | null = useMemo(() => {
     if (!detailDomain) return null
@@ -564,6 +582,9 @@ export function App() {
     setGrowthObs(answers)
   }
 
+  // 재방문 델타 확인 → 기준선을 현재로 갱신(델타 사라짐 · §11).
+  const handleDeltaAck = () => setGrowthSeen(currentGrowthOrdersMap)
+
   // 공교육 기준 없는 영역(영어 등)에 부모가 목표를 직접 추가한다 (자체 Standard, 항상 지금 목표).
   const handleAddGoal = (statement: string) => {
     const domain = goalSheetDomain
@@ -818,6 +839,8 @@ export function App() {
             weekDays={weekDays}
             rows={recordRows}
             onDayClick={setBackfillDate}
+            delta={growthDeltaItems}
+            onDeltaAck={handleDeltaAck}
           />
         )}
       </div>

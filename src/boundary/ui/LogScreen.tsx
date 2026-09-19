@@ -36,6 +36,9 @@ export interface LogScreenProps {
   readonly rows: readonly RecordRowVM[]
   /** 지난/오늘 날짜를 눌러 그 날 기록을 채운다 (backfill 시트) */
   readonly onDayClick: (date: string) => void
+  /** 재방문 델타(§11): 지난번보다 새로 나타난 좌표 모습. */
+  readonly delta?: readonly { readonly name: string; readonly label: string }[]
+  readonly onDeltaAck?: (() => void) | undefined
 }
 
 /** 목표 대비 달성 pip 행. 완료=세이지, 미완=중립 회색(허니 아님). */
@@ -62,11 +65,23 @@ function RecStatus({ row }: { row: RecordRowVM }) {
   return <span className="rec-cnt">{row.count}회</span>
 }
 
-export function LogScreen({ pct, weekDoneDays, weekDays, rows, onDayClick }: LogScreenProps) {
+export function LogScreen({ pct, weekDoneDays, weekDays, rows, onDayClick, delta, onDeltaAck }: LogScreenProps) {
   const pctLabel = Math.round(Math.max(0, Math.min(1, pct)) * 100)
   return (
     <section className="view" data-testid="view-log">
       <div className="screen-pad">
+        {delta && delta.length > 0 && (
+          <div className="delta-card" data-testid="revisit-delta">
+            <div className="delta-h">지난번보다 달라졌어요 ✨</div>
+            <div className="delta-list">
+              {delta.map((d, i) => (
+                <div key={i} className="delta-row"><span className="delta-dot" aria-hidden="true" />{d.name} — {d.label}</div>
+              ))}
+            </div>
+            <p className="delta-sub">이제 이 시기엔 이런 모습을 더 볼 수 있어요.</p>
+            {onDeltaAck && <button className="btn-soft" onClick={onDeltaAck} data-testid="delta-ack">확인했어요</button>}
+          </div>
+        )}
         <div className="rec-hero">
           <h2 className="rec-title">한 겹씩 쌓이는 중</h2>
           <p className="rec-sub">해온 것들이 나이테처럼 쌓여요. 앞서가지 않아도, 매년 한 겹씩.</p>

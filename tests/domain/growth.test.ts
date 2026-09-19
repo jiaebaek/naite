@@ -4,7 +4,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { GROWTH_POINTS, growthPointByCluster, growthPointsForClusters } from '../../src/domain/standards/growthPoints'
-import { growthStateOf, nextExperienceOf, areaGrowthProfile, signalsFor, observedOrdersFrom, growthPointsOfDomain } from '../../src/domain/growth'
+import { growthStateOf, nextExperienceOf, areaGrowthProfile, signalsFor, observedOrdersFrom, growthPointsOfDomain, currentGrowthOrders, growthDelta } from '../../src/domain/growth'
 import { STANDARDS_2021 } from '../../src/domain/standards/child2021'
 import { CLUSTERS, clusterById } from '../../src/domain/standards/clusters'
 import { ACTIVITY_LIBRARY } from '../../src/domain/standards/activityLibrary'
@@ -160,5 +160,21 @@ describe('§10 관찰 답변 → 좌표', () => {
   it('growthPointsOfDomain: 과학·탐구는 3좌표(현재 band)', () => {
     const ids = new Set(NURI_CLUSTERS.map((c) => c.id))
     expect(growthPointsOfDomain('과학·탐구', ids).map((g) => g.id)).toEqual(['sci-inquiry', 'sci-things', 'sci-nature'])
+  })
+})
+describe('§11 재방문 델타', () => {
+  const nuriIds = new Set(NURI_CLUSTERS.map((c) => c.id))
+  it('currentGrowthOrders: 커버된 묶음은 order 1, 아니면 0', () => {
+    const orders = currentGrowthOrders(nuriIds, { coveredClusterIds: new Set(['cl-nuri-ko-book']), achievedClusterIds: new Set() })
+    expect(orders['ko-book']).toBe(1)
+    expect(orders['ko-listen']).toBe(0)
+  })
+  it('⭐ growthDelta: order 오른 좌표만 = 새로 나타난 모습(+서술)', () => {
+    const items = growthDelta({ 'sci-inquiry': 0 }, { 'sci-inquiry': 3, 'sci-things': 0 })
+    expect(items.map((i) => i.growthPointId)).toEqual(['sci-inquiry'])
+    expect(items[0]!.label).toBe('궁금하면 직접 알아보는 모습이 보여요')
+  })
+  it('오르지 않으면 델타 없음(안정)', () => {
+    expect(growthDelta({ 'sci-inquiry': 3 }, { 'sci-inquiry': 3 })).toEqual([])
   })
 })

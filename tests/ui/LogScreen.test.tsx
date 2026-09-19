@@ -112,3 +112,24 @@ describe('⭐ 지난 날 backfill 진입 (보강 B · 회귀 방지)', () => {
     expect(screen.getByText(/그냥 비어 있을 뿐이에요/)).toBeInTheDocument()
   })
 })
+
+describe('§11 재방문 델타', () => {
+  it('델타가 있으면 "지난번보다 달라졌어요" 카드 + 새로 나타난 모습', () => {
+    setup({ delta: [{ name: '탐구하는 태도', label: '궁금한 걸 물어보는 모습이 보여요' }], onDeltaAck: vi.fn() })
+    const card = screen.getByTestId('revisit-delta')
+    expect(within(card).getByText(/지난번보다 달라졌어요/)).toBeInTheDocument()
+    expect(card.textContent).toContain('탐구하는 태도')
+  })
+
+  it('확인하면 onDeltaAck 로 기준선 갱신', async () => {
+    const onDeltaAck = vi.fn()
+    setup({ delta: [{ name: '말하고 듣기', label: '자기 이야기를 말로 하는 모습이 보여요' }], onDeltaAck })
+    await userEvent.click(screen.getByTestId('delta-ack'))
+    expect(onDeltaAck).toHaveBeenCalled()
+  })
+
+  it('델타 없으면 카드가 안 뜬다', () => {
+    setup({ delta: [] })
+    expect(screen.queryByTestId('revisit-delta')).not.toBeInTheDocument()
+  })
+})

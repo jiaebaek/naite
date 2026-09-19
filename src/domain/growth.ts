@@ -116,3 +116,48 @@ export function observedOrdersFrom(answers: Readonly<Record<string, ObsAnswer>>)
 export function growthPointsOfDomain(domain: string, clusterIds: ReadonlySet<string>): readonly GrowthPoint[] {
   return growthPointsForClusters(clusterIds).filter((g) => g.domain === domain)
 }
+
+// ── §11 재방문 델타: 지난번 대비 새로 나타난 좌표 모습 ──
+export interface GrowthSignalOpts {
+  readonly coveredClusterIds: ReadonlySet<string>
+  readonly achievedClusterIds: ReadonlySet<string>
+  readonly observedOrdersByGp?: Readonly<Record<string, readonly number[]>>
+}
+
+/** order → 부모 서술(0=아직 덜 보임). */
+export function parentLabelOf(gp: GrowthPoint, order: number): string {
+  if (order <= 0) return ORDER0_LABEL
+  return gp.behaviors.find((b) => b.order === order)?.label ?? ORDER0_LABEL
+}
+
+/** 현재 시기 전 GrowthPoint 의 observedOrder 맵(재방문 기준선 저장·비교용). */
+export function currentGrowthOrders(clusterIds: ReadonlySet<string>, opts: GrowthSignalOpts): Record<string, number> {
+  const out: Record<string, number> = {}
+  for (const gp of growthPointsForClusters(clusterIds)) {
+    out[gp.id] = growthStateOf(gp, signalsFor(gp, opts)).observedOrder
+  }
+  return out
+}
+
+export interface GrowthDeltaItem {
+  readonly growthPointId: string
+  readonly domain: string
+  readonly name: string
+  readonly label: string
+}
+
+/** 지난번(seen) 대비 order 가 오른 좌표들 = "새로 나타난 모습"(재방문 델타). */
+export function growthDelta(
+  seen: Readonly<Record<string, number>>,
+  current: Readonly<Record<string, number>>,
+): readonly GrowthDeltaItem[] {
+  const items: GrowthDeltaItem[] = []
+  for (const gp of GROWTH_POINTS) {
+    const cur = current[gp.id]
+    if (cur === undefined || cur <= 0) continue
+    if (cur > (seen[gp.id] ?? 0)) {
+      items.push({ growthPointId: gp.id, domain: gp.domain, name: gp.name, label: parentLabelOf(gp, cur) })
+    }
+  }
+  return items
+}
