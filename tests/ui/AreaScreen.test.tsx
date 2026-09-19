@@ -1,6 +1,6 @@
 /**
- * AreaScreen (F3) — UX 리디자인 §08.
- * 갭 우선 정렬 · 색으로 챙김/비어있음 구분 · 선행 UI 없음(원칙 5).
+ * AreaScreen (F3) — §8 lean (B). 안심 한 줄 + 접힌 잘함 + 살펴볼 초대 1~2개. 표시만(계산 불변).
+ * pip·커버리지 바·3그룹·pill 남발 제거(상세로). 생활·마음 안심 레인 유지.
  */
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
@@ -24,7 +24,7 @@ const dom = (domain: Domain, statuses: MilestoneVM['status'][], noPublic = false
   return { domain, milestones, total, on: total - gap, done, prog, gap, group, lane: laneOf(domain), noPublic, priority: false }
 }
 
-// 학습 레인: 국어=부분, 과학·탐구=비어있음, 수학=완료. + 생활 레인: 건강·안전(안심 섹션).
+// 학습: 국어=부분(잘함), 과학·탐구=비어있음(살펴볼), 수학=완료(잘함). + 생활: 건강·안전(안심).
 const DOMAINS_VM: readonly DomainVM[] = [
   dom('국어', ['챙기는중', '활동필요']),
   dom('과학·탐구', ['활동필요', '활동필요', '활동필요']),
@@ -38,75 +38,79 @@ const setup = () => {
   return { ...utils, onOpenDetail }
 }
 
-describe('갭 우선 정렬', () => {
-  it('세 그룹 라벨이 모두 있다', () => {
-    setup()
-    expect(screen.getByText('알려주면 여기가 채워져요')).toBeInTheDocument()
-    expect(screen.getByText('채우는 중')).toBeInTheDocument()
-    expect(screen.getByText('비어있는 곳 없어요')).toBeInTheDocument()
-  })
-
-  it('⭐ 비어있는 영역이 DOM 상 맨 위에 온다', () => {
+describe('lean — 안심 한 줄 + 접힌 잘함 + 살펴볼 초대', () => {
+  it('상단은 안심 한 줄(말로) — 커버리지 바·숫자 없음', () => {
     const { container } = setup()
-    const cards = [...container.querySelectorAll('[data-testid^="domain-"]')]
-    expect(cards[0]!.getAttribute('data-testid')).toBe('domain-과학·탐구')
+    expect(screen.getByText('학습, 대부분 잘 되고 있어요')).toBeInTheDocument()
+    expect(screen.getByText(/전문가가 세운 기준으로/)).toBeInTheDocument()
+    expect(container.querySelector('.coverbar')).toBeNull()
   })
-})
 
-describe('개요 — 몇 곳이 비어있는가', () => {
-  it('챙김/비어있음 수가 요약된다', () => {
+  it('⭐ 잘 챙기는 영역은 접힌 한 줄 — 카드로 안 깔린다', () => {
     setup()
-    expect(screen.getByText(/3개 영역 중 2곳 챙기고 있어요/)).toBeInTheDocument()
-    expect(screen.getByText(/알려주면 1곳 더 채워져요/)).toBeInTheDocument()
+    const fold = screen.getByTestId('well-fold')
+    expect(fold.textContent).toContain('국어 · 수학')
+    expect(fold.textContent).toContain('잘 되고 있어요')
+    // 접힘: 국어 행이 아직 없다
+    expect(screen.queryByTestId('domain-국어')).not.toBeInTheDocument()
+  })
+
+  it('접힌 줄을 펼치면 조망 + 각 영역 상세로', async () => {
+    const { onOpenDetail } = setup()
+    await userEvent.click(screen.getByTestId('well-fold'))
+    expect(screen.getByTestId('domain-국어')).toBeInTheDocument()
+    await userEvent.click(screen.getByTestId('domain-수학'))
+    expect(onOpenDetail).toHaveBeenCalledWith('수학')
+  })
+
+  it('⭐ 살펴볼 곳 = 점선 초대 카드(경보 아님)', () => {
+    setup()
+    expect(screen.getByText(/살펴볼 곳/)).toBeInTheDocument()
+    const card = screen.getByTestId('domain-과학·탐구')
+    expect(within(card).getByText('알려주기')).toBeInTheDocument()
+    expect(card.textContent).toContain('급하지 않아요')
+  })
+
+  it('살펴볼 카드를 누르면 onOpenDetail(domain)', async () => {
+    const { onOpenDetail } = setup()
+    await userEvent.click(screen.getByTestId('domain-과학·탐구'))
+    expect(onOpenDetail).toHaveBeenCalledWith('과학·탐구')
+  })
+
+  it('옛 3그룹 라벨·pill 남발 제거', () => {
+    setup()
+    expect(screen.queryByText('먼저 챙기면 좋아요')).not.toBeInTheDocument()
+    expect(screen.queryByText('채우는 중')).not.toBeInTheDocument()
   })
 })
 
 describe('⭐ 원칙 5 — 선행 UI 가 없다 (회귀 방지)', () => {
-  it('"선행"·"1년"·"2년" 같은 선행 문구가 화면에 없다', () => {
+  it('"선행" 문구·오프셋 컨트롤이 없다', () => {
     const { container } = setup()
-    const text = container.textContent ?? ''
-    expect(text).not.toContain('선행')
-    expect(text).not.toMatch(/[12]\s*년\s*선행/)
-  })
-
-  it('오프셋 선택 컨트롤(라디오/셀렉트)이 없다', () => {
-    setup()
+    expect((container.textContent ?? '')).not.toContain('선행')
     expect(screen.queryByRole('radio')).not.toBeInTheDocument()
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
   })
 })
 
 describe('⭐ 부모 우선 분야 (중요도 = 부모가 정함)', () => {
-  it('같은 그룹에서 우선 분야가 맨 위로 오고 "중요" 표시가 붙는다', () => {
-    const onOpenDetail = vi.fn()
-    // 둘 다 학습 레인·비어있음. 과학·탐구가 먼저 들어오지만, 예체능이 부모 우선 → 맨 위로.
+  it('살펴볼 초대에서 우선 분야가 맨 위 + "중요"', () => {
+    // 과학·탐구, 예체능 둘 다 비어있음(살펴볼). 예체능이 부모 우선 → 맨 위.
     const doms: readonly DomainVM[] = [
       dom('과학·탐구', ['활동필요', '활동필요']),
       { ...dom('예체능', ['활동필요', '활동필요']), priority: true },
     ]
-    const { container } = render(<AreaScreen dateLabel="9월 3일" domains={doms} onOpenDetail={onOpenDetail} />)
+    const { container } = render(<AreaScreen dateLabel="9월 3일" domains={doms} onOpenDetail={vi.fn()} />)
     const cards = [...container.querySelectorAll('[data-testid^="domain-"]')]
     expect(cards[0]!.getAttribute('data-testid')).toBe('domain-예체능')
     expect(within(cards[0] as HTMLElement).getByText('중요')).toBeInTheDocument()
-    expect(within(cards[1] as HTMLElement).queryByText('중요')).not.toBeInTheDocument()
   })
 })
 
-describe('⭐ T8 두 레인 — 생활·마음은 안심 섹션(갭 알람 X)', () => {
-  it('생활·마음 레인이 별도 안심 섹션으로, 비어있어도 갭 알람 톤이 아니다', () => {
+describe('⭐ 생활·마음 안심 레인(유지)', () => {
+  it('생활·마음이 별도 안심 섹션, 비어있어도 갭 알람 톤이 아니다', () => {
     setup()
     const life = screen.getByTestId('lane-life')
-    expect(within(life).getByText(/일상에서 챙겨지고 있어요/)).toBeInTheDocument()
-    // 건강·안전(생활 레인)은 학습 개요 카운트(3개 영역)에 안 들어간다
-    expect(screen.getByText(/3개 영역 중 2곳 챙기고 있어요/)).toBeInTheDocument()
-  })
-})
-
-describe('드릴다운', () => {
-  it('영역 카드의 액션을 누르면 onOpenDetail(domain)', async () => {
-    const { onOpenDetail } = setup()
-    const card = screen.getByTestId('domain-과학·탐구')
-    await userEvent.click(within(card).getAllByRole('button')[0]!)
-    expect(onOpenDetail).toHaveBeenCalledWith('과학·탐구')
+    expect(within(life).getAllByText(/일상에서 챙겨지고 있어요/).length).toBeGreaterThan(0)
   })
 })

@@ -4,7 +4,7 @@
  * 테스트는 스냅샷을 심는다(시드=테스트 픽스처). 회귀 방지: 안도 배너 · 빈 시작 · 온보딩·셋업 · 탭.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, within } from '@testing-library/react'
 import { App } from '../../src/boundary/ui/App'
 import { SEED_ACTIVITIES, SEED_ACADEMIES } from '../../src/boundary/seed'
 import { INITIAL_CARE } from '../../src/domain/pet'
@@ -117,11 +117,12 @@ describe('⭐ 빈 상태로 시작 + 셋업이 실제 데이터를 만든다 (�
 describe('⭐ 영어(자체) 목표를 부모가 직접 입력한다', () => {
   beforeEach(ready)
 
-  it('영역 화면에서 영어는 "우리가 정하는 영역"으로 나온다 (하드코딩 목표 없음)', async () => {
+  it('영역 화면에서 영어는 "목표 정하기" 초대로 나온다 (하드코딩 목표 없음)', async () => {
     render(<App />)
     await screen.findByTestId('view-today')
     fireEvent.click(screen.getByRole('button', { name: '영역' }))
-    expect(screen.getByText('우리가 정하는 영역')).toBeInTheDocument()
+    const card = await screen.findByTestId('domain-영어')
+    expect(within(card).getByText('목표 정하기')).toBeInTheDocument()
     // 초판 하드코딩 영어 목표가 사라졌다
     expect(screen.queryByText('영어 영상을 하루 20분 본다')).not.toBeInTheDocument()
   })
@@ -130,7 +131,7 @@ describe('⭐ 영어(자체) 목표를 부모가 직접 입력한다', () => {
     render(<App />)
     await screen.findByTestId('view-today')
     fireEvent.click(screen.getByRole('button', { name: '영역' }))
-    fireEvent.click(screen.getByRole('button', { name: '목표 정하기' })) // 영어 → 상세
+    fireEvent.click(screen.getByTestId('domain-영어')) // 영어 → 상세
     fireEvent.click(screen.getByTestId('add-goal'))
     fireEvent.change(screen.getByLabelText('목표 문장'), { target: { value: '영어 그림책 하루 한 권' } })
     fireEvent.click(screen.getByRole('button', { name: /이 목표 추가하기/ }))

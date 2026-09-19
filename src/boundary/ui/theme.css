@@ -539,6 +539,25 @@ body {
 .gpn-h { font-size: 12px; font-weight: 700; color: var(--pine); margin-bottom: 4px; }
 .gpn-t { font-size: 13px; color: var(--ink); }
 .gpn-act { font-size: 12px; color: var(--ink-soft); margin-top: 6px; background: var(--surface); border-radius: 8px; padding: 8px 10px; }
+/* §8 영역 탭 lean (B) — 안심 한 줄 + 접힌 잘함 + 살펴볼 초대 */
+.relief { margin-bottom: 14px; }
+.relief-line { font-size: 17px; color: var(--pine); font-weight: 700; }
+.relief-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.wellfold { margin-bottom: 12px; }
+.wellfold-head { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 8px; cursor: pointer; background: var(--sage-soft, var(--pine-soft)); border: 0; border-radius: 10px; padding: 11px 13px; font-family: var(--sans); text-align: left; }
+.wf-t { font-size: 12.5px; color: var(--sage-ink, var(--pine)); font-weight: 700; }
+.wf-c { font-size: 15px; color: var(--muted); }
+.wellfold-body { margin-top: 6px; display: flex; flex-direction: column; gap: 5px; }
+.well-row { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 8px; cursor: pointer; background: var(--surface); border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; font-family: var(--sans); text-align: left; }
+.wr-nm { font-size: 13px; font-weight: 500; color: var(--ink); }
+.wr-st { font-size: 12px; color: var(--muted); }
+.look-label { font-size: 11px; color: var(--muted); margin: 4px 0 7px; }
+.invite-card { display: block; width: 100%; text-align: left; cursor: pointer; border: 1px dashed color-mix(in srgb, var(--pine) 20%, var(--line-strong)); background: color-mix(in srgb, var(--surface) 92%, var(--pine-soft)); border-radius: 11px; padding: 11px 13px; margin-bottom: 7px; font-family: var(--sans); }
+.ic-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.ic-top b { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+.ic-tag { font-size: 11px; color: var(--sage-ink, var(--pine)); border: 1px solid color-mix(in srgb, var(--sage) 45%, transparent); border-radius: 7px; padding: 3px 9px; }
+.ic-d { font-size: 12px; color: var(--ink-soft); }
+.ic-m { color: var(--muted); }
 /* §06-B 관찰 보상 · §07-A 공유 신뢰 배지 (T11 B5·B6) */
 .obs-reward { font-size: 11.5px; color: var(--sage-ink, var(--pine)); background: var(--sage-soft, var(--pine-soft)); border-radius: 8px; padding: 8px 10px; margin: 4px 0 8px; }
 .sc-trust { display: inline-block; margin-top: 8px; font-size: 10px; color: var(--sage-ink, var(--pine)); background: var(--sage-soft, var(--pine-soft)); border-radius: 999px; padding: 3px 9px; }
